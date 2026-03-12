@@ -1,5 +1,5 @@
-const { Router } = require("express");
-const clientsController = require("../controllers/clients.controller");
+import { Router } from "express";
+import * as clientsController from "../controllers/clients.controller.js";
 
 const router = Router();
 
@@ -9,4 +9,4 @@ router.post("/", clientsController.create);
 router.put("/:id", clientsController.update);
 router.delete("/:id", clientsController.remove);
 
-module.exports = router;
+export default router;

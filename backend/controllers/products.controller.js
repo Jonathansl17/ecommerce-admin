@@ -1,6 +1,6 @@
-const productsService = require("../services/products.service");
+import * as productsService from "../services/products.service.js";
 
-const getAll = async (req, res) => {
+export const getAll = async (req, res) => {
   try {
     const products = await productsService.getAll();
     res.json(products);
@@ -9,7 +9,7 @@ const getAll = async (req, res) => {
   }
 };
 
-const getById = async (req, res) => {
+export const getById = async (req, res) => {
   try {
     const product = await productsService.getById(req.params.id);
     if (!product) return res.status(404).json({ error: "Product not found" });
@@ -19,7 +19,7 @@ const getById = async (req, res) => {
   }
 };
 
-const create = async (req, res) => {
+export const create = async (req, res) => {
   try {
     const product = await productsService.create(req.body);
     res.status(201).json(product);
@@ -28,7 +28,7 @@ const create = async (req, res) => {
   }
 };
 
-const update = async (req, res) => {
+export const update = async (req, res) => {
   try {
     const product = await productsService.update(req.params.id, req.body);
     if (!product) return res.status(404).json({ error: "Product not found" });
@@ -38,7 +38,7 @@ const update = async (req, res) => {
   }
 };
 
-const remove = async (req, res) => {
+export const remove = async (req, res) => {
   try {
     const product = await productsService.remove(req.params.id);
     if (!product) return res.status(404).json({ error: "Product not found" });
@@ -47,5 +47,3 @@ const remove = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
-module.exports = { getAll, getById, create, update, remove };
