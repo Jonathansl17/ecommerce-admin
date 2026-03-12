@@ -1,4 +1,5 @@
 import prisma from "../db/index.js";
+import bcrypt from "bcrypt";
 
 export const getAll = async () => {
   return prisma.client.findMany({ include: { products: true } });
@@ -11,9 +12,10 @@ export const getById = async (id) => {
   });
 };
 
-export const create = async ({ name, email, phone, address }) => {
+export const create = async ({ name, email, password, phone, address }) => {
+  const hashedPassword = await bcrypt.hash(password, 10);
   return prisma.client.create({
-    data: { name, email, phone, address },
+    data: { name, email, password: hashedPassword, phone, address },
   });
 };
 
