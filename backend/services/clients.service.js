@@ -1,4 +1,4 @@
-import prisma from "../db/index.js";
+import prisma from "../db/prisma.js";
 import bcrypt from "bcrypt";
 
 export const getAll = async () => {

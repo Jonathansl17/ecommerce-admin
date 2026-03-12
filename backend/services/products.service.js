@@ -1,4 +1,4 @@
-import prisma from "../db/index.js";
+import prisma from "../db/prisma.js";
 
 export const getAll = async () => {
   return prisma.product.findMany({ include: { client: true } });
