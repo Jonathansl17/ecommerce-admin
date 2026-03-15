@@ -1,0 +1,7 @@
+gestion de usuarios
+gestion de productos
+gestion de inventario (compras, insumos, etc)
+autenticacion
+notificaciones
+reseñas
+
