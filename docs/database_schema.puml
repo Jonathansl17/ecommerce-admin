@@ -1,0 +1,354 @@
+@startuml database_schema
+' =========================================================
+' E-Commerce DB — Esquema Normalizado
+' Herencia: Usuario (Cliente / Admin) | Item (Producto / Insumo)
+' =========================================================
+
+skinparam linetype ortho
+skinparam entity {
+  BackgroundColor #FAFAFA
+  BorderColor     #444444
+  FontSize        12
+}
+hide empty methods
+
+' =========================================================
+' HERENCIA: USUARIO
+' =========================================================
+
+entity "Usuario" as usuario {
+  * id            : BIGINT          <<PK>>
+  --
+  * nombre_completo : VARCHAR(100)
+  * email           : VARCHAR(150)  <<UNIQUE>>
+  * password_hash   : VARCHAR(255)
+  * rol             : ENUM('cliente','admin')
+  * estado_cuenta   : ENUM('activo','inactivo','eliminado')
+  * created_at      : TIMESTAMP
+  * updated_at      : TIMESTAMP
+}
+
+entity "Cliente" as cliente {
+  * usuario_id : BIGINT <<PK, FK>>
+  --
+  ' Sin campos adicionales por ahora;
+  ' extiende Usuario con rol = cliente
+}
+
+entity "Admin" as admin {
+  * usuario_id : BIGINT <<PK, FK>>
+  --
+  ' Sin campos adicionales por ahora;
+  ' extiende Usuario con rol = admin
+}
+
+usuario  <|--  cliente : "rol = cliente"
+usuario  <|--  admin   : "rol = admin"
+
+' =========================================================
+' HERENCIA: ITEM
+' =========================================================
+
+entity "Item" as item {
+  * id         : BIGINT <<PK>>
+  --
+  * nombre     : VARCHAR(100)
+  * tipo_item  : ENUM('producto','insumo')
+  * estado     : ENUM('activo','inactivo')
+  * created_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+}
+
+entity "Producto" as producto {
+  * item_id      : BIGINT <<PK, FK>>
+  --
+  * categoria_id : BIGINT     <<FK>>
+  descripcion    : TEXT
+  * tipo         : ENUM('estandar','personalizado')
+}
+
+entity "Insumo" as insumo {
+  * item_id        : BIGINT <<PK, FK>>
+  --
+  * unidad_medida  : ENUM('gramos','kilogramos','mililitros','litros','unidades')
+  * stock_actual   : DECIMAL(10,2)
+  umbral_minimo    : DECIMAL(10,2)
+}
+
+item  <|--  producto : "tipo_item = producto"
+item  <|--  insumo   : "tipo_item = insumo"
+
+' =========================================================
+' CATEGORÍA
+' =========================================================
+
+entity "Categoria" as categoria {
+  * id     : BIGINT      <<PK>>
+  --
+  * nombre : VARCHAR(80) <<UNIQUE>>
+}
+
+' =========================================================
+' VARIANTE DE PRODUCTO
+' =========================================================
+
+entity "VarianteProducto" as variante {
+  * id              : BIGINT <<PK>>
+  --
+  * producto_id     : BIGINT <<FK>>
+  color             : VARCHAR(50)
+  talla             : VARCHAR(30)
+  * stock_actual    : INT
+  umbral_minimo     : INT
+  stock_reservado   : INT
+}
+
+' =========================================================
+' VENTA
+' =========================================================
+
+entity "Venta" as venta {
+  * id            : BIGINT   <<PK>>
+  --
+  * cliente_id    : BIGINT   <<FK>>
+  * admin_id      : BIGINT   <<FK>>
+  * metodo_pago   : ENUM('SINPE','efectivo','tarjeta','otro')
+  * monto_total   : DECIMAL(10,2)
+  * created_at    : TIMESTAMP
+}
+
+entity "ItemVenta" as item_venta {
+  * id             : BIGINT        <<PK>>
+  --
+  * venta_id       : BIGINT        <<FK>>
+  * variante_id    : BIGINT        <<FK>>
+  * cantidad       : INT
+  * precio_unitario: DECIMAL(10,2)
+}
+
+' =========================================================
+' PEDIDO PERSONALIZADO
+' =========================================================
+
+entity "PedidoPersonalizado" as pedido_pers {
+  * id                      : BIGINT <<PK>>
+  --
+  * cliente_id              : BIGINT <<FK>>
+  * producto_id             : BIGINT <<FK>>
+  admin_id                  : BIGINT <<FK>>
+  * detalles_personalizacion: JSON
+  * estado                  : ENUM('Recibido','En proceso','Listo','Vendido','Rechazado')
+  motivo_rechazo            : TEXT
+  * created_at              : TIMESTAMP
+  * updated_at              : TIMESTAMP
+}
+
+' =========================================================
+' MOVIMIENTO DE STOCK (Productos / Variantes)
+' =========================================================
+
+entity "MovimientoStock" as mov_stock {
+  * id                : BIGINT <<PK>>
+  --
+  * variante_id       : BIGINT <<FK>>
+  * admin_id          : BIGINT <<FK>>
+  venta_id            : BIGINT <<FK>>
+  * tipo              : ENUM('venta','ajuste_manual')
+  * cantidad_anterior : INT
+  * cantidad_nueva    : INT
+  * motivo            : ENUM('ajuste_manual','correccion_error','producto_danado','devolucion')
+  nota                : TEXT
+  * created_at        : TIMESTAMP
+}
+
+' =========================================================
+' MOVIMIENTO DE INVENTARIO (Insumos)
+' =========================================================
+
+entity "MovimientoInventario" as mov_inv {
+  * id              : BIGINT       <<PK>>
+  --
+  * insumo_id       : BIGINT       <<FK>>
+  * admin_id        : BIGINT       <<FK>>
+  * tipo            : ENUM('entrada','consumo')
+  * cantidad        : DECIMAL(10,2)
+  * stock_anterior  : DECIMAL(10,2)
+  * stock_nuevo     : DECIMAL(10,2)
+  referencia        : VARCHAR(200)
+  * created_at      : TIMESTAMP
+}
+
+' =========================================================
+' ALERTAS
+' =========================================================
+
+entity "AlertaVariante" as alerta_var {
+  * id          : BIGINT  <<PK>>
+  --
+  * variante_id : BIGINT  <<FK>>
+  * tipo        : ENUM('stock_bajo','sin_stock')
+  * umbral      : INT
+  * activa      : BOOLEAN
+}
+
+entity "AlertaInsumo" as alerta_ins {
+  * id        : BIGINT       <<PK>>
+  --
+  * insumo_id : BIGINT       <<FK>>
+  * tipo      : ENUM('stock_bajo','sin_stock')
+  * umbral    : DECIMAL(10,2)
+  * activa    : BOOLEAN
+}
+
+' =========================================================
+' RESEÑAS
+' =========================================================
+
+entity "Resena" as resena {
+  * id              : BIGINT   <<PK>>
+  --
+  * producto_id     : BIGINT   <<FK>>
+  * cliente_id      : BIGINT   <<FK>>
+  * calificacion    : TINYINT
+  * comentario      : TEXT
+  * estado          : ENUM('pendiente','aprobada','rechazada')
+  * editada         : BOOLEAN
+  * votos_utiles    : INT
+  * votos_no_utiles : INT
+  * created_at      : TIMESTAMP
+  updated_at        : TIMESTAMP
+}
+
+entity "VotoResena" as voto_resena {
+  * id          : BIGINT <<PK>>
+  --
+  * resena_id   : BIGINT <<FK>>
+  * cliente_id  : BIGINT <<FK>>
+  * tipo_voto   : ENUM('util','no_util')
+  * created_at  : TIMESTAMP
+}
+
+entity "RespuestaAdmin" as resp_admin {
+  * id         : BIGINT       <<PK>>
+  --
+  * resena_id  : BIGINT       <<FK>>
+  * admin_id   : BIGINT       <<FK>>
+  * texto      : VARCHAR(500)
+  * created_at : TIMESTAMP
+  updated_at   : TIMESTAMP
+}
+
+entity "RegistroModeracion" as reg_mod {
+  * id        : BIGINT <<PK>>
+  --
+  * resena_id : BIGINT <<FK>>
+  * admin_id  : BIGINT <<FK>>
+  * motivo    : ENUM('contenido_ofensivo','spam','informacion_falsa','fuera_de_tema','otro')
+  notas       : TEXT
+  * created_at: TIMESTAMP
+}
+
+entity "ResumenCalificacion" as resumen_cal {
+  * id            : BIGINT       <<PK>>
+  --
+  * producto_id   : BIGINT       <<FK, UNIQUE>>
+  * promedio      : DECIMAL(3,1)
+  * total_resenas : INT
+  estrellas_1     : INT
+  estrellas_2     : INT
+  estrellas_3     : INT
+  estrellas_4     : INT
+  estrellas_5     : INT
+}
+
+' =========================================================
+' NOTIFICACIONES
+' =========================================================
+
+entity "Notificacion" as notif {
+  * id              : BIGINT      <<PK>>
+  --
+  * usuario_id      : BIGINT      <<FK>>
+  * tipo            : ENUM('interna','email','ambas')
+  * titulo          : VARCHAR(200)
+  * contenido       : TEXT
+  entidad_tipo      : VARCHAR(50)
+  entidad_id        : BIGINT
+  * leida           : BOOLEAN
+  enviada_at        : TIMESTAMP
+  * intentos_envio  : TINYINT
+  * created_at      : TIMESTAMP
+}
+
+' =========================================================
+' TOKEN RECUPERACIÓN DE CONTRASEÑA
+' =========================================================
+
+entity "TokenRecuperacion" as token_rec {
+  * id          : BIGINT      <<PK>>
+  --
+  * usuario_id  : BIGINT      <<FK>>
+  * token_hash  : VARCHAR(255)
+  * expires_at  : TIMESTAMP
+  usado_at      : TIMESTAMP
+  * created_at  : TIMESTAMP
+}
+
+' =========================================================
+' RELACIONES
+' =========================================================
+
+' --- Jerarquía de Usuario ---
+cliente  }o--||  usuario      : "es un"
+admin    }o--||  usuario      : "es un"
+
+' --- Jerarquía de Item ---
+producto }o--||  item         : "es un"
+insumo   }o--||  item         : "es un"
+
+' --- Producto ---
+producto }o--||  categoria    : "pertenece a"
+producto ||--o{  variante     : "tiene"
+producto ||--o{  pedido_pers  : "referenciado en"
+producto ||--o{  resena       : "recibe"
+producto ||--||  resumen_cal  : "tiene"
+
+' --- Insumo ---
+insumo   ||--o{  mov_inv      : "registra movimientos"
+insumo   ||--o|  alerta_ins   : "tiene alerta"
+
+' --- Variante ---
+variante ||--o{  item_venta   : "incluida en"
+variante ||--o{  mov_stock    : "registra movimientos"
+variante ||--o|  alerta_var   : "tiene alerta"
+
+' --- Venta ---
+cliente  ||--o{  venta        : "realiza"
+admin    ||--o{  venta        : "registra"
+venta    ||--o{  item_venta   : "contiene"
+venta    ||--o{  mov_stock    : "origina"
+
+' --- Pedido Personalizado ---
+cliente  ||--o{  pedido_pers  : "solicita"
+admin    |o--o{  pedido_pers  : "gestiona"
+
+' --- Movimientos ---
+admin    ||--o{  mov_stock    : "realiza ajuste"
+admin    ||--o{  mov_inv      : "realiza ajuste"
+
+' --- Reseñas ---
+cliente  ||--o{  resena       : "escribe"
+cliente  ||--o{  voto_resena  : "vota"
+resena   ||--o{  voto_resena  : "recibe votos"
+resena   ||--o|  resp_admin   : "tiene respuesta"
+resena   ||--o|  reg_mod      : "tiene moderación"
+admin    ||--o{  resp_admin   : "responde"
+admin    ||--o{  reg_mod      : "modera"
+
+' --- Notificaciones ---
+usuario  ||--o{  notif        : "recibe"
+
+' --- Token recuperación ---
+usuario  ||--o{  token_rec    : "genera"
+
+@enduml
