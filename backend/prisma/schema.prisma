@@ -179,7 +179,7 @@ model Supply {
   minThreshold       Decimal              @map("min_threshold") @db.Decimal(10, 2)
   item               Item                 @relation(fields: [itemId], references: [id])
   movements          InventoryMovement[]
-  alert              SupplyAlert?
+  alerts             SupplyAlert[]
 
   @@map("supplies")
 }
@@ -187,7 +187,7 @@ model Supply {
 model InventoryMovement {
   id            BigInt                @id @default(autoincrement())
   supplyId      BigInt                @map("supply_id")
-  adminUserId   BigInt                @map("admin_user_id")
+  adminId       BigInt                @map("admin_id")
   type          InventoryMovementType
   quantity      Decimal               @db.Decimal(10, 2)
   previousStock Decimal               @map("previous_stock") @db.Decimal(10, 2)
@@ -195,16 +195,16 @@ model InventoryMovement {
   reference     String?               @db.VarChar(200)
   createdAt     DateTime              @default(now()) @map("created_at")
   supply        Supply                @relation(fields: [supplyId], references: [itemId])
-  admin         Admin                 @relation(fields: [adminUserId], references: [adminUserId])
+  admin         Admin                 @relation(fields: [adminId], references: [adminUserId])
 
   @@index([supplyId])
-  @@index([adminUserId])
+  @@index([adminId])
   @@map("inventory_movements")
 }
 
 model SupplyAlert {
   id        BigInt    @id @default(autoincrement())
-  supplyId  BigInt    @unique @map("supply_id")
+  supplyId  BigInt    @map("supply_id")
   type      AlertType
   threshold Decimal   @db.Decimal(10, 2)
   active    Boolean
@@ -216,18 +216,18 @@ model SupplyAlert {
 model Sale {
   id            BigInt        @id @default(autoincrement())
   clientId      BigInt        @map("client_id")
-  adminUserId   BigInt        @map("admin_user_id")
-  orderId       BigInt        @map("order_id")
+  adminId       BigInt        @map("admin_id")
+  orderId       BigInt?       @map("order_id")
   paymentMethod PaymentMethod @map("payment_method")
   totalAmount   Decimal       @map("total_amount") @db.Decimal(10, 2)
   createdAt     DateTime      @default(now()) @map("created_at")
-  admin         Admin         @relation(fields: [adminUserId], references: [adminUserId])
+  admin         Admin         @relation(fields: [adminId], references: [adminUserId])
   saleItems     SaleItem[]
   invoices      Invoice[]
   stockMovements StockMovement[]
 
   @@index([clientId])
-  @@index([adminUserId])
+  @@index([adminId])
   @@index([orderId])
   @@map("sales")
 }
@@ -267,19 +267,19 @@ model Invoice {
 model StockMovement {
   id               BigInt              @id @default(autoincrement())
   variantId        BigInt              @map("variant_id")
-  adminUserId      BigInt              @map("admin_user_id")
+  adminId          BigInt              @map("admin_id")
   saleId           BigInt?             @map("sale_id")
   type             StockMovementType
   previousQuantity Int                 @map("previous_quantity")
   newQuantity      Int                 @map("new_quantity")
-  reason           StockMovementReason
+  reason           StockMovementReason?
   note             String?
   createdAt        DateTime            @default(now()) @map("created_at")
-  admin            Admin               @relation(fields: [adminUserId], references: [adminUserId])
+  admin            Admin               @relation(fields: [adminId], references: [adminUserId])
   sale             Sale?               @relation(fields: [saleId], references: [id])
 
   @@index([variantId])
-  @@index([adminUserId])
+  @@index([adminId])
   @@index([saleId])
   @@map("stock_movements")
 }
@@ -299,51 +299,51 @@ model CustomOrder {
   id                   BigInt            @id @default(autoincrement())
   clientId             BigInt            @map("client_id")
   productId            BigInt            @map("product_id")
-  adminUserId          BigInt            @map("admin_user_id")
+  adminId              BigInt            @map("admin_id")
   customizationDetails Json              @map("customization_details")
   status               CustomOrderStatus
   rejectionReason      String?           @map("rejection_reason")
   createdAt            DateTime          @default(now()) @map("created_at")
   updatedAt            DateTime          @updatedAt @map("updated_at")
-  admin                Admin             @relation(fields: [adminUserId], references: [adminUserId])
+  admin                Admin             @relation(fields: [adminId], references: [adminUserId])
 
   @@index([clientId])
   @@index([productId])
-  @@index([adminUserId])
+  @@index([adminId])
   @@map("custom_orders")
 }
 
 model AdminResponse {
   id          BigInt   @id @default(autoincrement())
   reviewId    BigInt   @map("review_id")
-  adminUserId BigInt   @map("admin_user_id")
+  adminId     BigInt   @map("admin_id")
   text        String   @db.VarChar(500)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-  admin       Admin    @relation(fields: [adminUserId], references: [adminUserId])
+  admin       Admin    @relation(fields: [adminId], references: [adminUserId])
 
   @@index([reviewId])
-  @@index([adminUserId])
+  @@index([adminId])
   @@map("admin_responses")
 }
 
 model ModerationRecord {
   id          BigInt           @id @default(autoincrement())
   reviewId    BigInt           @map("review_id")
-  adminUserId BigInt           @map("admin_user_id")
+  adminId     BigInt           @map("admin_id")
   reason      ModerationReason
   notes       String?
   createdAt   DateTime         @default(now()) @map("created_at")
-  admin       Admin            @relation(fields: [adminUserId], references: [adminUserId])
+  admin       Admin            @relation(fields: [adminId], references: [adminUserId])
 
   @@index([reviewId])
-  @@index([adminUserId])
+  @@index([adminId])
   @@map("moderation_records")
 }
 
 model AdminNotification {
   id           BigInt           @id @default(autoincrement())
-  adminUserId  BigInt           @map("admin_user_id")
+  adminId      BigInt           @map("admin_id")
   type         NotificationType
   title        String           @db.VarChar(200)
   content      String?
@@ -353,9 +353,9 @@ model AdminNotification {
   sentAt       DateTime?        @map("sent_at")
   sendAttempts Int              @default(0) @map("send_attempts") @db.SmallInt
   createdAt    DateTime         @default(now()) @map("created_at")
-  admin        Admin            @relation(fields: [adminUserId], references: [adminUserId])
+  admin        Admin            @relation(fields: [adminId], references: [adminUserId])
 
-  @@index([adminUserId])
+  @@index([adminId])
   @@index([entityType, entityId])
   @@map("admin_notifications")
 }
