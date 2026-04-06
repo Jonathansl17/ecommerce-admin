@@ -1,0 +1,541 @@
+@startuml database
+' =========================================================
+' E-Commerce — Diagrama Entidad-Relación (2 Bases de Datos)
+' DB_Client : storefront, sesiones, catálogo, carrito, pedidos
+' DB_Admin  : back-office, ventas, inventario, roles, facturas
+' <<ext>>   : referencia cruzada entre bases (solo ID, sin FK real)
+' =========================================================
+
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam nodesep 200
+skinparam ranksep 80
+skinparam entity {
+  BackgroundColor #FAFAFA
+  BorderColor     #555555
+  FontSize        12
+}
+skinparam package {
+  BackgroundColor #EEF4FF
+  BorderColor     #3366CC
+  FontNameSize    13
+}
+hide empty methods
+
+' ╔═══════════════════════════════════════════════════════╗
+' ║                     DB_CLIENT                         ║
+' ╚═══════════════════════════════════════════════════════╝
+package "DB_Client" as db_client #EEF4FF {
+
+  ' ─── AUTENTICACIÓN / USUARIO CLIENTE ─────────────────
+
+  entity "ClientUser" as client_user {
+    * id              : BIGINT        <<PK>>
+    --
+    * full_name       : VARCHAR(100)
+    * email           : VARCHAR(150)  <<UNIQUE>>
+    * password_hash   : VARCHAR(255)
+    * account_status  : ENUM('active','inactive','deleted')
+    * created_at      : TIMESTAMP
+    * updated_at      : TIMESTAMP
+  }
+
+  entity "ClientRecoveryToken" as client_rec_token {
+    * id          : BIGINT      <<PK>>
+    --
+    * user_id     : BIGINT      <<FK → ClientUser>>
+    * token_hash  : VARCHAR(255)
+    * expires_at  : TIMESTAMP
+    * used_at       : TIMESTAMP
+    * created_at  : TIMESTAMP
+  }
+
+  ' ─── NOTIFICACIONES CLIENTE ───────────────────────────
+
+  entity "ClientNotification" as client_notif {
+    * id              : BIGINT      <<PK>>
+    --
+    * client_user_id  : BIGINT      <<FK → ClientUser>>
+    * type            : ENUM('internal','email','both')
+    * title           : VARCHAR(200)
+    * content         : TEXT
+    * entity_type       : VARCHAR(50)
+    * entity_id         : BIGINT
+    * read            : BOOLEAN
+    * sent_at           : TIMESTAMP
+    * send_attempts   : TINYINT
+    * created_at      : TIMESTAMP
+  }
+
+  ' ─── CARRITO ──────────────────────────────────────────
+
+  entity "Cart" as cart {
+    * id              : BIGINT <<PK>>
+    --
+    * client_user_id  : BIGINT <<FK → ClientUser>>
+    * status          : ENUM('active','abandoned','converted')
+    * created_at      : TIMESTAMP
+    * updated_at      : TIMESTAMP
+  }
+
+  entity "Favorite" as favorite {
+    * id              : BIGINT <<PK>>
+    --
+    * client_user_id  : BIGINT <<FK → ClientUser>>
+    * product_id      : BIGINT <<FK → Product>>
+    * created_at      : TIMESTAMP
+  }
+
+  entity "CartItem" as cart_item {
+    * id               : BIGINT       <<PK>>
+    --
+    * cart_id          : BIGINT       <<FK → Cart>>
+    * variant_id       : BIGINT       <<FK → ProductVariant>>
+    * quantity         : INT
+    * unit_price_snap  : DECIMAL(10,2)
+    * created_at       : TIMESTAMP
+  }
+
+  ' ─── PEDIDOS ──────────────────────────────────────────
+
+  entity "Order" as order_e {
+    * id               : BIGINT       <<PK>>
+    --
+    * client_user_id   : BIGINT       <<FK → ClientUser>>
+    * cart_id            : BIGINT       <<FK → Cart>>
+    * status           : ENUM('pending_payment','confirmed',\n'in_preparation','ready_shipment',\n'shipped','in_transit','delivered','cancelled')
+    * subtotal         : DECIMAL(10,2)
+    * taxes            : DECIMAL(10,2)
+    * total_amount     : DECIMAL(10,2)
+    * shipping_address   : VARCHAR(300)
+    * created_at       : TIMESTAMP
+    * updated_at       : TIMESTAMP
+  }
+
+  entity "OrderItem" as order_item {
+    * id               : BIGINT       <<PK>>
+    --
+    * order_id         : BIGINT       <<FK → Order>>
+    * variant_id       : BIGINT       <<FK → ProductVariant>>
+    * quantity         : INT
+    * unit_price_snap  : DECIMAL(10,2)
+    * created_at       : TIMESTAMP
+  }
+
+  entity "Payment" as payment {
+    * id                 : BIGINT      <<PK>>
+    --
+    * order_id           : BIGINT      <<FK → Order>>
+    * method             : ENUM('SINPE','cash','card','other')
+    * external_reference   : VARCHAR(100)
+    * amount             : DECIMAL(10,2)
+    * status             : ENUM('pending','approved','rejected','voided')
+    * created_at         : TIMESTAMP
+    * updated_at           : TIMESTAMP
+  }
+
+  ' ─── CATÁLOGO ─────────────────────────────────────────
+
+  entity "Category" as category {
+    * id     : BIGINT      <<PK>>
+    --
+    * name   : VARCHAR(80) <<UNIQUE>>
+  }
+
+  entity "Item" as item_c {
+    * id         : BIGINT     <<PK>>
+    --
+    * name       : VARCHAR(100)
+    * item_type  : ENUM('product')
+    * status     : ENUM('active','inactive')
+    * created_at : TIMESTAMP
+    * updated_at : TIMESTAMP
+  }
+
+  entity "Product" as product {
+    * item_id      : BIGINT <<PK, FK → Item>>
+    --
+    * category_id  : BIGINT <<FK → Category>>
+    * description    : TEXT
+    * image_url      : VARCHAR(300)
+    * type         : ENUM('standard','custom')
+  }
+
+  entity "ProductVariant" as variant {
+    * id              : BIGINT     <<PK>>
+    --
+    * product_id      : BIGINT     <<FK → Product>>
+    * color             : VARCHAR(50)
+    * size              : VARCHAR(30)
+    * price           : DECIMAL(10,2)
+    * current_stock   : INT
+    * min_threshold     : INT
+    * reserved_stock    : INT
+  }
+
+  entity "RatingsSummary" as ratings_summary {
+    * id             : BIGINT       <<PK>>
+    --
+    * product_id     : BIGINT       <<FK, UNIQUE → Product>>
+    * average        : DECIMAL(3,1)
+    * total_reviews  : INT
+    * stars_1          : INT
+    * stars_2          : INT
+    * stars_3          : INT
+    * stars_4          : INT
+    * stars_5          : INT
+  }
+
+  ' ─── RESEÑAS ──────────────────────────────────────────
+
+  entity "Review" as review {
+    * id               : BIGINT  <<PK>>
+    --
+    * product_id       : BIGINT  <<FK → Product>>
+    * client_user_id   : BIGINT  <<FK → ClientUser>>
+    * rating           : TINYINT
+    * comment          : TEXT
+    * status           : ENUM('pending','approved','rejected')
+    * edited           : BOOLEAN
+    * helpful_votes    : INT
+    * unhelpful_votes  : INT
+    * created_at       : TIMESTAMP
+    * updated_at         : TIMESTAMP
+  }
+
+  entity "ReviewVote" as review_vote {
+    * id              : BIGINT <<PK>>
+    --
+    * review_id       : BIGINT <<FK → Review>>
+    * client_user_id  : BIGINT <<FK → ClientUser>>
+    * vote_type       : ENUM('helpful','unhelpful')
+    * created_at      : TIMESTAMP
+  }
+
+  ' ─── RELACIONES INTERNAS DB_CLIENT ──────────────────
+
+  client_user    ||--[#1A7FBF]o{  client_rec_token  : "<color:#1A7FBF>tokens de recuperación</color>"
+  client_user    ||--[#E67E22]o{  client_notif      : "<color:#E67E22>notificaciones de pedidos y eventos</color>"
+  client_user    ||--[#27AE60]o{  cart              : "<color:#27AE60>carritos de compra</color>"
+  client_user    ||--[#E91E8C]o{  favorite          : "<color:#E91E8C>favoritos guardados</color>"
+  client_user    ||--[#8E44AD]o{  order_e           : "<color:#8E44AD>pedidos realizados</color>"
+  client_user    ||--[#C0392B]o{  review            : "<color:#C0392B>reseñas escritas</color>"
+  client_user    ||--[#16A085]o{  review_vote       : "<color:#16A085>votos emitidos</color>"
+  cart           ||--[#F39C12]o{  cart_item         : "<color:#F39C12>ítems en carrito</color>"
+  cart           ||--[#2980B9]o|  order_e           : "<color:#2980B9>origina pedido al hacer checkout</color>"
+  order_e        ||--[#D35400]o{  order_item        : "<color:#D35400>ítems con snapshot de precio</color>"
+  order_e        ||--[#1ABC9C]o{  payment           : "<color:#1ABC9C>pagos del pedido</color>"
+  item_c         <|--[#7F8C8D]    product           : "<color:#7F8C8D>hereda campos base</color>"
+  product        }o--[#6C3483]||  category          : "<color:#6C3483>categoría para navegación</color>"
+  product        ||--[#117A65]o{  variant           : "<color:#117A65>variantes por color y talla</color>"
+  product        ||--[#B7950B]o{  review            : "<color:#B7950B>reseñas de compradores</color>"
+  product        ||--[#2471A3]|{  ratings_summary   : "<color:#2471A3>resumen de calificaciones</color>"
+  product        ||--[#CB4335]o{  favorite          : "<color:#CB4335>guardado como favorito</color>"
+  variant        ||--[#1F618D]o{  cart_item         : "<color:#1F618D>incluida en carrito</color>"
+  variant        ||--[#A93226]o{  order_item        : "<color:#A93226>incluida en pedido</color>"
+  review         ||--[#0E6655]o{  review_vote       : "<color:#0E6655>votos sobre utilidad</color>"
+
+  ' ─── LAYOUT HINTS DB_CLIENT ──────────────────────────
+
+  client_rec_token  -[hidden]right-  client_user
+  client_user       -[hidden]right-  client_notif
+  client_user       -[hidden]down-   cart
+  cart              -[hidden]right-  favorite
+  cart              -[hidden]down-   cart_item
+  cart_item         -[hidden]right-  order_e
+  order_e           -[hidden]down-   order_item
+  order_item        -[hidden]right-  payment
+  category          -[hidden]right-  item_c
+  item_c            -[hidden]right-  product
+  product           -[hidden]right-  variant
+  variant           -[hidden]right-  ratings_summary
+  order_item        -[hidden]down-   category
+  product           -[hidden]down-   review
+  review            -[hidden]right-  review_vote
+}
+
+' ╔═══════════════════════════════════════════════════════╗
+' ║                     DB_ADMIN                          ║
+' ╚═══════════════════════════════════════════════════════╝
+package "DB_Admin" as db_admin #FFF4EE {
+
+  ' ─── AUTENTICACIÓN / USUARIO ADMIN ───────────────────
+  ' Credenciales completamente separadas de DB_Client.
+  ' Una filtración del storefront no expone estas cuentas.
+
+  entity "AdminUser" as admin_user {
+    * id              : BIGINT        <<PK>>
+    --
+    * full_name       : VARCHAR(100)
+    * email           : VARCHAR(150)  <<UNIQUE>>
+    * password_hash   : VARCHAR(255)
+    * account_status  : ENUM('active','inactive','deleted')
+    * created_at      : TIMESTAMP
+    * updated_at      : TIMESTAMP
+  }
+
+  entity "AdminRecoveryToken" as admin_rec_token {
+    * id              : BIGINT      <<PK>>
+    --
+    * admin_user_id   : BIGINT      <<FK → AdminUser>>
+    * token_hash      : VARCHAR(255)
+    * expires_at      : TIMESTAMP
+    * used_at           : TIMESTAMP
+    * created_at      : TIMESTAMP
+  }
+
+  ' ─── ROLES Y PERMISOS ─────────────────────────────────
+
+  entity "Role" as role {
+    * id          : BIGINT      <<PK>>
+    --
+    * name        : VARCHAR(60) <<UNIQUE>>
+    * description   : TEXT
+  }
+
+  entity "Permission" as permission {
+    * id          : BIGINT      <<PK>>
+    --
+    * code        : VARCHAR(80) <<UNIQUE>>
+    ' Ej: 'inventory.read', 'sales.register'
+    * description   : TEXT
+  }
+
+  entity "RolePermission" as role_permission {
+    * role_id       : BIGINT <<PK, FK → Role>>
+    * permission_id : BIGINT <<PK, FK → Permission>>
+    --
+    ' Tabla intermedia M:N
+  }
+
+  entity "Admin" as admin {
+    * admin_user_id  : BIGINT <<PK, FK → AdminUser>>
+    --
+    * role_id        : BIGINT <<FK → Role>>
+    ' Perfil extendido del AdminUser con permisos internos
+  }
+
+  ' ─── INVENTARIO DE INSUMOS ────────────────────────────
+
+  entity "Item" as item_a {
+    * id         : BIGINT     <<PK>>
+    --
+    * name       : VARCHAR(100)
+    * item_type  : ENUM('supply')
+    * status     : ENUM('active','inactive')
+    * created_at : TIMESTAMP
+    * updated_at : TIMESTAMP
+  }
+
+  entity "Supply" as supply {
+    * item_id          : BIGINT       <<PK, FK → Item>>
+    --
+    * unit_of_measure  : ENUM('grams','kilograms',\n'milliliters','liters','units')
+    * current_stock    : DECIMAL(10,2)
+    * min_threshold      : DECIMAL(10,2)
+  }
+
+  entity "InventoryMovement" as inv_movement {
+    * id               : BIGINT       <<PK>>
+    --
+    * supply_id        : BIGINT       <<FK → Supply>>
+    * admin_id         : BIGINT       <<FK → Admin>>
+    * type             : ENUM('entry','consumption')
+    * quantity         : DECIMAL(10,2)
+    * previous_stock   : DECIMAL(10,2)
+    * new_stock        : DECIMAL(10,2)
+    * reference          : VARCHAR(200)
+    * created_at       : TIMESTAMP
+  }
+
+  entity "SupplyAlert" as supply_alert {
+    * id         : BIGINT       <<PK>>
+    --
+    * supply_id  : BIGINT       <<FK → Supply>>
+    * type       : ENUM('low_stock','out_of_stock')
+    * threshold  : DECIMAL(10,2)
+    * active     : BOOLEAN
+  }
+
+  ' ─── VENTAS ───────────────────────────────────────────
+
+  entity "Sale" as sale {
+    * id              : BIGINT       <<PK>>
+    --
+    * client_id       : BIGINT       <<ext: DB_Client.ClientUser>>
+    * admin_id        : BIGINT       <<FK → Admin>>
+    order_id          : BIGINT       <<ext: DB_Client.Order>>
+    * payment_method  : ENUM('SINPE','cash','card','other')
+    * total_amount    : DECIMAL(10,2)
+    * created_at      : TIMESTAMP
+  }
+
+  entity "SaleItem" as sale_item {
+    * id              : BIGINT       <<PK>>
+    --
+    * sale_id         : BIGINT       <<FK → Sale>>
+    * variant_id      : BIGINT       <<ext: DB_Client.ProductVariant>>
+    * quantity        : INT
+    * unit_price      : DECIMAL(10,2)
+  }
+
+  entity "Invoice" as invoice {
+    * id               : BIGINT       <<PK>>
+    --
+    * sale_id          : BIGINT       <<FK → Sale>>
+    * invoice_number   : VARCHAR(30)  <<UNIQUE>>
+    * client_id        : BIGINT       <<ext: DB_Client.ClientUser>>
+    * issue_date       : TIMESTAMP
+    * subtotal         : DECIMAL(10,2)
+    * taxes            : DECIMAL(10,2)
+    * total            : DECIMAL(10,2)
+    * pdf_path           : VARCHAR(300)
+    * status           : ENUM('issued','voided')
+    * created_at       : TIMESTAMP
+  }
+
+  ' ─── STOCK DE PRODUCTOS ───────────────────────────────
+
+  entity "StockMovement" as stock_movement {
+    * id                  : BIGINT <<PK>>
+    --
+    * variant_id          : BIGINT <<ext: DB_Client.ProductVariant>>
+    * admin_id            : BIGINT <<FK → Admin>>
+    * sale_id               : BIGINT <<FK → Sale>>
+    * type                : ENUM('sale','manual_adjustment')
+    * previous_quantity   : INT
+    * new_quantity        : INT
+    * reason              : ENUM('manual_adjustment','error_correction',\n'damaged_product','return')
+    * note                  : TEXT
+    * created_at          : TIMESTAMP
+  }
+
+  entity "VariantAlert" as variant_alert {
+    * id          : BIGINT <<PK>>
+    --
+    * variant_id  : BIGINT <<ext: DB_Client.ProductVariant>>
+    * type        : ENUM('low_stock','out_of_stock')
+    * threshold   : INT
+    * active      : BOOLEAN
+  }
+
+  ' ─── PEDIDOS PERSONALIZADOS ───────────────────────────
+
+  entity "CustomOrder" as custom_order {
+    * id                      : BIGINT <<PK>>
+    --
+    * client_id               : BIGINT <<ext: DB_Client.ClientUser>>
+    * product_id              : BIGINT <<ext: DB_Client.Product>>
+    * admin_id                  : BIGINT <<FK → Admin>>
+    * customization_details   : JSON
+    * status                  : ENUM('received','in_process',\n'ready','sold','rejected')
+    * rejection_reason          : TEXT
+    * created_at              : TIMESTAMP
+    * updated_at              : TIMESTAMP
+  }
+
+  ' ─── MODERACIÓN Y RESPUESTAS ──────────────────────────
+
+  entity "AdminResponse" as admin_response {
+    * id          : BIGINT       <<PK>>
+    --
+    * review_id   : BIGINT       <<ext: DB_Client.Review>>
+    * admin_id    : BIGINT       <<FK → Admin>>
+    * text        : VARCHAR(500)
+    * created_at  : TIMESTAMP
+    * updated_at    : TIMESTAMP
+  }
+
+  entity "ModerationRecord" as mod_record {
+    * id          : BIGINT <<PK>>
+    --
+    * review_id   : BIGINT <<ext: DB_Client.Review>>
+    * admin_id    : BIGINT <<FK → Admin>>
+    * reason      : ENUM('offensive_content','spam',\n'false_information','off_topic','other')
+    * notes         : TEXT
+    * created_at  : TIMESTAMP
+  }
+
+  ' ─── NOTIFICACIONES ADMIN ─────────────────────────────
+
+  entity "AdminNotification" as admin_notif {
+    * id              : BIGINT      <<PK>>
+    --
+    * admin_id        : BIGINT      <<FK → Admin>>
+    * type            : ENUM('internal','email','both')
+    * title           : VARCHAR(200)
+    * content         : TEXT
+    * entity_type       : VARCHAR(50)
+    * entity_id         : BIGINT
+    * read            : BOOLEAN
+    * sent_at           : TIMESTAMP
+    * send_attempts   : TINYINT
+    * created_at      : TIMESTAMP
+  }
+
+  ' ─── RELACIONES INTERNAS DB_ADMIN ────────────────────
+
+  admin_user    ||--[#1F618D]|{  admin             : "<color:#1F618D>perfil con rol y permisos</color>"
+  admin_user    ||--[#A569BD]o{  admin_rec_token   : "<color:#A569BD>tokens de recuperación</color>"
+  role          ||--[#148F77]o{  role_permission   : "<color:#148F77>permisos vía tabla M:N</color>"
+  permission    ||--[#D4AC0D]o{  role_permission   : "<color:#D4AC0D>asignado a roles</color>"
+  role          ||--[#C0392B]o{  admin             : "<color:#C0392B>rol que delimita capacidades</color>"
+
+  item_a        <|--[#7F8C8D]    supply            : "<color:#7F8C8D>hereda campos base</color>"
+  supply        ||--[#1A5276]o{  inv_movement      : "<color:#1A5276>entradas y consumos de insumo</color>"
+  supply        ||--[#117A65]o|  supply_alert      : "<color:#117A65>alerta de stock bajo</color>"
+  inv_movement  }o--[#B7950B]||  admin             : "<color:#B7950B>admin responsable del movimiento</color>"
+
+  admin         ||--[#E67E22]o{  sale              : "<color:#E67E22>ventas registradas</color>"
+  admin         ||--[#2ECC71]o{  stock_movement    : "<color:#2ECC71>ajustes de stock</color>"
+  admin         ||--[#E74C3C]o{  custom_order      : "<color:#E74C3C>pedidos personalizados</color>"
+  admin         ||--[#3498DB]o{  admin_response    : "<color:#3498DB>respuestas a reseñas</color>"
+  admin         ||--[#9B59B6]o{  mod_record        : "<color:#9B59B6>moderaciones de reseñas</color>"
+  admin         ||--[#F39C12]o{  admin_notif       : "<color:#F39C12>alertas internas</color>"
+
+  sale          ||--[#16A085]o{  sale_item         : "<color:#16A085>líneas de ítem con precio</color>"
+  sale          ||--[#8E44AD]|{  invoice           : "<color:#8E44AD>factura generada al pagar</color>"
+  sale          ||--[#D35400]o{  stock_movement    : "<color:#D35400>deducción de stock por venta</color>"
+
+  ' ─── LAYOUT HINTS DB_ADMIN ───────────────────────────
+
+  admin_rec_token   -[hidden]right-  admin_user
+  admin_user        -[hidden]down-   permission
+  permission        -[hidden]right-  role_permission
+  role_permission   -[hidden]right-  role
+  role              -[hidden]right-  admin
+  admin             -[hidden]down-   item_a
+  item_a            -[hidden]right-  supply
+  supply            -[hidden]right-  inv_movement
+  inv_movement      -[hidden]right-  supply_alert
+  admin             -[hidden]down-   sale
+  sale              -[hidden]right-  sale_item
+  sale_item         -[hidden]right-  invoice
+  invoice           -[hidden]right-  stock_movement
+  stock_movement    -[hidden]right-  variant_alert
+  supply_alert      -[hidden]down-   custom_order
+  custom_order      -[hidden]right-  admin_response
+  admin_response    -[hidden]right-  mod_record
+  mod_record        -[hidden]right-  admin_notif
+}
+
+' =========================================================
+' REFERENCIAS CRUZADAS (lógicas, sin FK real en BD)
+' Convención: flechas punteadas con etiqueta <<ext>>
+' =========================================================
+
+client_user   .[#E74C3C].>  sale           : "<color:#E74C3C><<ext>> client_id</color>"
+client_user   .[#E74C3C].>  custom_order   : "<color:#E74C3C><<ext>> client_id</color>"
+client_user   .[#E74C3C].>  invoice        : "<color:#E74C3C><<ext>> client_id</color>"
+variant       .[#E74C3C].>  sale_item      : "<color:#E74C3C><<ext>> variant_id</color>"
+variant       .[#E74C3C].>  stock_movement : "<color:#E74C3C><<ext>> variant_id</color>"
+variant       .[#E74C3C].>  variant_alert  : "<color:#E74C3C><<ext>> variant_id</color>"
+product       .[#E74C3C].>  custom_order   : "<color:#E74C3C><<ext>> product_id</color>"
+review        .[#E74C3C].>  admin_response : "<color:#E74C3C><<ext>> review_id</color>"
+review        .[#E74C3C].>  mod_record     : "<color:#E74C3C><<ext>> review_id</color>"
+order_e       .[#E74C3C].>  sale           : "<color:#E74C3C><<ext>> order_id</color>"
+' Nota: Admin ya NO referencia DB_Client.ClientUser.
+' Cada dominio tiene sus propias credenciales independientes.
+
+
+@enduml

@@ -1,0 +1,235 @@
+@startuml
+title DB_Admin
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam nodesep 200
+skinparam ranksep 80
+skinparam entity {
+  BackgroundColor #FAFAFA
+  BorderColor     #555555
+  FontSize        12
+}
+skinparam package {
+  BackgroundColor #FFF4EE
+  BorderColor     #CC6633
+  FontSize        13
+}
+hide empty methods
+
+package "DB_Admin" as db_admin #FFF4EE {
+
+  entity "AdminUser" as admin_user {
+    * id              : BIGINT        <<PK>>
+    --
+    * full_name       : VARCHAR(100)
+    * email           : VARCHAR(150)  <<UNIQUE>>
+    * password_hash   : VARCHAR(255)
+    * account_status  : ENUM('active','inactive','deleted')
+    * created_at      : TIMESTAMP
+    * updated_at      : TIMESTAMP
+  }
+
+  entity "AdminRecoveryToken" as admin_rec_token {
+    * id              : BIGINT      <<PK>>
+    --
+    * admin_user_id   : BIGINT      <<FK → AdminUser>>
+    * token_hash      : VARCHAR(255)
+    * expires_at      : TIMESTAMP
+    * used_at         : TIMESTAMP
+    * created_at      : TIMESTAMP
+  }
+
+  entity "Role" as role {
+    * id            : BIGINT      <<PK>>
+    --
+    * name          : VARCHAR(60) <<UNIQUE>>
+    * description   : TEXT
+  }
+
+  entity "Permission" as permission {
+    * id            : BIGINT      <<PK>>
+    --
+    * code          : VARCHAR(80) <<UNIQUE>>
+    * description   : TEXT
+  }
+
+  entity "RolePermission" as role_permission {
+    * role_id       : BIGINT <<PK, FK → Role>>
+    * permission_id : BIGINT <<PK, FK → Permission>>
+  }
+
+  entity "Admin" as admin {
+    * admin_user_id : BIGINT <<PK, FK → AdminUser>>
+    --
+    * role_id       : BIGINT <<FK → Role>>
+  }
+
+  entity "Item" as item_a {
+    * id         : BIGINT     <<PK>>
+    --
+    * name       : VARCHAR(100)
+    * item_type  : ENUM('supply')
+    * status     : ENUM('active','inactive')
+    * created_at : TIMESTAMP
+    * updated_at : TIMESTAMP
+  }
+
+  entity "Supply" as supply {
+    * item_id          : BIGINT       <<PK, FK → Item>>
+    --
+    * unit_of_measure  : ENUM('grams','kilograms',\n'milliliters','liters','units')
+    * current_stock    : DECIMAL(10,2)
+    * min_threshold    : DECIMAL(10,2)
+  }
+
+  entity "InventoryMovement" as inv_movement {
+    * id               : BIGINT       <<PK>>
+    --
+    * supply_id        : BIGINT       <<FK → Supply>>
+    * admin_user_id    : BIGINT       <<FK → Admin>>
+    * type             : ENUM('entry','consumption')
+    * quantity         : DECIMAL(10,2)
+    * previous_stock   : DECIMAL(10,2)
+    * new_stock        : DECIMAL(10,2)
+    * reference        : VARCHAR(200)
+    * created_at       : TIMESTAMP
+  }
+
+  entity "SupplyAlert" as supply_alert {
+    * id         : BIGINT       <<PK>>
+    --
+    * supply_id  : BIGINT       <<FK → Supply>>
+    * type       : ENUM('low_stock','out_of_stock')
+    * threshold  : DECIMAL(10,2)
+    * active     : BOOLEAN
+  }
+
+  entity "Sale" as sale {
+    * id              : BIGINT       <<PK>>
+    --
+    * client_id       : BIGINT       <<ext: DB_Client.ClientUser>>
+    * admin_user_id   : BIGINT       <<FK → Admin>>
+    * order_id        : BIGINT       <<ext: DB_Client.Order>>
+    * payment_method  : ENUM('SINPE','cash','card','other')
+    * total_amount    : DECIMAL(10,2)
+    * created_at      : TIMESTAMP
+  }
+
+  entity "SaleItem" as sale_item {
+    * id              : BIGINT       <<PK>>
+    --
+    * sale_id         : BIGINT       <<FK → Sale>>
+    * variant_id      : BIGINT       <<ext: DB_Client.ProductVariant>>
+    * quantity        : INT
+    * unit_price      : DECIMAL(10,2)
+  }
+
+  entity "Invoice" as invoice {
+    * id               : BIGINT       <<PK>>
+    --
+    * sale_id          : BIGINT       <<FK → Sale>>
+    * invoice_number   : VARCHAR(30)  <<UNIQUE>>
+    * client_id        : BIGINT       <<ext: DB_Client.ClientUser>>
+    * issue_date       : TIMESTAMP
+    * subtotal         : DECIMAL(10,2)
+    * taxes            : DECIMAL(10,2)
+    * total            : DECIMAL(10,2)
+    * pdf_path         : VARCHAR(300)
+    * status           : ENUM('issued','voided')
+    * created_at       : TIMESTAMP
+  }
+
+  entity "StockMovement" as stock_movement {
+    * id                : BIGINT <<PK>>
+    --
+    * variant_id        : BIGINT <<ext: DB_Client.ProductVariant>>
+    * admin_user_id     : BIGINT <<FK → Admin>>
+    * sale_id           : BIGINT <<FK → Sale>>
+    * type              : ENUM('sale','manual_adjustment')
+    * previous_quantity : INT
+    * new_quantity      : INT
+    * reason            : ENUM('manual_adjustment','error_correction',\n'damaged_product','return')
+    * note              : TEXT
+    * created_at        : TIMESTAMP
+  }
+
+  entity "VariantAlert" as variant_alert {
+    * id          : BIGINT <<PK>>
+    --
+    * variant_id  : BIGINT <<ext: DB_Client.ProductVariant>>
+    * type        : ENUM('low_stock','out_of_stock')
+    * threshold   : INT
+    * active      : BOOLEAN
+  }
+
+  entity "CustomOrder" as custom_order {
+    * id                    : BIGINT <<PK>>
+    --
+    * client_id             : BIGINT <<ext: DB_Client.ClientUser>>
+    * product_id            : BIGINT <<ext: DB_Client.Product>>
+    * admin_user_id         : BIGINT <<FK → Admin>>
+    * customization_details : JSON
+    * status                : ENUM('received','in_process',\n'ready','sold','rejected')
+    * rejection_reason      : TEXT
+    * created_at            : TIMESTAMP
+    * updated_at            : TIMESTAMP
+  }
+
+  entity "AdminResponse" as admin_response {
+    * id            : BIGINT       <<PK>>
+    --
+    * review_id     : BIGINT       <<ext: DB_Client.Review>>
+    * admin_user_id : BIGINT       <<FK → Admin>>
+    * text          : VARCHAR(500)
+    * created_at    : TIMESTAMP
+    * updated_at    : TIMESTAMP
+  }
+
+  entity "ModerationRecord" as mod_record {
+    * id            : BIGINT <<PK>>
+    --
+    * review_id     : BIGINT <<ext: DB_Client.Review>>
+    * admin_user_id : BIGINT <<FK → Admin>>
+    * reason        : ENUM('offensive_content','spam',\n'false_information','off_topic','other')
+    * notes         : TEXT
+    * created_at    : TIMESTAMP
+  }
+
+  entity "AdminNotification" as admin_notif {
+    * id              : BIGINT      <<PK>>
+    --
+    * admin_user_id   : BIGINT      <<FK → Admin>>
+    * type            : ENUM('internal','email','both')
+    * title           : VARCHAR(200)
+    * content         : TEXT
+    * entity_type     : VARCHAR(50)
+    * entity_id       : BIGINT
+    * read            : BOOLEAN
+    * sent_at         : TIMESTAMP
+    * send_attempts   : TINYINT
+    * created_at      : TIMESTAMP
+  }
+
+  admin_user   ||--|{ admin
+  admin_user   ||--o{ admin_rec_token
+  role         ||--o{ role_permission
+  permission   ||--o{ role_permission
+  role         ||--o{ admin
+
+  item_a       <|-- supply
+  supply       ||--o{ inv_movement
+  supply       ||--o| supply_alert
+  admin        ||--o{ inv_movement
+
+  admin        ||--o{ sale
+  admin        ||--o{ stock_movement
+  admin        ||--o{ custom_order
+  admin        ||--o{ admin_response
+  admin        ||--o{ mod_record
+  admin        ||--o{ admin_notif
+
+  sale         ||--o{ sale_item
+  sale         ||--|{ invoice
+  sale         ||--o{ stock_movement
+}
+@enduml
