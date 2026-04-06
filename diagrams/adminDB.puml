@@ -35,7 +35,7 @@ package "DB_Admin" as db_admin #FFF4EE {
     * admin_user_id   : BIGINT      <<FK → AdminUser>>
     * token_hash      : VARCHAR(255)
     * expires_at      : TIMESTAMP
-    * used_at         : TIMESTAMP
+    used_at           : TIMESTAMP
     * created_at      : TIMESTAMP
   }
 
@@ -86,12 +86,12 @@ package "DB_Admin" as db_admin #FFF4EE {
     * id               : BIGINT       <<PK>>
     --
     * supply_id        : BIGINT       <<FK → Supply>>
-    * admin_user_id    : BIGINT       <<FK → Admin>>
+    * admin_id         : BIGINT       <<FK → Admin>>
     * type             : ENUM('entry','consumption')
     * quantity         : DECIMAL(10,2)
     * previous_stock   : DECIMAL(10,2)
     * new_stock        : DECIMAL(10,2)
-    * reference        : VARCHAR(200)
+    reference          : VARCHAR(200)
     * created_at       : TIMESTAMP
   }
 
@@ -108,8 +108,8 @@ package "DB_Admin" as db_admin #FFF4EE {
     * id              : BIGINT       <<PK>>
     --
     * client_id       : BIGINT       <<ext: DB_Client.ClientUser>>
-    * admin_user_id   : BIGINT       <<FK → Admin>>
-    * order_id        : BIGINT       <<ext: DB_Client.Order>>
+    * admin_id        : BIGINT       <<FK → Admin>>
+    order_id          : BIGINT       <<ext: DB_Client.Order>>
     * payment_method  : ENUM('SINPE','cash','card','other')
     * total_amount    : DECIMAL(10,2)
     * created_at      : TIMESTAMP
@@ -134,7 +134,7 @@ package "DB_Admin" as db_admin #FFF4EE {
     * subtotal         : DECIMAL(10,2)
     * taxes            : DECIMAL(10,2)
     * total            : DECIMAL(10,2)
-    * pdf_path         : VARCHAR(300)
+    pdf_path           : VARCHAR(300)
     * status           : ENUM('issued','voided')
     * created_at       : TIMESTAMP
   }
@@ -143,13 +143,13 @@ package "DB_Admin" as db_admin #FFF4EE {
     * id                : BIGINT <<PK>>
     --
     * variant_id        : BIGINT <<ext: DB_Client.ProductVariant>>
-    * admin_user_id     : BIGINT <<FK → Admin>>
-    * sale_id           : BIGINT <<FK → Sale>>
+    * admin_id          : BIGINT <<FK → Admin>>
+    sale_id             : BIGINT <<FK → Sale>>
     * type              : ENUM('sale','manual_adjustment')
     * previous_quantity : INT
     * new_quantity      : INT
-    * reason            : ENUM('manual_adjustment','error_correction',\n'damaged_product','return')
-    * note              : TEXT
+    reason              : ENUM('manual_adjustment','error_correction',\n'damaged_product','return')
+    note                : TEXT
     * created_at        : TIMESTAMP
   }
 
@@ -167,10 +167,10 @@ package "DB_Admin" as db_admin #FFF4EE {
     --
     * client_id             : BIGINT <<ext: DB_Client.ClientUser>>
     * product_id            : BIGINT <<ext: DB_Client.Product>>
-    * admin_user_id         : BIGINT <<FK → Admin>>
+    * admin_id              : BIGINT <<FK → Admin>>
     * customization_details : JSON
     * status                : ENUM('received','in_process',\n'ready','sold','rejected')
-    * rejection_reason      : TEXT
+    rejection_reason        : TEXT
     * created_at            : TIMESTAMP
     * updated_at            : TIMESTAMP
   }
@@ -179,7 +179,7 @@ package "DB_Admin" as db_admin #FFF4EE {
     * id            : BIGINT       <<PK>>
     --
     * review_id     : BIGINT       <<ext: DB_Client.Review>>
-    * admin_user_id : BIGINT       <<FK → Admin>>
+    * admin_id      : BIGINT       <<FK → Admin>>
     * text          : VARCHAR(500)
     * created_at    : TIMESTAMP
     * updated_at    : TIMESTAMP
@@ -189,28 +189,28 @@ package "DB_Admin" as db_admin #FFF4EE {
     * id            : BIGINT <<PK>>
     --
     * review_id     : BIGINT <<ext: DB_Client.Review>>
-    * admin_user_id : BIGINT <<FK → Admin>>
+    * admin_id      : BIGINT <<FK → Admin>>
     * reason        : ENUM('offensive_content','spam',\n'false_information','off_topic','other')
-    * notes         : TEXT
+    notes           : TEXT
     * created_at    : TIMESTAMP
   }
 
   entity "AdminNotification" as admin_notif {
     * id              : BIGINT      <<PK>>
     --
-    * admin_user_id   : BIGINT      <<FK → Admin>>
+    * admin_id        : BIGINT      <<FK → Admin>>
     * type            : ENUM('internal','email','both')
     * title           : VARCHAR(200)
-    * content         : TEXT
-    * entity_type     : VARCHAR(50)
-    * entity_id       : BIGINT
+    content           : TEXT
+    entity_type       : VARCHAR(50)
+    entity_id         : BIGINT
     * read            : BOOLEAN
-    * sent_at         : TIMESTAMP
+    sent_at           : TIMESTAMP
     * send_attempts   : TINYINT
     * created_at      : TIMESTAMP
   }
 
-  admin_user   ||--|{ admin
+  admin_user   ||--o| admin
   admin_user   ||--o{ admin_rec_token
   role         ||--o{ role_permission
   permission   ||--o{ role_permission
@@ -218,7 +218,7 @@ package "DB_Admin" as db_admin #FFF4EE {
 
   item_a       <|-- supply
   supply       ||--o{ inv_movement
-  supply       ||--o| supply_alert
+  supply       ||--o{ supply_alert
   admin        ||--o{ inv_movement
 
   admin        ||--o{ sale
@@ -229,7 +229,7 @@ package "DB_Admin" as db_admin #FFF4EE {
   admin        ||--o{ admin_notif
 
   sale         ||--o{ sale_item
-  sale         ||--|{ invoice
+  sale         ||--o{ invoice
   sale         ||--o{ stock_movement
 }
 @enduml
