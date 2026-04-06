@@ -280,7 +280,7 @@ package "DB_Admin" as db_admin #FFF4EE {
     * admin_user_id   : BIGINT      <<FK → AdminUser>>
     * token_hash      : VARCHAR(255)
     * expires_at      : TIMESTAMP
-    * used_at           : TIMESTAMP
+    used_at             : TIMESTAMP
     * created_at      : TIMESTAMP
   }
 
@@ -344,7 +344,7 @@ package "DB_Admin" as db_admin #FFF4EE {
     * quantity         : DECIMAL(10,2)
     * previous_stock   : DECIMAL(10,2)
     * new_stock        : DECIMAL(10,2)
-    * reference          : VARCHAR(200)
+    reference            : VARCHAR(200)
     * created_at       : TIMESTAMP
   }
 
@@ -389,7 +389,7 @@ package "DB_Admin" as db_admin #FFF4EE {
     * subtotal         : DECIMAL(10,2)
     * taxes            : DECIMAL(10,2)
     * total            : DECIMAL(10,2)
-    * pdf_path           : VARCHAR(300)
+    pdf_path             : VARCHAR(300)
     * status           : ENUM('issued','voided')
     * created_at       : TIMESTAMP
   }
@@ -401,12 +401,12 @@ package "DB_Admin" as db_admin #FFF4EE {
     --
     * variant_id          : BIGINT <<ext: DB_Client.ProductVariant>>
     * admin_id            : BIGINT <<FK → Admin>>
-    * sale_id               : BIGINT <<FK → Sale>>
+    sale_id               : BIGINT <<FK → Sale>>
     * type                : ENUM('sale','manual_adjustment')
     * previous_quantity   : INT
     * new_quantity        : INT
-    * reason              : ENUM('manual_adjustment','error_correction',\n'damaged_product','return')
-    * note                  : TEXT
+    reason                : ENUM('manual_adjustment','error_correction',\n'damaged_product','return')
+    note                  : TEXT
     * created_at          : TIMESTAMP
   }
 
@@ -429,7 +429,7 @@ package "DB_Admin" as db_admin #FFF4EE {
     * admin_id                  : BIGINT <<FK → Admin>>
     * customization_details   : JSON
     * status                  : ENUM('received','in_process',\n'ready','sold','rejected')
-    * rejection_reason          : TEXT
+    rejection_reason             : TEXT
     * created_at              : TIMESTAMP
     * updated_at              : TIMESTAMP
   }
@@ -452,7 +452,7 @@ package "DB_Admin" as db_admin #FFF4EE {
     * review_id   : BIGINT <<ext: DB_Client.Review>>
     * admin_id    : BIGINT <<FK → Admin>>
     * reason      : ENUM('offensive_content','spam',\n'false_information','off_topic','other')
-    * notes         : TEXT
+    notes           : TEXT
     * created_at  : TIMESTAMP
   }
 
@@ -464,18 +464,18 @@ package "DB_Admin" as db_admin #FFF4EE {
     * admin_id        : BIGINT      <<FK → Admin>>
     * type            : ENUM('internal','email','both')
     * title           : VARCHAR(200)
-    * content         : TEXT
-    * entity_type       : VARCHAR(50)
-    * entity_id         : BIGINT
+    content           : TEXT
+    entity_type       : VARCHAR(50)
+    entity_id         : BIGINT
     * read            : BOOLEAN
-    * sent_at           : TIMESTAMP
+    sent_at           : TIMESTAMP
     * send_attempts   : TINYINT
     * created_at      : TIMESTAMP
   }
 
   ' ─── RELACIONES INTERNAS DB_ADMIN ────────────────────
 
-  admin_user    ||--[#1F618D]|{  admin             : "<color:#1F618D>perfil con rol y permisos</color>"
+  admin_user    ||--[#1F618D]o|  admin             : "<color:#1F618D>perfil con rol y permisos</color>"
   admin_user    ||--[#A569BD]o{  admin_rec_token   : "<color:#A569BD>tokens de recuperación</color>"
   role          ||--[#148F77]o{  role_permission   : "<color:#148F77>permisos vía tabla M:N</color>"
   permission    ||--[#D4AC0D]o{  role_permission   : "<color:#D4AC0D>asignado a roles</color>"
@@ -483,7 +483,7 @@ package "DB_Admin" as db_admin #FFF4EE {
 
   item_a        <|--[#7F8C8D]    supply            : "<color:#7F8C8D>hereda campos base</color>"
   supply        ||--[#1A5276]o{  inv_movement      : "<color:#1A5276>entradas y consumos de insumo</color>"
-  supply        ||--[#117A65]o|  supply_alert      : "<color:#117A65>alerta de stock bajo</color>"
+  supply        ||--[#117A65]o{  supply_alert      : "<color:#117A65>alertas de stock bajo</color>"
   inv_movement  }o--[#B7950B]||  admin             : "<color:#B7950B>admin responsable del movimiento</color>"
 
   admin         ||--[#E67E22]o{  sale              : "<color:#E67E22>ventas registradas</color>"
@@ -494,7 +494,7 @@ package "DB_Admin" as db_admin #FFF4EE {
   admin         ||--[#F39C12]o{  admin_notif       : "<color:#F39C12>alertas internas</color>"
 
   sale          ||--[#16A085]o{  sale_item         : "<color:#16A085>líneas de ítem con precio</color>"
-  sale          ||--[#8E44AD]|{  invoice           : "<color:#8E44AD>factura generada al pagar</color>"
+  sale          ||--[#8E44AD]o{  invoice           : "<color:#8E44AD>factura generada al pagar</color>"
   sale          ||--[#D35400]o{  stock_movement    : "<color:#D35400>deducción de stock por venta</color>"
 
   ' ─── LAYOUT HINTS DB_ADMIN ───────────────────────────
