@@ -7,30 +7,355 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Client {
-  id        Int       @id @default(autoincrement())
-  name      String
-  email     String    @unique
-  password  String
-  phone     String?
-  address   String?
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  products  Product[]
-
-  @@map("clients")
+enum AccountStatus {
+  active
+  inactive
+  deleted
 }
 
-model Product {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  price       Decimal  @db.Decimal(10, 2)
-  stock       Int      @default(0)
-  clientId    Int      @map("client_id")
-  client      Client   @relation(fields: [clientId], references: [id])
+enum ItemType {
+  supply
+}
+
+enum ItemStatus {
+  active
+  inactive
+}
+
+enum UnitOfMeasure {
+  grams
+  kilograms
+  milliliters
+  liters
+  units
+}
+
+enum InventoryMovementType {
+  entry
+  consumption
+}
+
+enum AlertType {
+  low_stock
+  out_of_stock
+}
+
+enum PaymentMethod {
+  SINPE
+  cash
+  card
+  other
+}
+
+enum InvoiceStatus {
+  issued
+  voided
+}
+
+enum StockMovementType {
+  sale
+  manual_adjustment
+}
+
+enum StockMovementReason {
+  manual_adjustment
+  error_correction
+  damaged_product
+  return
+}
+
+enum CustomOrderStatus {
+  received
+  in_process
+  ready
+  sold
+  rejected
+}
+
+enum ModerationReason {
+  offensive_content
+  spam
+  false_information
+  off_topic
+  other
+}
+
+enum NotificationType {
+  internal
+  email
+  both
+}
+
+model AdminUser {
+  id             BigInt                @id @default(autoincrement())
+  fullName       String                @map("full_name") @db.VarChar(100)
+  email          String                @unique @db.VarChar(150)
+  passwordHash   String                @map("password_hash") @db.VarChar(255)
+  accountStatus  AccountStatus         @map("account_status")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+  recoveryTokens AdminRecoveryToken[]
+  admin          Admin?
+
+  @@map("admin_users")
+}
+
+model AdminRecoveryToken {
+  id          BigInt    @id @default(autoincrement())
+  adminUserId BigInt    @map("admin_user_id")
+  tokenHash   String    @map("token_hash") @db.VarChar(255)
+  expiresAt   DateTime  @map("expires_at")
+  usedAt      DateTime? @map("used_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id])
+
+  @@index([adminUserId])
+  @@map("admin_recovery_tokens")
+}
+
+model Role {
+  id              BigInt           @id @default(autoincrement())
+  name            String           @unique @db.VarChar(60)
+  description     String?
+  admins          Admin[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id              BigInt           @id @default(autoincrement())
+  code            String           @unique @db.VarChar(80)
+  description     String?
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       BigInt     @map("role_id")
+  permissionId BigInt     @map("permission_id")
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model Admin {
+  adminUserId        BigInt              @id @map("admin_user_id")
+  roleId             BigInt              @map("role_id")
+  adminUser          AdminUser           @relation(fields: [adminUserId], references: [id])
+  role               Role                @relation(fields: [roleId], references: [id])
+  inventoryMovements InventoryMovement[]
+  sales              Sale[]
+  stockMovements     StockMovement[]
+  customOrders       CustomOrder[]
+  adminResponses     AdminResponse[]
+  moderationRecords  ModerationRecord[]
+  notifications      AdminNotification[]
+
+  @@index([roleId])
+  @@map("admins")
+}
+
+model Item {
+  id        BigInt     @id @default(autoincrement())
+  name      String     @db.VarChar(100)
+  itemType  ItemType   @map("item_type")
+  status    ItemStatus
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  supply    Supply?
+
+  @@map("items")
+}
+
+model Supply {
+  itemId             BigInt               @id @map("item_id")
+  unitOfMeasure      UnitOfMeasure        @map("unit_of_measure")
+  currentStock       Decimal              @map("current_stock") @db.Decimal(10, 2)
+  minThreshold       Decimal              @map("min_threshold") @db.Decimal(10, 2)
+  item               Item                 @relation(fields: [itemId], references: [id])
+  movements          InventoryMovement[]
+  alert              SupplyAlert?
+
+  @@map("supplies")
+}
+
+model InventoryMovement {
+  id            BigInt                @id @default(autoincrement())
+  supplyId      BigInt                @map("supply_id")
+  adminUserId   BigInt                @map("admin_user_id")
+  type          InventoryMovementType
+  quantity      Decimal               @db.Decimal(10, 2)
+  previousStock Decimal               @map("previous_stock") @db.Decimal(10, 2)
+  newStock      Decimal               @map("new_stock") @db.Decimal(10, 2)
+  reference     String?               @db.VarChar(200)
+  createdAt     DateTime              @default(now()) @map("created_at")
+  supply        Supply                @relation(fields: [supplyId], references: [itemId])
+  admin         Admin                 @relation(fields: [adminUserId], references: [adminUserId])
+
+  @@index([supplyId])
+  @@index([adminUserId])
+  @@map("inventory_movements")
+}
+
+model SupplyAlert {
+  id        BigInt    @id @default(autoincrement())
+  supplyId  BigInt    @unique @map("supply_id")
+  type      AlertType
+  threshold Decimal   @db.Decimal(10, 2)
+  active    Boolean
+  supply    Supply    @relation(fields: [supplyId], references: [itemId])
+
+  @@map("supply_alerts")
+}
+
+model Sale {
+  id            BigInt        @id @default(autoincrement())
+  clientId      BigInt        @map("client_id")
+  adminUserId   BigInt        @map("admin_user_id")
+  orderId       BigInt        @map("order_id")
+  paymentMethod PaymentMethod @map("payment_method")
+  totalAmount   Decimal       @map("total_amount") @db.Decimal(10, 2)
+  createdAt     DateTime      @default(now()) @map("created_at")
+  admin         Admin         @relation(fields: [adminUserId], references: [adminUserId])
+  saleItems     SaleItem[]
+  invoices      Invoice[]
+  stockMovements StockMovement[]
+
+  @@index([clientId])
+  @@index([adminUserId])
+  @@index([orderId])
+  @@map("sales")
+}
+
+model SaleItem {
+  id        BigInt  @id @default(autoincrement())
+  saleId    BigInt  @map("sale_id")
+  variantId BigInt  @map("variant_id")
+  quantity  Int
+  unitPrice Decimal @map("unit_price") @db.Decimal(10, 2)
+  sale      Sale    @relation(fields: [saleId], references: [id])
+
+  @@index([saleId])
+  @@index([variantId])
+  @@map("sale_items")
+}
+
+model Invoice {
+  id            BigInt        @id @default(autoincrement())
+  saleId        BigInt        @map("sale_id")
+  invoiceNumber String        @unique @map("invoice_number") @db.VarChar(30)
+  clientId      BigInt        @map("client_id")
+  issueDate     DateTime      @map("issue_date")
+  subtotal      Decimal       @db.Decimal(10, 2)
+  taxes         Decimal       @db.Decimal(10, 2)
+  total         Decimal       @db.Decimal(10, 2)
+  pdfPath       String?       @map("pdf_path") @db.VarChar(300)
+  status        InvoiceStatus
+  createdAt     DateTime      @default(now()) @map("created_at")
+  sale          Sale          @relation(fields: [saleId], references: [id])
+
+  @@index([saleId])
+  @@index([clientId])
+  @@map("invoices")
+}
+
+model StockMovement {
+  id               BigInt              @id @default(autoincrement())
+  variantId        BigInt              @map("variant_id")
+  adminUserId      BigInt              @map("admin_user_id")
+  saleId           BigInt?             @map("sale_id")
+  type             StockMovementType
+  previousQuantity Int                 @map("previous_quantity")
+  newQuantity      Int                 @map("new_quantity")
+  reason           StockMovementReason
+  note             String?
+  createdAt        DateTime            @default(now()) @map("created_at")
+  admin            Admin               @relation(fields: [adminUserId], references: [adminUserId])
+  sale             Sale?               @relation(fields: [saleId], references: [id])
+
+  @@index([variantId])
+  @@index([adminUserId])
+  @@index([saleId])
+  @@map("stock_movements")
+}
+
+model VariantAlert {
+  id        BigInt    @id @default(autoincrement())
+  variantId BigInt    @map("variant_id")
+  type      AlertType
+  threshold Int
+  active    Boolean
+
+  @@index([variantId])
+  @@map("variant_alerts")
+}
+
+model CustomOrder {
+  id                   BigInt            @id @default(autoincrement())
+  clientId             BigInt            @map("client_id")
+  productId            BigInt            @map("product_id")
+  adminUserId          BigInt            @map("admin_user_id")
+  customizationDetails Json              @map("customization_details")
+  status               CustomOrderStatus
+  rejectionReason      String?           @map("rejection_reason")
+  createdAt            DateTime          @default(now()) @map("created_at")
+  updatedAt            DateTime          @updatedAt @map("updated_at")
+  admin                Admin             @relation(fields: [adminUserId], references: [adminUserId])
+
+  @@index([clientId])
+  @@index([productId])
+  @@index([adminUserId])
+  @@map("custom_orders")
+}
+
+model AdminResponse {
+  id          BigInt   @id @default(autoincrement())
+  reviewId    BigInt   @map("review_id")
+  adminUserId BigInt   @map("admin_user_id")
+  text        String   @db.VarChar(500)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
+  admin       Admin    @relation(fields: [adminUserId], references: [adminUserId])
 
-  @@map("products")
+  @@index([reviewId])
+  @@index([adminUserId])
+  @@map("admin_responses")
+}
+
+model ModerationRecord {
+  id          BigInt           @id @default(autoincrement())
+  reviewId    BigInt           @map("review_id")
+  adminUserId BigInt           @map("admin_user_id")
+  reason      ModerationReason
+  notes       String?
+  createdAt   DateTime         @default(now()) @map("created_at")
+  admin       Admin            @relation(fields: [adminUserId], references: [adminUserId])
+
+  @@index([reviewId])
+  @@index([adminUserId])
+  @@map("moderation_records")
+}
+
+model AdminNotification {
+  id           BigInt           @id @default(autoincrement())
+  adminUserId  BigInt           @map("admin_user_id")
+  type         NotificationType
+  title        String           @db.VarChar(200)
+  content      String?
+  entityType   String?          @map("entity_type") @db.VarChar(50)
+  entityId     BigInt?          @map("entity_id")
+  read         Boolean
+  sentAt       DateTime?        @map("sent_at")
+  sendAttempts Int              @default(0) @map("send_attempts") @db.SmallInt
+  createdAt    DateTime         @default(now()) @map("created_at")
+  admin        Admin            @relation(fields: [adminUserId], references: [adminUserId])
+
+  @@index([adminUserId])
+  @@index([entityType, entityId])
+  @@map("admin_notifications")
 }
