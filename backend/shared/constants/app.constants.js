@@ -1,0 +1,4 @@
+export const APP_CONFIG = {
+  PORT: 3000,
+  DEFAULT_BCRYPT_SALT_ROUNDS: 10,
+};
