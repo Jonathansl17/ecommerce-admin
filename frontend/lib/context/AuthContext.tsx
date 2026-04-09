@@ -8,7 +8,7 @@ import {
   useCallback,
 } from 'react';
 import { useRouter } from 'next/navigation';
-import { AUTH_STORAGE_KEYS } from '@/lib/constants/auth.constants';
+import { AUTH_ROUTES, AUTH_STORAGE_KEYS } from '@/lib/constants/auth.constants';
 import type { AuthUser } from '@/lib/types/auth.types';
 
 interface AuthContextValue {
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.removeItem(AUTH_STORAGE_KEYS.USER);
     setToken(null);
     setUser(null);
-    router.push('/login');
+    router.push(AUTH_ROUTES.LOGIN);
   }, [router]);
 
   const isAuthenticated = !!user && !!token;

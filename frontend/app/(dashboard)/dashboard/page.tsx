@@ -1,27 +1,10 @@
 'use client';
 
 import { useAuth } from '@/lib/context/AuthContext';
+import { AUTH_STRINGS } from '@/lib/constants/auth.constants';
+import { QUICK_LINKS } from '@/lib/constants/dashboard.constants';
 
-const PAGE_TITLE = 'Panel de Administración';
-const PAGE_SUBTITLE = 'Bienvenido al panel administrativo. Gestiona productos, pedidos y usuarios.';
-
-const QUICK_LINKS = [
-  {
-    href: '/productos',
-    title: 'Gestionar productos',
-    description: 'Administra el catálogo de productos, precios e inventario.',
-  },
-  {
-    href: '/pedidos',
-    title: 'Ver pedidos',
-    description: 'Revisa y gestiona los pedidos de los clientes.',
-  },
-  {
-    href: '/clientes',
-    title: 'Gestionar clientes',
-    description: 'Consulta la información y actividad de los clientes.',
-  },
-] as const;
+const strings = AUTH_STRINGS.dashboard;
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
@@ -29,9 +12,9 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">{PAGE_TITLE}</h1>
+        <h1 className="text-2xl font-bold text-foreground">{strings.pageTitle}</h1>
         <p className="mt-1 text-foreground/70">
-          Hola, {user?.fullName}. {PAGE_SUBTITLE}
+          {strings.greeting} {user?.fullName}. {strings.pageSubtitle}
         </p>
       </div>
 

@@ -7,3 +7,5 @@ export const STORE_URL =
 export const HTTP_STATUS = {
   BAD_REQUEST: 400,
 } as const;
+
+export const REQUEST_TIMEOUT_MS = 10_000;
