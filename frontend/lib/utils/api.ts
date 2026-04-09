@@ -1,4 +1,4 @@
-import { API_BASE_URL, HTTP_STATUS } from '@/lib/constants/api.constants';
+import { API_BASE_URL, HTTP_STATUS, REQUEST_TIMEOUT_MS } from '@/lib/constants/api.constants';
 import type {
   ApiErrorResponse,
   LoginFormData,
@@ -11,6 +11,7 @@ export async function registerUser(data: RegisterFormData): Promise<ApiErrorResp
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
   if (res.status === HTTP_STATUS.BAD_REQUEST) {
@@ -31,6 +32,7 @@ export async function loginUser(data: LoginFormData): Promise<LoginResponse> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
   if (!res.ok) {

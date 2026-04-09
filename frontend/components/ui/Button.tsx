@@ -18,6 +18,7 @@ export function Button({
   return (
     <button
       disabled={isDisabled}
+      aria-busy={isLoading}
       className={`w-full rounded-md bg-foreground text-background py-2 font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
       {...props}
     >

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ADMIN_ROLE, AUTH_STRINGS } from '@/lib/constants/auth.constants';
+import { ADMIN_ROLE, AUTH_ROUTES, AUTH_STRINGS } from '@/lib/constants/auth.constants';
 import { STORE_URL } from '@/lib/constants/api.constants';
 import { validateLoginForm, getFieldError } from '@/lib/utils/validation';
 import { loginUser } from '@/lib/utils/api';
@@ -52,7 +52,7 @@ export function useLoginForm() {
       }
 
       auth.login(response.token, response.usuario);
-      router.push('/dashboard');
+      router.push(AUTH_ROUTES.DASHBOARD);
     } catch (err) {
       const apiError = err as ApiErrorResponse;
 

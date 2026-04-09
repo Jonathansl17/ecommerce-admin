@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/lib/context/AuthContext';
-import { ADMIN_ROLE } from '@/lib/constants/auth.constants';
+import { ADMIN_ROLE, AUTH_ROUTES, AUTH_STRINGS } from '@/lib/constants/auth.constants';
 import { STORE_URL } from '@/lib/constants/api.constants';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -10,7 +10,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-const NAV_TITLE = 'Ecommerce Admin';
+const strings = AUTH_STRINGS.dashboard;
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
@@ -20,7 +20,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     if (isLoading) return;
 
     if (!isAuthenticated) {
-      router.push('/login');
+      router.push(AUTH_ROUTES.LOGIN);
       return;
     }
 
@@ -38,17 +38,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <header className="sticky top-0 z-40 border-b border-foreground/10 bg-background shadow-sm">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <a
-            href="/dashboard"
+            href={AUTH_ROUTES.DASHBOARD}
             className="text-lg font-bold tracking-tight text-foreground hover:opacity-80 transition-opacity"
           >
-            {NAV_TITLE}
+            {strings.navTitle}
           </a>
 
           <button
             onClick={logout}
             className="text-sm font-medium text-foreground/60 hover:text-foreground transition-colors"
           >
-            Cerrar sesión
+            {strings.logoutButton}
           </button>
         </div>
       </header>

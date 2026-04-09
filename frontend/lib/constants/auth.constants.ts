@@ -30,6 +30,15 @@ export const AUTH_STRINGS = {
     noAccountText: '¿No tienes cuenta?',
     registerLink: 'Registrarse',
   },
+  dashboard: {
+    navTitle: 'Ecommerce Admin',
+    logoutButton: 'Cerrar sesión',
+    pageTitle: 'Panel de Administración',
+    pageSubtitle:
+      'Gestiona productos, pedidos y usuarios.',
+    greeting: 'Hola,',
+    adminBadgeLabel: 'Panel Administrativo',
+  },
   validation: {
     fullNameRequired: 'El nombre completo es obligatorio',
     emailRequired: 'El correo electrónico es obligatorio',
@@ -57,3 +66,9 @@ export const AUTH_STORAGE_KEYS = {
 } as const;
 
 export const ADMIN_ROLE = 'administrador' as const;
+
+export const AUTH_ROUTES = {
+  LOGIN: '/login',
+  REGISTER: '/register',
+  DASHBOARD: '/dashboard',
+} as const;
