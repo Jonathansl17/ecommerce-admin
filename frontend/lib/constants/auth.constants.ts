@@ -1,7 +1,7 @@
 export const AUTH_STRINGS = {
   register: {
-    title: 'Crear cuenta',
-    subtitle: 'Registra tus datos para acceder a la plataforma',
+    title: 'Crear cuenta administrativa',
+    subtitle: 'Registra tus datos para acceder al panel de administración',
     fullNameLabel: 'Nombre completo',
     fullNamePlaceholder: 'Tu nombre completo',
     emailLabel: 'Correo electrónico',
@@ -19,8 +19,8 @@ export const AUTH_STRINGS = {
     goToLogin: 'Ir al inicio de sesión',
   },
   login: {
-    title: 'Iniciar sesión',
-    subtitle: 'Bienvenido de vuelta',
+    title: 'Panel Administrativo',
+    subtitle: 'Inicia sesión para acceder al panel de administración',
     emailLabel: 'Correo electrónico',
     emailPlaceholder: 'correo@ejemplo.com',
     passwordLabel: 'Contraseña',
@@ -29,7 +29,6 @@ export const AUTH_STRINGS = {
     submittingButton: 'Ingresando...',
     noAccountText: '¿No tienes cuenta?',
     registerLink: 'Registrarse',
-    comingSoon: 'Próximamente',
   },
   validation: {
     fullNameRequired: 'El nombre completo es obligatorio',
@@ -46,5 +45,15 @@ export const AUTH_STRINGS = {
     emailAlreadyExists: 'Este correo electrónico ya está registrado',
     unexpectedError: 'Ocurrió un error inesperado',
     connectionError: 'No se pudo conectar con el servidor',
+    invalidCredentials: 'Correo electrónico o contraseña incorrectos',
+    noAdminPermission:
+      'No tienes permisos para acceder al panel de administración',
   },
 } as const;
+
+export const AUTH_STORAGE_KEYS = {
+  TOKEN: 'auth_token',
+  USER: 'auth_user',
+} as const;
+
+export const ADMIN_ROLE = 'administrador' as const;

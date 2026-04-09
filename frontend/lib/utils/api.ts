@@ -1,5 +1,10 @@
-import { API_BASE_URL } from '@/lib/constants/api.constants';
-import type { RegisterFormData, ApiErrorResponse } from '@/lib/types/auth.types';
+import { API_BASE_URL, HTTP_STATUS } from '@/lib/constants/api.constants';
+import type {
+  ApiErrorResponse,
+  LoginFormData,
+  LoginResponse,
+  RegisterFormData,
+} from '@/lib/types/auth.types';
 
 export async function registerUser(data: RegisterFormData): Promise<ApiErrorResponse | null> {
   const res = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -8,7 +13,7 @@ export async function registerUser(data: RegisterFormData): Promise<ApiErrorResp
     body: JSON.stringify(data),
   });
 
-  if (res.status === 400) {
+  if (res.status === HTTP_STATUS.BAD_REQUEST) {
     const body: ApiErrorResponse = await res.json();
     return body;
   }
@@ -19,4 +24,20 @@ export async function registerUser(data: RegisterFormData): Promise<ApiErrorResp
   }
 
   return null;
+}
+
+export async function loginUser(data: LoginFormData): Promise<LoginResponse> {
+  const res = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const body: ApiErrorResponse = await res.json().catch(() => ({}));
+    throw body;
+  }
+
+  const body: LoginResponse = await res.json();
+  return body;
 }
