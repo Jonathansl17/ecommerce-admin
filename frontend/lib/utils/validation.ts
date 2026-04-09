@@ -4,7 +4,11 @@ import {
   PASSWORD_MIN_LENGTH,
   PASSWORD_PATTERN_REGEX,
 } from '@/lib/constants/validation.constants';
-import type { FieldError, RegisterFormData } from '@/lib/types/auth.types';
+import type {
+  FieldError,
+  LoginFormData,
+  RegisterFormData,
+} from '@/lib/types/auth.types';
 
 export function validateRegisterForm(data: RegisterFormData): FieldError[] {
   const errors: FieldError[] = [];
@@ -54,6 +58,31 @@ export function validateRegisterForm(data: RegisterFormData): FieldError[] {
     errors.push({
       field: 'confirmPassword',
       message: AUTH_STRINGS.validation.passwordsMismatch,
+    });
+  }
+
+  return errors;
+}
+
+export function validateLoginForm(data: LoginFormData): FieldError[] {
+  const errors: FieldError[] = [];
+
+  if (!data.email.trim()) {
+    errors.push({
+      field: 'email',
+      message: AUTH_STRINGS.validation.emailRequired,
+    });
+  } else if (!EMAIL_REGEX.test(data.email)) {
+    errors.push({
+      field: 'email',
+      message: AUTH_STRINGS.validation.emailInvalid,
+    });
+  }
+
+  if (!data.password) {
+    errors.push({
+      field: 'password',
+      message: AUTH_STRINGS.validation.passwordRequired,
     });
   }
 
