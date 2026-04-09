@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { useRouter } from 'next/navigation';
 import { AUTH_ROUTES, AUTH_STORAGE_KEYS } from '@/lib/constants/auth.constants';
+import { logoutUser } from '@/lib/utils/api';
 import type { AuthUser } from '@/lib/types/auth.types';
 
 interface AuthContextValue {
@@ -57,13 +58,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(newUser);
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    if (token) {
+      try {
+        await logoutUser(token);
+      } catch {
+        // Best-effort: siempre limpiar estado local aunque falle el servidor
+      }
+    }
+
     localStorage.removeItem(AUTH_STORAGE_KEYS.TOKEN);
     localStorage.removeItem(AUTH_STORAGE_KEYS.USER);
     setToken(null);
     setUser(null);
     router.push(AUTH_ROUTES.LOGIN);
-  }, [router]);
+  }, [router, token]);
 
   const isAuthenticated = !!user && !!token;
 

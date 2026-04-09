@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import prisma from '../../shared/db/prisma.js';
@@ -13,12 +14,14 @@ const seleccionarCamposPublicos = (adminUser) => ({
   email: adminUser.email,
 });
 
-const generarToken = (usuario, roleName) =>
-  jwt.sign(
-    { sub: usuario.id.toString(), email: usuario.email, rol: roleName },
+const generarToken = (usuario, roleName) => {
+  const jti = crypto.randomUUID();
+  return jwt.sign(
+    { sub: usuario.id.toString(), email: usuario.email, rol: roleName, jti },
     process.env.JWT_SECRET,
     { expiresIn: AUTH_CONFIG.JWT_EXPIRES_IN }
   );
+};
 
 export const register = async ({ fullName, email, password }) => {
   const passwordHash = await bcrypt.hash(password, AUTH_CONFIG.SALT_ROUNDS);
@@ -110,4 +113,27 @@ export const iniciarSesion = async ({ email, password }) => {
       rol: roleName,
     },
   };
+};
+
+export const cerrarSesion = async (jti, expiresAt) => {
+  await prisma.revokedToken.upsert({
+    where: { jti },
+    create: { jti, expiresAt },
+    update: {},
+  });
+};
+
+export const estaTokenRevocado = async (jti) => {
+  const token = await prisma.revokedToken.findUnique({
+    where: { jti },
+    select: { id: true },
+  });
+  return !!token;
+};
+
+export const limpiarTokensExpirados = async () => {
+  const resultado = await prisma.revokedToken.deleteMany({
+    where: { expiresAt: { lt: new Date() } },
+  });
+  return resultado.count;
 };
