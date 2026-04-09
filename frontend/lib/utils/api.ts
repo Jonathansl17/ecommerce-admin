@@ -43,3 +43,14 @@ export async function loginUser(data: LoginFormData): Promise<LoginResponse> {
   const body: LoginResponse = await res.json();
   return body;
 }
+
+export async function logoutUser(token: string): Promise<void> {
+  await fetch(`${API_BASE_URL}/auth/logout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+}

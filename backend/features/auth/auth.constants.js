@@ -6,6 +6,8 @@ export const AUTH_MESSAGES = {
   INICIO_SESION_EXITOSO: 'Inicio de sesión exitoso',
   CREDENCIALES_INVALIDAS: 'Correo electrónico o contraseña incorrectos',
   CUENTA_INACTIVA: 'Tu cuenta está inactiva. Contacta al soporte.',
+  SESION_CERRADA: 'Sesión cerrada exitosamente',
+  TOKEN_REVOCADO: 'El token ha sido revocado',
 };
 
 export const AUTH_CONFIG = {
