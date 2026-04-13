@@ -4,7 +4,20 @@ import { INVENTORY_MESSAGES, INVENTORY_CONFIG } from './inventory.constants.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 
 export const getAll = async () => {
-  // placeholder — MT-3
+  const items = await prisma.item.findMany({
+    where: { itemType: INVENTORY_CONFIG.ITEM_TYPE },
+    include: { supply: true },
+    orderBy: { name: 'asc' },
+  });
+
+  return items.map((item) => ({
+    id: item.id.toString(),
+    name: item.name,
+    status: item.status,
+    unitOfMeasure: item.supply?.unitOfMeasure ?? null,
+    currentStock: item.supply?.currentStock ?? null,
+    minThreshold: item.supply?.minThreshold ?? null,
+  }));
 };
 
 export const create = async ({ name, unitOfMeasure, initialStock }) => {
