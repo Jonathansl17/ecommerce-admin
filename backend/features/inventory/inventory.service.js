@@ -8,5 +8,39 @@ export const getAll = async () => {
 };
 
 export const create = async ({ name, unitOfMeasure, initialStock }) => {
-  // placeholder — MT-2
+  const existing = await prisma.item.findFirst({
+    where: { name: { equals: name, mode: 'insensitive' }, itemType: INVENTORY_CONFIG.ITEM_TYPE },
+  });
+
+  if (existing) {
+    throw crearError(INVENTORY_MESSAGES.NOMBRE_DUPLICADO, HTTP_STATUS.CONFLICT);
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const item = await tx.item.create({
+      data: {
+        name,
+        itemType: INVENTORY_CONFIG.ITEM_TYPE,
+        status: INVENTORY_CONFIG.ESTADO_POR_DEFECTO,
+      },
+    });
+
+    const supply = await tx.supply.create({
+      data: {
+        itemId: item.id,
+        unitOfMeasure,
+        currentStock: initialStock,
+        minThreshold: 0,
+      },
+    });
+
+    return {
+      id: item.id.toString(),
+      name: item.name,
+      status: item.status,
+      unitOfMeasure: supply.unitOfMeasure,
+      currentStock: supply.currentStock,
+      minThreshold: supply.minThreshold,
+    };
+  });
 };
