@@ -38,8 +38,8 @@ export default function InventoryPage() {
     if (!token) return;
     try {
       setEditServerError(null);
-      await updateSupply(id, data, token);
-      await loadSupplies();
+      const updated = await updateSupply(id, data, token);
+      setSupplies((prev) => prev.map((s) => (s.id === id ? updated : s)));
       setEditingSupply(null);
     } catch (err: unknown) {
       const error = err as { error?: string };
