@@ -37,6 +37,8 @@ export const INVENTORY_STRINGS = {
     saveButton: 'Guardar cambios',
     savingButton: 'Guardando...',
     cancelButton: 'Cancelar',
+    unitChangeWarning:
+      'Advertencia: cambiar la unidad de medida puede afectar la interpretación del stock y el historial de movimientos existentes.',
   },
   list: {
     emptyMessage: 'No hay insumos registrados.',

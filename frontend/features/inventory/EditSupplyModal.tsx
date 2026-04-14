@@ -34,6 +34,7 @@ export function EditSupplyModal({ supply, onClose, onSave, serverError }: EditSu
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<UpdateSupplyForm>({
     resolver: zodResolver(schema),
@@ -43,6 +44,9 @@ export function EditSupplyModal({ supply, onClose, onSave, serverError }: EditSu
   });
 
   if (!supply) return null;
+
+  const selectedUnit = watch('unitOfMeasure');
+  const unitChanged = selectedUnit !== undefined && selectedUnit !== supply.unitOfMeasure;
 
   const handleFormSubmit = async (data: UpdateSupplyForm) => {
     await onSave(supply.id, data);
@@ -97,6 +101,12 @@ export function EditSupplyModal({ supply, onClose, onSave, serverError }: EditSu
               className="w-full rounded-md border border-foreground/10 bg-foreground/5 px-3 py-2 text-foreground/60 cursor-not-allowed"
             />
           </FormField>
+
+          {unitChanged && (
+            <p role="alert" className="rounded-md border border-yellow-300 bg-yellow-50 px-3 py-2 text-sm text-yellow-700">
+              {strings.unitChangeWarning}
+            </p>
+          )}
 
           {serverError && (
             <p role="alert" className="text-sm text-red-500">{serverError}</p>
