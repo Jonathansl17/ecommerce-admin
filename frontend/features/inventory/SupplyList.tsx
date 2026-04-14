@@ -5,9 +5,10 @@ const strings = INVENTORY_STRINGS.list;
 
 interface SupplyListProps {
   supplies: Supply[];
+  onEdit: (supply: Supply) => void;
 }
 
-export function SupplyList({ supplies }: SupplyListProps) {
+export function SupplyList({ supplies, onEdit }: SupplyListProps) {
   if (supplies.length === 0) {
     return (
       <p className="text-sm text-foreground/60">{strings.emptyMessage}</p>
@@ -23,6 +24,7 @@ export function SupplyList({ supplies }: SupplyListProps) {
             <th className="px-4 py-3 font-medium">{strings.colUnit}</th>
             <th className="px-4 py-3 font-medium">{strings.colStock}</th>
             <th className="px-4 py-3 font-medium">{strings.colStatus}</th>
+            <th className="px-4 py-3 font-medium">{strings.colActions}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-foreground/10">
@@ -41,6 +43,14 @@ export function SupplyList({ supplies }: SupplyListProps) {
                 }`}>
                   {supply.status === 'active' ? 'Activo' : 'Inactivo'}
                 </span>
+              </td>
+              <td className="px-4 py-3">
+                <button
+                  onClick={() => onEdit(supply)}
+                  className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  {strings.editButton}
+                </button>
               </td>
             </tr>
           ))}
