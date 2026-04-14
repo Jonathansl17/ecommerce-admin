@@ -1,17 +1,52 @@
 'use client';
 
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { FormField } from '@/components/ui/FormField';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 import { UNIT_OF_MEASURE_OPTIONS, INVENTORY_STRINGS } from './inventory.constants';
-import type { Supply } from '@/lib/types/inventory.types';
+import type { Supply, UpdateSupplyForm } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS.edit;
+const validationStrings = INVENTORY_STRINGS.validation;
+
+const schema = z.object({
+  name: z
+    .string()
+    .min(1, validationStrings.nameRequired)
+    .max(100, validationStrings.nameMax),
+  unitOfMeasure: z.enum(
+    ['grams', 'kilograms', 'milliliters', 'liters', 'units'],
+    { error: validationStrings.unitRequired }
+  ),
+});
 
 interface EditSupplyModalProps {
   supply: Supply | null;
   onClose: () => void;
+  onSave: (id: string, data: UpdateSupplyForm) => Promise<void>;
+  serverError?: string | null;
 }
 
-export function EditSupplyModal({ supply, onClose }: EditSupplyModalProps) {
+export function EditSupplyModal({ supply, onClose, onSave, serverError }: EditSupplyModalProps) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<UpdateSupplyForm>({
+    resolver: zodResolver(schema),
+    values: supply
+      ? { name: supply.name, unitOfMeasure: supply.unitOfMeasure }
+      : undefined,
+  });
+
   if (!supply) return null;
+
+  const handleFormSubmit = async (data: UpdateSupplyForm) => {
+    await onSave(supply.id, data);
+  };
 
   return (
     <div
@@ -29,27 +64,21 @@ export function EditSupplyModal({ supply, onClose }: EditSupplyModalProps) {
           {strings.title}
         </h2>
 
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="edit-name" className="block text-sm font-medium text-foreground mb-1">
-              {strings.nameLabel}
-            </label>
-            <input
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+          <FormField id="edit-name" label={strings.nameLabel} error={errors.name?.message}>
+            <Input
               id="edit-name"
-              type="text"
-              defaultValue={supply.name}
-              className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30"
+              placeholder={strings.namePlaceholder}
+              hasError={!!errors.name}
+              {...register('name')}
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label htmlFor="edit-unit" className="block text-sm font-medium text-foreground mb-1">
-              {strings.unitLabel}
-            </label>
+          <FormField id="edit-unit" label={strings.unitLabel} error={errors.unitOfMeasure?.message}>
             <select
               id="edit-unit"
-              defaultValue={supply.unitOfMeasure}
-              className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30"
+              {...register('unitOfMeasure')}
+              className={`w-full rounded-md border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30 ${errors.unitOfMeasure ? 'border-red-500' : 'border-foreground/20'}`}
             >
               {UNIT_OF_MEASURE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -57,12 +86,9 @@ export function EditSupplyModal({ supply, onClose }: EditSupplyModalProps) {
                 </option>
               ))}
             </select>
-          </div>
+          </FormField>
 
-          <div>
-            <label htmlFor="edit-stock" className="block text-sm font-medium text-foreground mb-1">
-              {strings.stockLabel}
-            </label>
+          <FormField id="edit-stock" label={strings.stockLabel}>
             <input
               id="edit-stock"
               type="number"
@@ -70,24 +96,31 @@ export function EditSupplyModal({ supply, onClose }: EditSupplyModalProps) {
               readOnly
               className="w-full rounded-md border border-foreground/10 bg-foreground/5 px-3 py-2 text-foreground/60 cursor-not-allowed"
             />
-          </div>
+          </FormField>
+
+          {serverError && (
+            <p role="alert" className="text-sm text-red-500">{serverError}</p>
+          )}
 
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-foreground/20 px-4 py-2 text-sm text-foreground/70 hover:bg-foreground/5 transition-colors"
+              disabled={isSubmitting}
+              className="rounded-md border border-foreground/20 px-4 py-2 text-sm text-foreground/70 hover:bg-foreground/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {strings.cancelButton}
             </button>
-            <button
-              type="button"
-              className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90 transition-opacity"
+            <Button
+              type="submit"
+              isLoading={isSubmitting}
+              loadingText={strings.savingButton}
+              className="w-auto px-4"
             >
               {strings.saveButton}
-            </button>
+            </Button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

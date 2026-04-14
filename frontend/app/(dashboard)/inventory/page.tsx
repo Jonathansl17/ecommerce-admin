@@ -5,9 +5,9 @@ import { useAuth } from '@/lib/context/AuthContext';
 import { SupplyForm } from '@/features/inventory/SupplyForm';
 import { SupplyList } from '@/features/inventory/SupplyList';
 import { EditSupplyModal } from '@/features/inventory/EditSupplyModal';
-import { getSupplies, createSupply } from '@/features/inventory/inventory.api';
+import { getSupplies, createSupply, updateSupply } from '@/features/inventory/inventory.api';
 import { INVENTORY_STRINGS } from '@/features/inventory/inventory.constants';
-import type { Supply, CreateSupplyForm } from '@/lib/types/inventory.types';
+import type { Supply, CreateSupplyForm, UpdateSupplyForm } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS;
 
@@ -17,6 +17,7 @@ export default function InventoryPage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [editingSupply, setEditingSupply] = useState<Supply | null>(null);
+  const [editServerError, setEditServerError] = useState<string | null>(null);
 
   const loadSupplies = useCallback(async () => {
     if (!token) return;
@@ -32,6 +33,23 @@ export default function InventoryPage() {
   useEffect(() => {
     loadSupplies();
   }, [loadSupplies]);
+
+  const handleUpdate = async (id: string, data: UpdateSupplyForm) => {
+    if (!token) return;
+    try {
+      setEditServerError(null);
+      await updateSupply(id, data, token);
+      await loadSupplies();
+      setEditingSupply(null);
+    } catch (err: unknown) {
+      const error = err as { error?: string };
+      if (error?.error === strings.errors.duplicateName) {
+        setEditServerError(strings.errors.duplicateName);
+      } else {
+        setEditServerError(strings.errors.updateError);
+      }
+    }
+  };
 
   const handleCreate = async (data: CreateSupplyForm) => {
     if (!token) return;
@@ -70,7 +88,12 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      <EditSupplyModal supply={editingSupply} onClose={() => setEditingSupply(null)} />
+      <EditSupplyModal
+        supply={editingSupply}
+        onClose={() => { setEditingSupply(null); setEditServerError(null); }}
+        onSave={handleUpdate}
+        serverError={editServerError}
+      />
     </>
   );
 }

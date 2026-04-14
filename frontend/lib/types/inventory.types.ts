@@ -16,3 +16,8 @@ export interface CreateSupplyForm {
   unitOfMeasure: UnitOfMeasure;
   initialStock: number;
 }
+
+export interface UpdateSupplyForm {
+  name: string;
+  unitOfMeasure: UnitOfMeasure;
+}
