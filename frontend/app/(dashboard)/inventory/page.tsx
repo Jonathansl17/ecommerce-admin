@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { SupplyForm } from '@/features/inventory/SupplyForm';
 import { SupplyList } from '@/features/inventory/SupplyList';
+import { EditSupplyModal } from '@/features/inventory/EditSupplyModal';
 import { getSupplies, createSupply } from '@/features/inventory/inventory.api';
 import { INVENTORY_STRINGS } from '@/features/inventory/inventory.constants';
 import type { Supply, CreateSupplyForm } from '@/lib/types/inventory.types';
@@ -15,6 +16,7 @@ export default function InventoryPage() {
   const [supplies, setSupplies] = useState<Supply[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [editingSupply, setEditingSupply] = useState<Supply | null>(null);
 
   const loadSupplies = useCallback(async () => {
     if (!token) return;
@@ -48,23 +50,27 @@ export default function InventoryPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{strings.page.title}</h1>
-        <p className="mt-1 text-sm text-foreground/60">{strings.page.subtitle}</p>
-      </div>
+    <>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{strings.page.title}</h1>
+          <p className="mt-1 text-sm text-foreground/60">{strings.page.subtitle}</p>
+        </div>
 
-      <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
-        <SupplyForm onSubmit={handleCreate} serverError={serverError} />
+        <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+          <SupplyForm onSubmit={handleCreate} serverError={serverError} />
 
-        <div className="space-y-3">
-          {fetchError ? (
-            <p role="alert" className="text-sm text-red-500">{fetchError}</p>
-          ) : (
-            <SupplyList supplies={supplies} />
-          )}
+          <div className="space-y-3">
+            {fetchError ? (
+              <p role="alert" className="text-sm text-red-500">{fetchError}</p>
+            ) : (
+              <SupplyList supplies={supplies} onEdit={setEditingSupply} />
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      <EditSupplyModal supply={editingSupply} onClose={() => setEditingSupply(null)} />
+    </>
   );
 }

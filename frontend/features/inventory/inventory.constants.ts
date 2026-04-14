@@ -28,12 +28,24 @@ export const INVENTORY_STRINGS = {
     submitButton: 'Registrar insumo',
     submittingButton: 'Registrando...',
   },
+  edit: {
+    title: 'Editar insumo',
+    nameLabel: 'Nombre',
+    namePlaceholder: 'Ej: Harina de trigo',
+    unitLabel: 'Unidad de medida',
+    stockLabel: 'Stock actual (solo lectura)',
+    saveButton: 'Guardar cambios',
+    savingButton: 'Guardando...',
+    cancelButton: 'Cancelar',
+  },
   list: {
     emptyMessage: 'No hay insumos registrados.',
     colName: 'Nombre',
     colUnit: 'Unidad',
     colStock: 'Stock actual',
     colStatus: 'Estado',
+    colActions: 'Acciones',
+    editButton: 'Editar',
   },
   validation: {
     nameRequired: 'El nombre es obligatorio',
@@ -44,6 +56,7 @@ export const INVENTORY_STRINGS = {
   errors: {
     duplicateName: 'Ya existe un insumo con ese nombre',
     createError: 'No se pudo registrar el insumo',
+    updateError: 'No se pudo actualizar el insumo',
     fetchError: 'No se pudieron cargar los insumos',
   },
   success: {
