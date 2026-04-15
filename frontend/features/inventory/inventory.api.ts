@@ -1,5 +1,5 @@
 import { API_BASE_URL, REQUEST_TIMEOUT_MS } from '@/lib/constants/api.constants';
-import type { Supply, CreateSupplyForm, UpdateSupplyForm, CreateSupplyEntryForm, CreateConsumptionForm, SupplyHistory } from '@/lib/types/inventory.types';
+import type { Supply, CreateSupplyForm, UpdateSupplyForm, CreateSupplyEntryForm, CreateConsumptionForm, SupplyHistory, InventoryReport } from '@/lib/types/inventory.types';
 
 export async function getSupplies(token: string): Promise<Supply[]> {
   const res = await fetch(`${API_BASE_URL}/inventory/supplies`, {
@@ -33,6 +33,23 @@ export async function createSupply(
   }
 
   const body: { data: Supply } = await res.json();
+  return body.data;
+}
+
+export async function getInventoryReport(
+  dateFrom: string,
+  dateTo: string,
+  token: string
+): Promise<InventoryReport> {
+  const params = new URLSearchParams({ dateFrom, dateTo });
+  const res = await fetch(`${API_BASE_URL}/inventory/report?${params}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+
+  if (!res.ok) throw new Error('fetch_error');
+
+  const body: { data: InventoryReport } = await res.json();
   return body.data;
 }
 
