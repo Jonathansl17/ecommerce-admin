@@ -5,9 +5,10 @@ import { useAuth } from '@/lib/context/AuthContext';
 import { SupplyForm } from '@/features/inventory/SupplyForm';
 import { SupplyList } from '@/features/inventory/SupplyList';
 import { EditSupplyModal } from '@/features/inventory/EditSupplyModal';
-import { getSupplies, createSupply, updateSupply } from '@/features/inventory/inventory.api';
+import { SupplyEntryForm } from '@/features/inventory/SupplyEntryForm';
+import { getSupplies, createSupply, updateSupply, createSupplyEntry } from '@/features/inventory/inventory.api';
 import { INVENTORY_STRINGS } from '@/features/inventory/inventory.constants';
-import type { Supply, CreateSupplyForm, UpdateSupplyForm } from '@/lib/types/inventory.types';
+import type { Supply, CreateSupplyForm, UpdateSupplyForm, CreateSupplyEntryForm } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS;
 
@@ -18,6 +19,7 @@ export default function InventoryPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [editingSupply, setEditingSupply] = useState<Supply | null>(null);
   const [editServerError, setEditServerError] = useState<string | null>(null);
+  const [entryServerError, setEntryServerError] = useState<string | null>(null);
 
   const loadSupplies = useCallback(async () => {
     if (!token) return;
@@ -51,6 +53,17 @@ export default function InventoryPage() {
     }
   };
 
+  const handleCreateEntry = async (data: CreateSupplyEntryForm) => {
+    if (!token) return;
+    try {
+      setEntryServerError(null);
+      const updated = await createSupplyEntry(data, token);
+      setSupplies((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    } catch {
+      setEntryServerError(strings.errors.entryError);
+    }
+  };
+
   const handleCreate = async (data: CreateSupplyForm) => {
     if (!token) return;
     try {
@@ -76,7 +89,14 @@ export default function InventoryPage() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
-          <SupplyForm onSubmit={handleCreate} serverError={serverError} />
+          <div className="space-y-6">
+            <SupplyForm onSubmit={handleCreate} serverError={serverError} />
+            <SupplyEntryForm
+              supplies={supplies}
+              onSubmit={handleCreateEntry}
+              serverError={entryServerError}
+            />
+          </div>
 
           <div className="space-y-3">
             {fetchError ? (
