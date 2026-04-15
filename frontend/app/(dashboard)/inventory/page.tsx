@@ -7,6 +7,7 @@ import { SupplyList } from '@/features/inventory/SupplyList';
 import { EditSupplyModal } from '@/features/inventory/EditSupplyModal';
 import { SupplyEntryForm } from '@/features/inventory/SupplyEntryForm';
 import { ConsumptionModal } from '@/features/inventory/ConsumptionModal';
+import { InventoryAlerts } from '@/features/inventory/InventoryAlerts';
 import { getSupplies, createSupply, updateSupply, createSupplyEntry, registerConsumption } from '@/features/inventory/inventory.api';
 import { INVENTORY_STRINGS } from '@/features/inventory/inventory.constants';
 import type { Supply, CreateSupplyForm, UpdateSupplyForm, CreateSupplyEntryForm, CreateConsumptionForm } from '@/lib/types/inventory.types';
@@ -109,6 +110,8 @@ export default function InventoryPage() {
           <h1 className="text-2xl font-bold text-foreground">{strings.page.title}</h1>
           <p className="mt-1 text-sm text-foreground/60">{strings.page.subtitle}</p>
         </div>
+
+        <InventoryAlerts supplies={supplies} />
 
         <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
           <div className="space-y-6">
