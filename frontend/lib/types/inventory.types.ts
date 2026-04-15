@@ -27,3 +27,14 @@ export interface CreateSupplyEntryForm {
   quantity: number;
   date: string; // YYYY-MM-DD
 }
+
+export interface ConsumptionItem {
+  supplyId: string;
+  quantity: number;
+}
+
+export interface CreateConsumptionForm {
+  items: ConsumptionItem[];
+  reference: string;
+  date: string; // YYYY-MM-DD
+}
