@@ -49,6 +49,7 @@ export const INVENTORY_STRINGS = {
     lowStock: 'Stock bajo',
     stockLabel: 'Stock',
     thresholdLabel: 'Umbral',
+    registerEntryButton: 'Registrar entrada',
   },
   history: {
     title: 'Historial de movimientos',
