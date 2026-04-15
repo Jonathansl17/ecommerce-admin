@@ -1,7 +1,9 @@
+import Link from 'next/link';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from './inventory.constants';
 import type { Supply } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS.list;
+const historyStrings = INVENTORY_STRINGS.history;
 
 interface SupplyListProps {
   supplies: Supply[];
@@ -45,12 +47,20 @@ export function SupplyList({ supplies, onEdit }: SupplyListProps) {
                 </span>
               </td>
               <td className="px-4 py-3">
-                <button
-                  onClick={() => onEdit(supply)}
-                  className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                >
-                  {strings.editButton}
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => onEdit(supply)}
+                    className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    {strings.editButton}
+                  </button>
+                  <Link
+                    href={`/inventory/${supply.id}/history`}
+                    className="text-sm font-medium text-foreground/50 hover:text-foreground/80 transition-colors"
+                  >
+                    {historyStrings.historyButton}
+                  </Link>
+                </div>
               </td>
             </tr>
           ))}

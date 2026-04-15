@@ -38,3 +38,19 @@ export interface CreateConsumptionForm {
   reference: string;
   date: string; // YYYY-MM-DD
 }
+
+export interface InventoryMovement {
+  id: string;
+  type: 'entry' | 'consumption';
+  quantity: number;
+  previousStock: number;
+  newStock: number;
+  reference: string | null;
+  createdAt: string; // ISO 8601
+  adminName: string;
+}
+
+export interface SupplyHistory {
+  supply: Supply;
+  movements: InventoryMovement[];
+}
