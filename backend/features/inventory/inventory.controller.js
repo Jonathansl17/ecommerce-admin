@@ -1,4 +1,4 @@
-import { getAll as getAllService, create as createService, update as updateService, createEntry as createEntryService, createConsumption as createConsumptionService, getMovements as getMovementsService } from './inventory.service.js';
+import { getAll as getAllService, create as createService, update as updateService, createEntry as createEntryService, createConsumption as createConsumptionService, getMovements as getMovementsService, getReport as getReportService } from './inventory.service.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 
 export const getAll = async (req, res, next) => {
@@ -23,6 +23,19 @@ export const update = async (req, res, next) => {
   try {
     const insumo = await updateService(req.params.id, req.body);
     return res.status(HTTP_STATUS.OK).json({ data: insumo, error: null, meta: null });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getReport = async (req, res, next) => {
+  try {
+    const { dateFrom, dateTo } = req.query;
+    if (!dateFrom || !dateTo) {
+      return res.status(400).json({ error: 'Los parámetros dateFrom y dateTo son requeridos', data: null, meta: null });
+    }
+    const data = await getReportService(dateFrom, dateTo);
+    return res.status(HTTP_STATUS.OK).json({ data, error: null, meta: null });
   } catch (error) {
     next(error);
   }
