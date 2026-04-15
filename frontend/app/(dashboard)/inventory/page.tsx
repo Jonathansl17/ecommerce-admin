@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { SupplyForm } from '@/features/inventory/SupplyForm';
 import { SupplyList } from '@/features/inventory/SupplyList';
@@ -24,6 +24,8 @@ export default function InventoryPage() {
   const [entryServerError, setEntryServerError] = useState<string | null>(null);
   const [consumptionOpen, setConsumptionOpen] = useState(false);
   const [consumptionServerError, setConsumptionServerError] = useState<string | null>(null);
+  const [quickEntrySupplyId, setQuickEntrySupplyId] = useState<string | undefined>(undefined);
+  const entryFormRef = useRef<HTMLDivElement>(null);
 
   const loadSupplies = useCallback(async () => {
     if (!token) return;
@@ -55,6 +57,11 @@ export default function InventoryPage() {
         setEditServerError(strings.errors.updateError);
       }
     }
+  };
+
+  const handleQuickEntry = (supplyId: string) => {
+    setQuickEntrySupplyId(supplyId);
+    entryFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleConsumption = async (data: CreateConsumptionForm) => {
@@ -111,16 +118,19 @@ export default function InventoryPage() {
           <p className="mt-1 text-sm text-foreground/60">{strings.page.subtitle}</p>
         </div>
 
-        <InventoryAlerts supplies={supplies} />
+        <InventoryAlerts supplies={supplies} onQuickEntry={handleQuickEntry} />
 
         <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
           <div className="space-y-6">
             <SupplyForm onSubmit={handleCreate} serverError={serverError} />
-            <SupplyEntryForm
-              supplies={supplies}
-              onSubmit={handleCreateEntry}
-              serverError={entryServerError}
-            />
+            <div ref={entryFormRef}>
+              <SupplyEntryForm
+                supplies={supplies}
+                onSubmit={handleCreateEntry}
+                serverError={entryServerError}
+                defaultSupplyId={quickEntrySupplyId}
+              />
+            </div>
           </div>
 
           <div className="space-y-3">
