@@ -20,6 +20,7 @@ export interface CreateSupplyForm {
 export interface UpdateSupplyForm {
   name: string;
   unitOfMeasure: UnitOfMeasure;
+  minThreshold: number;
 }
 
 export interface CreateSupplyEntryForm {
