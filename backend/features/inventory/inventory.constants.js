@@ -6,6 +6,9 @@ export const INVENTORY_MESSAGES = {
   ERROR_AL_ACTUALIZAR: 'Error al actualizar el insumo',
   ENTRADA_REGISTRADA: 'Entrada registrada correctamente',
   CANTIDAD_INVALIDA: 'La cantidad debe ser mayor a cero',
+  CONSUMO_REGISTRADO: 'Consumo registrado correctamente',
+  STOCK_INSUFICIENTE: 'Stock insuficiente para uno o más insumos',
+  INSUMO_DUPLICADO_EN_OPERACION: 'No se puede incluir el mismo insumo más de una vez',
 };
 
 export const INVENTORY_CONFIG = {

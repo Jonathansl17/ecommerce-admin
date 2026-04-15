@@ -40,6 +40,22 @@ export const INVENTORY_STRINGS = {
     unitChangeWarning:
       'Advertencia: cambiar la unidad de medida puede afectar la interpretación del stock y el historial de movimientos existentes.',
   },
+  consumption: {
+    title: 'Registrar consumo de insumos',
+    openButton: 'Registrar consumo',
+    referenceLabel: 'Referencia (opcional)',
+    referencePlaceholder: 'Ej: Lote #001 - Torta de chocolate',
+    dateLabel: 'Fecha de consumo',
+    supplyLabel: 'Insumo',
+    supplyPlaceholder: 'Selecciona un insumo',
+    quantityLabel: 'Cantidad',
+    quantityPlaceholder: '0',
+    addItemButton: '+ Agregar insumo',
+    removeItemButton: 'Quitar',
+    submitButton: 'Registrar consumo',
+    submittingButton: 'Registrando...',
+    cancelButton: 'Cancelar',
+  },
   entry: {
     title: 'Registrar entrada de insumo',
     supplyLabel: 'Insumo',
@@ -66,7 +82,9 @@ export const INVENTORY_STRINGS = {
     stockMin: 'La cantidad inicial no puede ser negativa',
     supplyRequired: 'Selecciona un insumo',
     entryQuantityMin: 'La cantidad debe ser mayor a cero',
+    consumptionQuantityMin: 'La cantidad debe ser mayor a cero',
     dateRequired: 'La fecha es obligatoria',
+    itemsRequired: 'Agrega al menos un insumo',
   },
   errors: {
     duplicateName: 'Ya existe un insumo con ese nombre',
@@ -74,6 +92,8 @@ export const INVENTORY_STRINGS = {
     updateError: 'No se pudo actualizar el insumo',
     fetchError: 'No se pudieron cargar los insumos',
     entryError: 'No se pudo registrar la entrada',
+    consumptionError: 'No se pudo registrar el consumo',
+    stockInsufficient: 'Stock insuficiente para uno o más insumos',
   },
   success: {
     created: 'Insumo registrado correctamente',
