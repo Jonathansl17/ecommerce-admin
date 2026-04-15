@@ -55,3 +55,30 @@ export interface SupplyHistory {
   supply: Supply;
   movements: InventoryMovement[];
 }
+
+export interface SupplyReportRow {
+  id: string;
+  name: string;
+  unitOfMeasure: UnitOfMeasure;
+  stockInicial: number;
+  entradas: number;
+  consumo: number;
+  stockFinal: number;
+}
+
+export interface RendimientoItem {
+  supplyName: string;
+  unitOfMeasure: UnitOfMeasure;
+  quantity: number;
+}
+
+export interface RendimientoGroup {
+  reference: string;
+  items: RendimientoItem[];
+}
+
+export interface InventoryReport {
+  period: { from: string; to: string };
+  supplies: SupplyReportRow[];
+  rendimiento: RendimientoGroup[];
+}
