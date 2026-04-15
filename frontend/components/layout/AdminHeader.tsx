@@ -17,11 +17,10 @@ const pageTitles: Record<string, string> = {
 };
 
 interface AdminHeaderProps {
-  collapsed: boolean;
   onMenuOpen: () => void;
 }
 
-export function AdminHeader({ collapsed, onMenuOpen }: AdminHeaderProps) {
+export function AdminHeader({ onMenuOpen }: AdminHeaderProps) {
   const pathname = usePathname();
   const { user } = useAuth();
 
@@ -33,12 +32,8 @@ export function AdminHeader({ collapsed, onMenuOpen }: AdminHeaderProps) {
     : 'AD';
 
   return (
-    <header
-      className={`sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur transition-all duration-300 lg:px-6 ${
-        collapsed ? 'lg:ml-16' : 'lg:ml-64'
-      }`}
-    >
-      {/* Izquierda */}
+    <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur lg:px-6 relative">
+      {/* Izquierda — menú móvil + título */}
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuOpen}
@@ -61,7 +56,12 @@ export function AdminHeader({ collapsed, onMenuOpen }: AdminHeaderProps) {
         </div>
       </div>
 
-      {/* Derecha */}
+      {/* Centro — título del panel */}
+      <span className="absolute left-1/2 -translate-x-1/2 text-sm font-semibold text-foreground">
+        Panel Administrativo
+      </span>
+
+      {/* Derecha — acciones */}
       <div className="flex items-center gap-2">
         <Link
           href="/notifications"
