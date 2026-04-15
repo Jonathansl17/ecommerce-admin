@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getAll, create, update, createEntry, createConsumption } from './inventory.controller.js';
+import { getAll, create, update, createEntry, createConsumption, getMovements } from './inventory.controller.js';
 import { validateCreateSupply, validateUpdateSupply, validateCreateEntry, validateCreateConsumption } from './inventory.validator.js';
 import { requireAuth } from '../../shared/middleware/authMiddleware.js';
 
@@ -10,5 +10,6 @@ router.post('/supplies', validateCreateSupply, create);
 router.put('/supplies/:id', validateUpdateSupply, update);
 router.post('/supplies/:id/entries', requireAuth, validateCreateEntry, createEntry);
 router.post('/consumption', requireAuth, validateCreateConsumption, createConsumption);
+router.get('/supplies/:id/movements', getMovements);
 
 export default router;
