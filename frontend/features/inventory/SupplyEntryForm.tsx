@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,20 +25,26 @@ interface SupplyEntryFormProps {
   supplies: Supply[];
   onSubmit: (data: CreateSupplyEntryForm) => Promise<void>;
   serverError?: string | null;
+  defaultSupplyId?: string;
 }
 
-export function SupplyEntryForm({ supplies, onSubmit, serverError }: SupplyEntryFormProps) {
+export function SupplyEntryForm({ supplies, onSubmit, serverError, defaultSupplyId }: SupplyEntryFormProps) {
   const today = new Date().toISOString().split('T')[0];
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CreateSupplyEntryForm>({
     resolver: zodResolver(schema),
     defaultValues: { supplyId: '', quantity: undefined as unknown as number, date: today },
   });
+
+  useEffect(() => {
+    if (defaultSupplyId) setValue('supplyId', defaultSupplyId);
+  }, [defaultSupplyId, setValue]);
 
   const handleFormSubmit = async (data: CreateSupplyEntryForm) => {
     await onSubmit(data);
