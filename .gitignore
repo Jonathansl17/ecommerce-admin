@@ -44,4 +44,6 @@ generated/prisma
 next-env.d.ts
 
 # .txt
-US-GI.txt
+US-GesInv.txt
+US-Resto.txt
+US-GesInv copy.txt
