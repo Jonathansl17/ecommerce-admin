@@ -20,6 +20,98 @@ export const getAll = async () => {
   }));
 };
 
+export const update = async (id, { name, unitOfMeasure }) => {
+  const itemId = BigInt(id);
+
+  const item = await prisma.item.findFirst({
+    where: { id: itemId, itemType: INVENTORY_CONFIG.ITEM_TYPE },
+  });
+
+  if (!item) {
+    throw crearError(INVENTORY_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+  }
+
+  const duplicate = await prisma.item.findFirst({
+    where: {
+      name: { equals: name, mode: 'insensitive' },
+      itemType: INVENTORY_CONFIG.ITEM_TYPE,
+      NOT: { id: itemId },
+    },
+  });
+
+  if (duplicate) {
+    throw crearError(INVENTORY_MESSAGES.NOMBRE_DUPLICADO, HTTP_STATUS.CONFLICT);
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const updatedItem = await tx.item.update({
+      where: { id: itemId },
+      data: { name },
+      include: { supply: true },
+    });
+
+    const updatedSupply = await tx.supply.update({
+      where: { itemId },
+      data: { unitOfMeasure },
+    });
+
+    return {
+      id: updatedItem.id.toString(),
+      name: updatedItem.name,
+      status: updatedItem.status,
+      unitOfMeasure: updatedSupply.unitOfMeasure,
+      currentStock: updatedSupply.currentStock,
+      minThreshold: updatedSupply.minThreshold,
+    };
+  });
+};
+
+export const createEntry = async (supplyId, { quantity, date }, adminId) => {
+  const itemId = BigInt(supplyId);
+
+  const supply = await prisma.supply.findUnique({
+    where: { itemId },
+    include: { item: true },
+  });
+
+  if (!supply || supply.item.itemType !== INVENTORY_CONFIG.ITEM_TYPE) {
+    throw crearError(INVENTORY_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+  }
+
+  const previousStock = supply.currentStock;
+  const newStock = Number(previousStock) + quantity;
+  const entryDate = date ? new Date(date) : new Date();
+
+  return prisma.$transaction(async (tx) => {
+    const updatedSupply = await tx.supply.update({
+      where: { itemId },
+      data: { currentStock: newStock },
+      include: { item: true },
+    });
+
+    await tx.inventoryMovement.create({
+      data: {
+        supplyId: itemId,
+        adminId: BigInt(adminId),
+        type: 'entry',
+        quantity,
+        previousStock,
+        newStock,
+        createdAt: entryDate,
+      },
+    });
+
+    return {
+      id: updatedSupply.item.id.toString(),
+      name: updatedSupply.item.name,
+      status: updatedSupply.item.status,
+      unitOfMeasure: updatedSupply.unitOfMeasure,
+      currentStock: updatedSupply.currentStock,
+      minThreshold: updatedSupply.minThreshold,
+    };
+  });
+};
+
 export const create = async ({ name, unitOfMeasure, initialStock }) => {
   const existing = await prisma.item.findFirst({
     where: { name: { equals: name, mode: 'insensitive' }, itemType: INVENTORY_CONFIG.ITEM_TYPE },

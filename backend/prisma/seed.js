@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 const SEED_CONFIG = {
   ROL_POR_DEFECTO: 'administrador',
-  ROL_DESCRIPCION: 'Rol por defecto para administradores del panel',
+  ROL_DESCRIPCION: 'Rol por defecto para administradores registrados',
 };
 
 async function main() {
