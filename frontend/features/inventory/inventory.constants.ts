@@ -40,6 +40,16 @@ export const INVENTORY_STRINGS = {
     unitChangeWarning:
       'Advertencia: cambiar la unidad de medida puede afectar la interpretación del stock y el historial de movimientos existentes.',
   },
+  entry: {
+    title: 'Registrar entrada de insumo',
+    supplyLabel: 'Insumo',
+    supplyPlaceholder: 'Selecciona un insumo',
+    quantityLabel: 'Cantidad a ingresar',
+    quantityPlaceholder: '0',
+    dateLabel: 'Fecha de entrada',
+    submitButton: 'Registrar entrada',
+    submittingButton: 'Registrando...',
+  },
   list: {
     emptyMessage: 'No hay insumos registrados.',
     colName: 'Nombre',
@@ -54,14 +64,19 @@ export const INVENTORY_STRINGS = {
     nameMax: 'El nombre no puede superar los 100 caracteres',
     unitRequired: 'Selecciona una unidad de medida',
     stockMin: 'La cantidad inicial no puede ser negativa',
+    supplyRequired: 'Selecciona un insumo',
+    entryQuantityMin: 'La cantidad debe ser mayor a cero',
+    dateRequired: 'La fecha es obligatoria',
   },
   errors: {
     duplicateName: 'Ya existe un insumo con ese nombre',
     createError: 'No se pudo registrar el insumo',
     updateError: 'No se pudo actualizar el insumo',
     fetchError: 'No se pudieron cargar los insumos',
+    entryError: 'No se pudo registrar la entrada',
   },
   success: {
     created: 'Insumo registrado correctamente',
+    entryCreated: 'Entrada registrada correctamente',
   },
 } as const;
