@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/context/AuthContext';
-import { SupplyForm } from '@/features/inventory/SupplyForm';
 import { SupplyList } from '@/features/inventory/SupplyList';
 import { EditSupplyModal } from '@/features/inventory/EditSupplyModal';
-import { SupplyEntryForm } from '@/features/inventory/SupplyEntryForm';
+import { SupplyFormModal } from '@/features/inventory/SupplyFormModal';
+import { SupplyEntryModal } from '@/features/inventory/SupplyEntryModal';
 import { ConsumptionModal } from '@/features/inventory/ConsumptionModal';
 import { InventoryAlerts } from '@/features/inventory/InventoryAlerts';
-import { getSupplies, createSupply, updateSupply, createSupplyEntry, registerConsumption } from '@/features/inventory/inventory.api';
+import { getSupplies, createSupply, updateSupply, registerEntries, registerConsumption } from '@/features/inventory/inventory.api';
 import { INVENTORY_STRINGS } from '@/features/inventory/inventory.constants';
-import type { Supply, CreateSupplyForm, UpdateSupplyForm, CreateSupplyEntryForm, CreateConsumptionForm } from '@/lib/types/inventory.types';
+import type { Supply, CreateSupplyForm, UpdateSupplyForm, CreateSupplyEntriesForm, CreateConsumptionForm } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS;
 
@@ -19,14 +19,21 @@ export default function InventoryPage() {
   const { token } = useAuth();
   const [supplies, setSupplies] = useState<Supply[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [editingSupply, setEditingSupply] = useState<Supply | null>(null);
-  const [editServerError, setEditServerError] = useState<string | null>(null);
-  const [entryServerError, setEntryServerError] = useState<string | null>(null);
+
+  // Modal open states
+  const [supplyFormOpen, setSupplyFormOpen] = useState(false);
+  const [entryOpen, setEntryOpen] = useState(false);
   const [consumptionOpen, setConsumptionOpen] = useState(false);
-  const [consumptionServerError, setConsumptionServerError] = useState<string | null>(null);
+  const [editingSupply, setEditingSupply] = useState<Supply | null>(null);
+
+  // Server errors per modal
+  const [supplyFormError, setSupplyFormError] = useState<string | null>(null);
+  const [entryError, setEntryError] = useState<string | null>(null);
+  const [consumptionError, setConsumptionError] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  // Pre-selected supply for quick entry from alerts
   const [quickEntrySupplyId, setQuickEntrySupplyId] = useState<string | undefined>(undefined);
-  const entryFormRef = useRef<HTMLDivElement>(null);
 
   const loadSupplies = useCallback(async () => {
     if (!token) return;
@@ -43,77 +50,80 @@ export default function InventoryPage() {
     loadSupplies();
   }, [loadSupplies]);
 
-  const handleUpdate = async (id: string, data: UpdateSupplyForm) => {
+  const handleCreate = async (data: CreateSupplyForm) => {
     if (!token) return;
     try {
-      setEditServerError(null);
-      const updated = await updateSupply(id, data, token);
-      setSupplies((prev) => prev.map((s) => (s.id === id ? updated : s)));
-      setEditingSupply(null);
+      setSupplyFormError(null);
+      const newSupply = await createSupply(data, token);
+      setSupplies((prev) => [...prev, newSupply]);
+      setSupplyFormOpen(false);
     } catch (err: unknown) {
       const error = err as { error?: string };
-      if (error?.error === strings.errors.duplicateName) {
-        setEditServerError(strings.errors.duplicateName);
-      } else {
-        setEditServerError(strings.errors.updateError);
-      }
+      setSupplyFormError(
+        error?.error === strings.errors.duplicateName
+          ? strings.errors.duplicateName
+          : strings.errors.createError
+      );
     }
   };
 
-  const handleQuickEntry = (supplyId: string) => {
-    setQuickEntrySupplyId(supplyId);
-    entryFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const handleCreateEntry = async (data: CreateSupplyEntriesForm) => {
+    if (!token) return;
+    try {
+      setEntryError(null);
+      const updatedSupplies = await registerEntries(data, token);
+      setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
+      setEntryOpen(false);
+      setQuickEntrySupplyId(undefined);
+    } catch {
+      setEntryError(strings.errors.entryError);
+    }
   };
 
   const handleConsumption = async (data: CreateConsumptionForm) => {
     if (!token) return;
     try {
-      setConsumptionServerError(null);
+      setConsumptionError(null);
       const updatedSupplies = await registerConsumption(data, token);
-      setSupplies((prev) =>
-        prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s)
-      );
+      setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
       setConsumptionOpen(false);
     } catch (err: unknown) {
       const error = err as { error?: string };
-      if (error?.error === strings.errors.stockInsufficient) {
-        setConsumptionServerError(strings.errors.stockInsufficient);
-      } else {
-        setConsumptionServerError(strings.errors.consumptionError);
-      }
+      setConsumptionError(
+        error?.error === strings.errors.stockInsufficient
+          ? strings.errors.stockInsufficient
+          : strings.errors.consumptionError
+      );
     }
   };
 
-  const handleCreateEntry = async (data: CreateSupplyEntryForm) => {
+  const handleUpdate = async (id: string, data: UpdateSupplyForm) => {
     if (!token) return;
     try {
-      setEntryServerError(null);
-      const updated = await createSupplyEntry(data, token);
-      setSupplies((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
-    } catch {
-      setEntryServerError(strings.errors.entryError);
-    }
-  };
-
-  const handleCreate = async (data: CreateSupplyForm) => {
-    if (!token) return;
-    try {
-      setServerError(null);
-      const newSupply = await createSupply(data, token);
-      setSupplies((prev) => [...prev, newSupply]);
+      setEditError(null);
+      const updated = await updateSupply(id, data, token);
+      setSupplies((prev) => prev.map((s) => (s.id === id ? updated : s)));
+      setEditingSupply(null);
     } catch (err: unknown) {
       const error = err as { error?: string };
-      if (error?.error === strings.errors.duplicateName) {
-        setServerError(strings.errors.duplicateName);
-      } else {
-        setServerError(strings.errors.createError);
-      }
+      setEditError(
+        error?.error === strings.errors.duplicateName
+          ? strings.errors.duplicateName
+          : strings.errors.updateError
+      );
     }
+  };
+
+  const handleQuickEntry = (supplyId: string) => {
+    setQuickEntrySupplyId(supplyId);
+    setEntryError(null);
+    setEntryOpen(true);
   };
 
   return (
     <>
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">{strings.page.title}</h1>
@@ -127,54 +137,68 @@ export default function InventoryPage() {
           </Link>
         </div>
 
+        {/* Alertas */}
         <InventoryAlerts supplies={supplies} onQuickEntry={handleQuickEntry} />
 
-        <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
-          <div className="space-y-6">
-            <SupplyForm onSubmit={handleCreate} serverError={serverError} />
-            <div ref={entryFormRef}>
-              <SupplyEntryForm
-                supplies={supplies}
-                onSubmit={handleCreateEntry}
-                serverError={entryServerError}
-                defaultSupplyId={quickEntrySupplyId}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex justify-end">
-              <button
-                onClick={() => { setConsumptionServerError(null); setConsumptionOpen(true); }}
-                className="rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground/70 hover:bg-foreground/5 transition-colors"
-              >
-                {strings.consumption.openButton}
-              </button>
-            </div>
-            {fetchError ? (
-              <p role="alert" className="text-sm text-red-500">{fetchError}</p>
-            ) : (
-              <SupplyList supplies={supplies} onEdit={setEditingSupply} />
-            )}
-          </div>
+        {/* Botones de acción */}
+        <div className="flex flex-wrap gap-3">
+          {[
+            { label: strings.form.openButton, onClick: () => { setSupplyFormError(null); setSupplyFormOpen(true); } },
+            { label: strings.entry.openButton, onClick: () => { setEntryError(null); setQuickEntrySupplyId(undefined); setEntryOpen(true); } },
+            { label: strings.consumption.openButton, onClick: () => { setConsumptionError(null); setConsumptionOpen(true); } },
+          ].map(({ label, onClick }) => (
+            <button
+              key={label}
+              onClick={onClick}
+              className="rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground/70 hover:bg-foreground/5 transition-colors"
+            >
+              {label}
+            </button>
+          ))}
         </div>
+
+        {/* Tabla */}
+        {fetchError ? (
+          <p role="alert" className="text-sm text-red-500">{fetchError}</p>
+        ) : (
+          <SupplyList supplies={supplies} onEdit={setEditingSupply} />
+        )}
       </div>
 
-      <EditSupplyModal
-        supply={editingSupply}
-        onClose={() => { setEditingSupply(null); setEditServerError(null); }}
-        onSave={handleUpdate}
-        serverError={editServerError}
-      />
+      {/* Modales */}
+      {supplyFormOpen && (
+        <SupplyFormModal
+          onClose={() => { setSupplyFormOpen(false); setSupplyFormError(null); }}
+          onSubmit={handleCreate}
+          serverError={supplyFormError}
+        />
+      )}
+
+      {entryOpen && (
+        <SupplyEntryModal
+          supplies={supplies}
+          onClose={() => { setEntryOpen(false); setEntryError(null); setQuickEntrySupplyId(undefined); }}
+          onSubmit={handleCreateEntry}
+          serverError={entryError}
+          defaultSupplyId={quickEntrySupplyId}
+        />
+      )}
 
       {consumptionOpen && (
         <ConsumptionModal
           supplies={supplies}
-          onClose={() => { setConsumptionOpen(false); setConsumptionServerError(null); }}
+          onClose={() => { setConsumptionOpen(false); setConsumptionError(null); }}
           onSubmit={handleConsumption}
-          serverError={consumptionServerError}
+          serverError={consumptionError}
         />
       )}
+
+      <EditSupplyModal
+        supply={editingSupply}
+        onClose={() => { setEditingSupply(null); setEditError(null); }}
+        onSave={handleUpdate}
+        serverError={editError}
+      />
     </>
   );
 }
