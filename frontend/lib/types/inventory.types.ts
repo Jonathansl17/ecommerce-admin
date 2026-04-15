@@ -29,6 +29,16 @@ export interface CreateSupplyEntryForm {
   date: string; // YYYY-MM-DD
 }
 
+export interface EntryItem {
+  supplyId: string;
+  quantity: number;
+}
+
+export interface CreateSupplyEntriesForm {
+  items: EntryItem[];
+  date: string; // YYYY-MM-DD
+}
+
 export interface ConsumptionItem {
   supplyId: string;
   quantity: number;

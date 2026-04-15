@@ -14,13 +14,12 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Shield,
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
 
 const navSections = [
   {
-    label: 'OVERVIEW',
+    label: 'GENERAL',
     items: [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }],
   },
   {
@@ -65,24 +64,11 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
 
   return (
     <aside
-      className={`fixed left-0 top-0 z-40 h-screen border-r border-border bg-card transition-all duration-300 ${
+      className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] border-r border-border bg-card transition-all duration-300 ${
         collapsed ? 'w-16' : 'w-64'
       }`}
     >
       <div className="flex h-full flex-col">
-        {/* Logo */}
-        <div className={`flex h-16 items-center border-b border-border px-4 ${collapsed ? 'justify-center' : 'gap-3'}`}>
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Shield className="h-5 w-5" />
-          </div>
-          {!collapsed && (
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-foreground">Admin Panel</span>
-              <span className="text-xs text-muted-foreground">Artisan Market</span>
-            </div>
-          )}
-        </div>
-
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           {navSections.map((section) => (
@@ -110,7 +96,7 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
                         }`}
                       >
                         <Icon className="h-5 w-5 shrink-0" />
-                        {!collapsed && <span className="flex-1">{item.label}</span>}
+                        {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
                       </Link>
                     </li>
                   );

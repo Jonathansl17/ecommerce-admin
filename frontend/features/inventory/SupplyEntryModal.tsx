@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,34 +8,32 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/FormField';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from './inventory.constants';
-import type { Supply, CreateConsumptionForm } from '@/lib/types/inventory.types';
+import type { Supply, CreateSupplyEntriesForm } from '@/lib/types/inventory.types';
 
-const strings = INVENTORY_STRINGS.consumption;
+const strings = INVENTORY_STRINGS.entry;
 const validationStrings = INVENTORY_STRINGS.validation;
 
 const schema = z.object({
   items: z
-    .array(
-      z.object({
-        supplyId: z.string().min(1, validationStrings.supplyRequired),
-        quantity: z
-          .number({ invalid_type_error: validationStrings.consumptionQuantityMin })
-          .min(0.01, validationStrings.consumptionQuantityMin),
-      })
-    )
+    .array(z.object({
+      supplyId: z.string().min(1, validationStrings.supplyRequired),
+      quantity: z
+        .number({ invalid_type_error: validationStrings.entryQuantityMin })
+        .min(0.01, validationStrings.entryQuantityMin),
+    }))
     .min(1, validationStrings.itemsRequired),
-  reference: z.string().max(200).optional().or(z.literal('')),
   date: z.string().min(1, validationStrings.dateRequired),
 });
 
-interface ConsumptionModalProps {
+interface SupplyEntryModalProps {
   supplies: Supply[];
   onClose: () => void;
-  onSubmit: (data: CreateConsumptionForm) => Promise<void>;
+  onSubmit: (data: CreateSupplyEntriesForm) => Promise<void>;
   serverError?: string | null;
+  defaultSupplyId?: string;
 }
 
-export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: ConsumptionModalProps) {
+export function SupplyEntryModal({ supplies, onClose, onSubmit, serverError, defaultSupplyId }: SupplyEntryModalProps) {
   const today = new Date().toISOString().split('T')[0];
 
   const {
@@ -44,11 +43,10 @@ export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: C
     reset,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<CreateConsumptionForm>({
+  } = useForm<CreateSupplyEntriesForm>({
     resolver: zodResolver(schema),
     defaultValues: {
-      items: [{ supplyId: '', quantity: undefined as unknown as number }],
-      reference: '',
+      items: [{ supplyId: defaultSupplyId ?? '', quantity: NaN }],
       date: today,
     },
   });
@@ -56,20 +54,26 @@ export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: C
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
   const watchedItems = watch('items');
 
+  useEffect(() => {
+    if (defaultSupplyId) {
+      reset({
+        items: [{ supplyId: defaultSupplyId, quantity: NaN }],
+        date: new Date().toISOString().split('T')[0],
+      });
+    }
+  }, [defaultSupplyId, reset]);
+
+  const handleFormSubmit = async (data: CreateSupplyEntriesForm) => {
+    await onSubmit(data);
+    reset({ items: [{ supplyId: '', quantity: NaN }], date: new Date().toISOString().split('T')[0] });
+  };
+
+  // Returns available supplies for a given row index (excludes already selected in other rows)
   const availableSupplies = (index: number) => {
     const selectedIds = watchedItems
       .map((item, i) => (i !== index ? item.supplyId : null))
       .filter(Boolean);
     return supplies.filter((s) => !selectedIds.includes(s.id));
-  };
-
-  const handleFormSubmit = async (data: CreateConsumptionForm) => {
-    await onSubmit(data);
-    reset({
-      items: [{ supplyId: '', quantity: undefined as unknown as number }],
-      reference: '',
-      date: new Date().toISOString().split('T')[0],
-    });
   };
 
   return (
@@ -82,48 +86,29 @@ export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: C
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="consumption-modal-title"
+        aria-labelledby="entry-modal-title"
       >
         {/* Header */}
         <div className="border-b border-foreground/10 px-6 py-4">
-          <h2 id="consumption-modal-title" className="text-base font-semibold text-foreground">
+          <h2 id="entry-modal-title" className="text-base font-semibold text-foreground">
             {strings.title}
           </h2>
         </div>
 
-        {/* Scrollable body */}
+        {/* Body */}
         <div className="overflow-y-auto px-6 py-4">
-          <form id="consumption-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-            {/* Reference */}
-            <FormField id="consumption-reference" label={strings.referenceLabel}>
-              <Input
-                id="consumption-reference"
-                placeholder={strings.referencePlaceholder}
-                {...register('reference')}
-              />
-            </FormField>
-
+          <form id="entry-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
             {/* Date */}
-            <FormField id="consumption-date" label={strings.dateLabel} error={errors.date?.message}>
-              <Input
-                id="consumption-date"
-                type="date"
-                hasError={!!errors.date}
-                {...register('date')}
-              />
+            <FormField id="entry-date" label={strings.dateLabel} error={errors.date?.message}>
+              <Input id="entry-date" type="date" hasError={!!errors.date} {...register('date')} />
             </FormField>
 
             {/* Items */}
             <div className="space-y-3">
               {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="rounded-md border border-foreground/10 bg-foreground/[0.02] p-3"
-                >
+                <div key={field.id} className="rounded-md border border-foreground/10 bg-foreground/[0.02] p-3">
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="text-xs font-medium text-foreground/60">
-                      Insumo {index + 1}
-                    </span>
+                    <span className="text-xs font-medium text-foreground/60">Insumo {index + 1}</span>
                     {fields.length > 1 && (
                       <button
                         type="button"
@@ -137,12 +122,12 @@ export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: C
 
                   <div className="grid grid-cols-[1fr_120px] gap-3">
                     <FormField
-                      id={`item-supply-${index}`}
+                      id={`entry-supply-${index}`}
                       label={strings.supplyLabel}
                       error={errors.items?.[index]?.supplyId?.message}
                     >
                       <select
-                        id={`item-supply-${index}`}
+                        id={`entry-supply-${index}`}
                         {...register(`items.${index}.supplyId`)}
                         className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30 ${
                           errors.items?.[index]?.supplyId ? 'border-red-500' : 'border-foreground/20'
@@ -158,13 +143,13 @@ export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: C
                     </FormField>
 
                     <FormField
-                      id={`item-quantity-${index}`}
+                      id={`entry-qty-${index}`}
                       label={strings.quantityLabel}
                       labelClassName="text-xs"
                       error={errors.items?.[index]?.quantity?.message}
                     >
                       <Input
-                        id={`item-quantity-${index}`}
+                        id={`entry-qty-${index}`}
                         type="number"
                         min={0.01}
                         step="any"
@@ -181,19 +166,19 @@ export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: C
                 <p className="text-sm text-red-500">{errors.items.root.message}</p>
               )}
 
-              <button
-                type="button"
-                onClick={() => append({ supplyId: '', quantity: NaN })}
-                className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                {strings.addItemButton}
-              </button>
+              {fields.length < supplies.length && (
+                <button
+                  type="button"
+                  onClick={() => append({ supplyId: '', quantity: NaN })}
+                  className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  {strings.addItemButton}
+                </button>
+              )}
             </div>
 
             {serverError && (
-              <p role="alert" className="text-sm text-red-500">
-                {serverError}
-              </p>
+              <p role="alert" className="text-sm text-red-500">{serverError}</p>
             )}
           </form>
         </div>
@@ -210,7 +195,7 @@ export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: C
           </button>
           <Button
             type="submit"
-            form="consumption-form"
+            form="entry-form"
             isLoading={isSubmitting}
             loadingText={strings.submittingButton}
             className="w-auto px-4"
