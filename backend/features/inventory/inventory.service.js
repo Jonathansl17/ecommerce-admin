@@ -66,6 +66,58 @@ export const update = async (id, { name, unitOfMeasure }) => {
   });
 };
 
+export const getMovements = async (supplyId, { type, dateFrom, dateTo }) => {
+  const itemId = BigInt(supplyId);
+
+  const supply = await prisma.supply.findUnique({
+    where: { itemId },
+    include: { item: true },
+  });
+
+  if (!supply || supply.item.itemType !== INVENTORY_CONFIG.ITEM_TYPE) {
+    throw crearError(INVENTORY_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+  }
+
+  const where = { supplyId: itemId };
+  if (type) where.type = type;
+  if (dateFrom || dateTo) {
+    where.createdAt = {};
+    if (dateFrom) where.createdAt.gte = new Date(dateFrom);
+    if (dateTo) {
+      const end = new Date(dateTo);
+      end.setHours(23, 59, 59, 999);
+      where.createdAt.lte = end;
+    }
+  }
+
+  const movements = await prisma.inventoryMovement.findMany({
+    where,
+    include: { admin: { include: { adminUser: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return {
+    supply: {
+      id: supply.item.id.toString(),
+      name: supply.item.name,
+      status: supply.item.status,
+      unitOfMeasure: supply.unitOfMeasure,
+      currentStock: supply.currentStock,
+      minThreshold: supply.minThreshold,
+    },
+    movements: movements.map((m) => ({
+      id: m.id.toString(),
+      type: m.type,
+      quantity: Number(m.quantity),
+      previousStock: Number(m.previousStock),
+      newStock: Number(m.newStock),
+      reference: m.reference,
+      createdAt: m.createdAt.toISOString(),
+      adminName: m.admin.adminUser.fullName,
+    })),
+  };
+};
+
 export const createConsumption = async (items, { reference, date }, adminId) => {
   // Detect duplicate supplyIds in the same operation
   const supplyIds = items.map((i) => i.supplyId);

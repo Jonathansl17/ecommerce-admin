@@ -1,4 +1,4 @@
-import { getAll as getAllService, create as createService, update as updateService, createEntry as createEntryService, createConsumption as createConsumptionService } from './inventory.service.js';
+import { getAll as getAllService, create as createService, update as updateService, createEntry as createEntryService, createConsumption as createConsumptionService, getMovements as getMovementsService } from './inventory.service.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 
 export const getAll = async (req, res, next) => {
@@ -23,6 +23,16 @@ export const update = async (req, res, next) => {
   try {
     const insumo = await updateService(req.params.id, req.body);
     return res.status(HTTP_STATUS.OK).json({ data: insumo, error: null, meta: null });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMovements = async (req, res, next) => {
+  try {
+    const { type, dateFrom, dateTo } = req.query;
+    const data = await getMovementsService(req.params.id, { type, dateFrom, dateTo });
+    return res.status(HTTP_STATUS.OK).json({ data, error: null, meta: null });
   } catch (error) {
     next(error);
   }
