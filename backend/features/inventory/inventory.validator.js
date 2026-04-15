@@ -11,6 +11,7 @@ const createSupplySchema = z.object({
 const updateSupplySchema = z.object({
   name: z.string().min(1).max(100),
   unitOfMeasure: z.enum(UNIT_OF_MEASURE),
+  minThreshold: z.number().min(0).optional().default(0),
 });
 
 export const validateCreateSupply = (req, res, next) => {

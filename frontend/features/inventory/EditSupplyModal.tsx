@@ -21,6 +21,9 @@ const schema = z.object({
     ['grams', 'kilograms', 'milliliters', 'liters', 'units'],
     { error: validationStrings.unitRequired }
   ),
+  minThreshold: z
+    .number({ invalid_type_error: validationStrings.thresholdMin })
+    .min(0, validationStrings.thresholdMin),
 });
 
 interface EditSupplyModalProps {
@@ -39,7 +42,7 @@ export function EditSupplyModal({ supply, onClose, onSave, serverError }: EditSu
   } = useForm<UpdateSupplyForm>({
     resolver: zodResolver(schema),
     values: supply
-      ? { name: supply.name, unitOfMeasure: supply.unitOfMeasure }
+      ? { name: supply.name, unitOfMeasure: supply.unitOfMeasure, minThreshold: Number(supply.minThreshold) }
       : undefined,
   });
 
@@ -100,6 +103,19 @@ export function EditSupplyModal({ supply, onClose, onSave, serverError }: EditSu
               readOnly
               className="w-full rounded-md border border-foreground/10 bg-foreground/5 px-3 py-2 text-foreground/60 cursor-not-allowed"
             />
+          </FormField>
+
+          <FormField id="edit-threshold" label={strings.thresholdLabel} error={errors.minThreshold?.message}>
+            <Input
+              id="edit-threshold"
+              type="number"
+              min={0}
+              step="any"
+              placeholder={strings.thresholdPlaceholder}
+              hasError={!!errors.minThreshold}
+              {...register('minThreshold', { valueAsNumber: true })}
+            />
+            <p className="mt-1 text-xs text-foreground/50">{strings.thresholdHint}</p>
           </FormField>
 
           {unitChanged && (
