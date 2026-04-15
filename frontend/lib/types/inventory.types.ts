@@ -16,3 +16,25 @@ export interface CreateSupplyForm {
   unitOfMeasure: UnitOfMeasure;
   initialStock: number;
 }
+
+export interface UpdateSupplyForm {
+  name: string;
+  unitOfMeasure: UnitOfMeasure;
+}
+
+export interface CreateSupplyEntryForm {
+  supplyId: string;
+  quantity: number;
+  date: string; // YYYY-MM-DD
+}
+
+export interface ConsumptionItem {
+  supplyId: string;
+  quantity: number;
+}
+
+export interface CreateConsumptionForm {
+  items: ConsumptionItem[];
+  reference: string;
+  date: string; // YYYY-MM-DD
+}
