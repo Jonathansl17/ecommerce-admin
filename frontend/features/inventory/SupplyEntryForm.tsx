@@ -39,7 +39,7 @@ export function SupplyEntryForm({ supplies, onSubmit, serverError, defaultSupply
     formState: { errors, isSubmitting },
   } = useForm<CreateSupplyEntryForm>({
     resolver: zodResolver(schema),
-    defaultValues: { supplyId: '', quantity: undefined as unknown as number, date: today },
+    defaultValues: { supplyId: '', quantity: NaN, date: today },
   });
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export function SupplyEntryForm({ supplies, onSubmit, serverError, defaultSupply
 
   const handleFormSubmit = async (data: CreateSupplyEntryForm) => {
     await onSubmit(data);
-    reset({ supplyId: '', quantity: undefined as unknown as number, date: new Date().toISOString().split('T')[0] });
+    reset({ supplyId: '', quantity: NaN, date: new Date().toISOString().split('T')[0] });
   };
 
   return (
