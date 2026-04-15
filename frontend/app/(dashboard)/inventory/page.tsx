@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/lib/context/AuthContext';
 import { SupplyForm } from '@/features/inventory/SupplyForm';
 import { SupplyList } from '@/features/inventory/SupplyList';
@@ -113,9 +114,17 @@ export default function InventoryPage() {
   return (
     <>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{strings.page.title}</h1>
-          <p className="mt-1 text-sm text-foreground/60">{strings.page.subtitle}</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">{strings.page.title}</h1>
+            <p className="mt-1 text-sm text-foreground/60">{strings.page.subtitle}</p>
+          </div>
+          <Link
+            href="/inventory/report"
+            className="rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground/70 hover:bg-foreground/5 transition-colors"
+          >
+            {strings.report.reportButton}
+          </Link>
         </div>
 
         <InventoryAlerts supplies={supplies} onQuickEntry={handleQuickEntry} />

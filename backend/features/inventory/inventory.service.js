@@ -84,6 +84,93 @@ export const update = async (id, { name, unitOfMeasure, minThreshold = 0 }) => {
   });
 };
 
+export const getReport = async (dateFrom, dateTo) => {
+  const startDate = new Date(dateFrom);
+  startDate.setHours(0, 0, 0, 0);
+  const endDate = new Date(dateTo);
+  endDate.setHours(23, 59, 59, 999);
+
+  const movements = await prisma.inventoryMovement.findMany({
+    where: {
+      createdAt: { gte: startDate, lte: endDate },
+      supply: { item: { itemType: INVENTORY_CONFIG.ITEM_TYPE } },
+    },
+    include: { supply: { include: { item: true } } },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  // Group totals per supply
+  const supplyTotals = new Map();
+  for (const m of movements) {
+    const key = m.supplyId.toString();
+    if (!supplyTotals.has(key)) {
+      supplyTotals.set(key, { supply: m.supply, entradas: 0, consumo: 0 });
+    }
+    const row = supplyTotals.get(key);
+    if (m.type === 'entry') row.entradas += Number(m.quantity);
+    else row.consumo += Number(m.quantity);
+  }
+
+  // Calculate stock values per supply
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isPeriodCurrent = endDate >= today;
+
+  const supplies = await Promise.all(
+    Array.from(supplyTotals.entries()).map(async ([supplyId, { supply, entradas, consumo }]) => {
+      let stockFinal;
+      if (isPeriodCurrent) {
+        stockFinal = Number(supply.currentStock);
+      } else {
+        const movementsAfter = await prisma.inventoryMovement.findMany({
+          where: { supplyId: BigInt(supplyId), createdAt: { gt: endDate } },
+        });
+        stockFinal = Number(supply.currentStock);
+        for (const m of movementsAfter) {
+          if (m.type === 'entry') stockFinal -= Number(m.quantity);
+          else stockFinal += Number(m.quantity);
+        }
+      }
+
+      return {
+        id: supply.item.id.toString(),
+        name: supply.item.name,
+        unitOfMeasure: supply.unitOfMeasure,
+        stockInicial: stockFinal - entradas + consumo,
+        entradas,
+        consumo,
+        stockFinal,
+      };
+    })
+  );
+
+  // Build rendimiento from consumptions with reference
+  const rendimientoMap = new Map();
+  for (const m of movements) {
+    if (m.type !== 'consumption' || !m.reference) continue;
+    if (!rendimientoMap.has(m.reference)) rendimientoMap.set(m.reference, new Map());
+    const itemMap = rendimientoMap.get(m.reference);
+    const key = m.supply.item.name;
+    if (!itemMap.has(key)) itemMap.set(key, { quantity: 0, unitOfMeasure: m.supply.unitOfMeasure });
+    itemMap.get(key).quantity += Number(m.quantity);
+  }
+
+  const rendimiento = Array.from(rendimientoMap.entries()).map(([reference, itemMap]) => ({
+    reference,
+    items: Array.from(itemMap.entries()).map(([supplyName, data]) => ({
+      supplyName,
+      unitOfMeasure: data.unitOfMeasure,
+      quantity: data.quantity,
+    })),
+  }));
+
+  return {
+    period: { from: dateFrom, to: dateTo },
+    supplies: supplies.sort((a, b) => a.name.localeCompare(b.name)),
+    rendimiento,
+  };
+};
+
 export const getMovements = async (supplyId, { type, dateFrom, dateTo }) => {
   const itemId = BigInt(supplyId);
 
