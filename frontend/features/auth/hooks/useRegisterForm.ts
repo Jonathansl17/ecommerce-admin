@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { AUTH_STRINGS } from '@/lib/constants/auth.constants';
-import { validateRegisterForm, getFieldError } from '@/lib/utils/validation';
-import { registerUser } from '@/lib/utils/api';
-import type { FieldError, RegisterFormData } from '@/lib/types/auth.types';
+import { AUTH_STRINGS } from '@/features/auth/constants/auth.constants';
+import { validateRegisterForm, getFieldError } from '@/features/auth/shared/auth.validation';
+import { registerUser } from '@/features/auth/shared/auth.api';
+import type { FieldError, RegisterFormData } from '@/features/auth/types/auth.types';
 
 const INITIAL_FORM_DATA: RegisterFormData = {
   fullName: '',

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { AUTH_STRINGS } from '@/lib/constants/auth.constants';
+import { AUTH_STRINGS } from '@/features/auth/constants/auth.constants';
 
 const strings = AUTH_STRINGS.register;
 

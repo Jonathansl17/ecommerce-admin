@@ -8,9 +8,9 @@ import {
   useCallback,
 } from 'react';
 import { useRouter } from 'next/navigation';
-import { AUTH_ROUTES, AUTH_STORAGE_KEYS } from '@/lib/constants/auth.constants';
-import { logoutUser } from '@/lib/utils/api';
-import type { AuthUser } from '@/lib/types/auth.types';
+import { AUTH_ROUTES, AUTH_STORAGE_KEYS } from '@/features/auth/constants/auth.constants';
+import { logoutUser } from '@/features/auth/shared/auth.api';
+import type { AuthUser } from '@/features/auth/types/auth.types';
 
 interface AuthContextValue {
   user: AuthUser | null;
