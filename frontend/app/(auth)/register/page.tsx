@@ -1,8 +1,8 @@
 'use client';
 
-import { useRegisterForm } from './useRegisterForm';
-import { RegisterSuccess } from './RegisterSuccess';
-import { RegisterForm } from './RegisterForm';
+import { useRegisterForm } from '@/features/auth/hooks/useRegisterForm';
+import { RegisterSuccess } from '@/features/auth/components/RegisterSuccess';
+import { RegisterForm } from '@/features/auth/components/RegisterForm';
 
 export default function RegisterPage() {
   const { formData, loading, success, handleChange, handleSubmit, fieldError } =

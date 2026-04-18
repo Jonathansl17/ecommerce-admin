@@ -1,14 +1,14 @@
-import { AUTH_STRINGS } from '@/lib/constants/auth.constants';
+import { AUTH_STRINGS } from '@/features/auth/constants/auth.constants';
 import {
   EMAIL_REGEX,
   PASSWORD_MIN_LENGTH,
   PASSWORD_PATTERN_REGEX,
-} from '@/lib/constants/validation.constants';
+} from '@/features/auth/constants/validation.constants';
 import type {
   FieldError,
   LoginFormData,
   RegisterFormData,
-} from '@/lib/types/auth.types';
+} from '@/features/auth/types/auth.types';
 
 export function validateRegisterForm(data: RegisterFormData): FieldError[] {
   const errors: FieldError[] = [];
