@@ -1,7 +1,7 @@
 'use client';
 
-import { useAuth } from '@/lib/context/AuthContext';
-import { ADMIN_ROLE, AUTH_ROUTES } from '@/lib/constants/auth.constants';
+import { useAuth } from '@/features/auth/hooks/AuthContext';
+import { ADMIN_ROLE, AUTH_ROUTES } from '@/features/auth/constants/auth.constants';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AdminSidebar } from '@/components/layout/AdminSidebar';
