@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Bell, ChevronRight, Menu } from 'lucide-react';
-import { useAuth } from '@/lib/context/AuthContext';
+import { useAuth } from '@/features/auth/hooks/AuthContext';
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',

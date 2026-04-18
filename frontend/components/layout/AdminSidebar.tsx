@@ -15,7 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { useAuth } from '@/lib/context/AuthContext';
+import { useAuth } from '@/features/auth/hooks/AuthContext';
 
 const navSections = [
   {
