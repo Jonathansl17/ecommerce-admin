@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/lib/context/AuthContext';
+import { useAuth } from '@/features/auth/hooks/AuthContext';
 import { SupplyList } from '@/features/inventory/SupplyList';
 import { EditSupplyModal } from '@/features/inventory/EditSupplyModal';
 import { SupplyFormModal } from '@/features/inventory/SupplyFormModal';
