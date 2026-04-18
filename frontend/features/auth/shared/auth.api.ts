@@ -4,7 +4,7 @@ import type {
   LoginFormData,
   LoginResponse,
   RegisterFormData,
-} from '@/lib/types/auth.types';
+} from '@/features/auth/types/auth.types';
 
 export async function registerUser(data: RegisterFormData): Promise<ApiErrorResponse | null> {
   const res = await fetch(`${API_BASE_URL}/auth/register`, {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/lib/context/AuthContext';
+import { useAuth } from '@/features/auth/hooks/AuthContext';
 import { getInventoryReport } from '@/features/inventory/inventory.api';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/inventory.constants';
 import type { InventoryReport } from '@/lib/types/inventory.types';

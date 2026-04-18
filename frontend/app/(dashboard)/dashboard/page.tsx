@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '@/lib/context/AuthContext';
+import { useAuth } from '@/features/auth/hooks/AuthContext';
 import { QUICK_LINKS } from '@/lib/constants/dashboard.constants';
 
 export default function AdminDashboardPage() {
