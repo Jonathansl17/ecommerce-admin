@@ -10,22 +10,9 @@ import {
 import { useRouter } from 'next/navigation';
 import { AUTH_ROUTES, AUTH_STORAGE_KEYS } from '@/features/auth/constants/auth.constants';
 import { logoutUser } from '@/features/auth/shared/auth.api';
-import type { AuthUser } from '@/features/auth/types/auth.types';
-
-interface AuthContextValue {
-  user: AuthUser | null;
-  token: string | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  login: (token: string, user: AuthUser) => void;
-  logout: () => void;
-}
+import type { AuthContextValue, AuthProviderProps, AuthUser } from '@/features/auth/types/auth.types';
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
