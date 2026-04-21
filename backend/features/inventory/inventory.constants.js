@@ -9,6 +9,8 @@ export const INVENTORY_MESSAGES = {
   CONSUMO_REGISTRADO: 'Consumo registrado correctamente',
   STOCK_INSUFICIENTE: 'Stock insuficiente para uno o más insumos',
   INSUMO_DUPLICADO_EN_OPERACION: 'No se puede incluir el mismo insumo más de una vez',
+  AJUSTE_REGISTRADO: 'Ajuste de stock registrado correctamente',
+  MISMO_STOCK: 'El nuevo stock es igual al stock actual',
 };
 
 export const INVENTORY_CONFIG = {
