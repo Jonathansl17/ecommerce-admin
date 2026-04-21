@@ -5,6 +5,7 @@ import { limpiarTokensExpirados } from './features/auth/auth.service.js';
 import productsRoutes from './features/products/products.routes.js';
 import clientsRoutes from './features/clients/clients.routes.js';
 import authRoutes from './features/auth/auth.routes.js';
+import passwordRecoveryRoutes from './features/password-recovery/password-recovery.routes.js';
 import inventoryRoutes from './features/inventory/inventory.routes.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
 import { APP_CONFIG } from './shared/constants/app.constants.js';
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/api/products', productsRoutes);
 app.use('/api/clients', clientsRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/password-recovery', passwordRecoveryRoutes);
 app.use('/api/inventory', inventoryRoutes);
 
 app.use(errorHandler);

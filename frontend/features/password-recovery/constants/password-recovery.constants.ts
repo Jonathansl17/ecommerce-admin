@@ -1,0 +1,30 @@
+export const PASSWORD_RECOVERY_STRINGS = {
+  forgotPassword: {
+    title: 'Recuperar contraseña',
+    subtitle: 'Ingresa tu correo electrónico para solicitar un enlace de recuperación',
+    emailLabel: 'Correo electrónico',
+    emailPlaceholder: 'correo@ejemplo.com',
+    submitButton: 'Enviar enlace de recuperación',
+    submittingButton: 'Enviando...',
+    successMessage: 'Si el correo está registrado, recibirás un enlace de recuperación',
+    backToLogin: 'Volver al inicio de sesión',
+  },
+  resetPassword: {
+    title: 'Restablecer contraseña',
+    subtitle: 'Ingresa tu nueva contraseña para recuperar el acceso a tu cuenta',
+    passwordLabel: 'Nueva contraseña',
+    passwordPlaceholder: '••••••••',
+    confirmPasswordLabel: 'Confirmar nueva contraseña',
+    confirmPasswordPlaceholder: '••••••••',
+    submitButton: 'Restablecer contraseña',
+    submittingButton: 'Restableciendo...',
+    validatingToken: 'Validando enlace...',
+    successMessage: 'Tu contraseña ha sido restablecida correctamente',
+    invalidToken: 'El enlace de recuperación no es válido o ya expiró',
+    backToLogin: 'Volver al inicio de sesión',
+  },
+  errors: {
+    connectionError: 'No se pudo conectar con el servidor',
+    invalidRecoveryToken: 'El enlace de recuperación no es válido o ya expiró',
+  },
+} as const;
