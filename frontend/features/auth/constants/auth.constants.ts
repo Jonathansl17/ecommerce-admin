@@ -27,6 +27,7 @@ export const AUTH_STRINGS = {
     passwordPlaceholder: '••••••••',
     submitButton: 'Iniciar sesión',
     submittingButton: 'Ingresando...',
+    forgotPasswordLink: '¿Olvidaste tu contraseña?',
     noAccountText: '¿No tienes cuenta?',
     registerLink: 'Registrarse',
   },
@@ -70,5 +71,7 @@ export const ADMIN_ROLE = 'administrador' as const;
 export const AUTH_ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
+  FORGOT_PASSWORD: '/forgot-password',
+  RESET_PASSWORD: '/reset-password',
   DASHBOARD: '/dashboard',
 } as const;

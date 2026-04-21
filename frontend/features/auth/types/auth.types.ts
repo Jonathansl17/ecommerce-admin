@@ -81,6 +81,11 @@ export interface AuthFieldProps {
   error?: string;
 }
 
+export interface PasswordVisibilityToggleProps {
+  isVisible: boolean;
+  onToggle: () => void;
+}
+
 export interface FormGeneralErrorProps {
   message?: string;
 }

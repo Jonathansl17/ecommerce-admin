@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { AuthLayout } from '@/features/auth/components/AuthLayout';
-import { AuthField } from '@/features/auth/components/minicomponents/AuthField';
-import { FormGeneralError } from '@/features/auth/components/minicomponents/FormGeneralError';
+import { AuthLayout } from '@/components/auth/AuthLayout';
+import { AuthField } from '@/components/auth/AuthField';
+import { FormGeneralError } from '@/components/auth/FormGeneralError';
 import { Button } from '@/components/ui/Button';
-import { AUTH_STRINGS } from '@/features/auth/constants/auth.constants';
+import { AUTH_ROUTES, AUTH_STRINGS } from '@/features/auth/constants/auth.constants';
 import type { LoginFormProps } from '@/features/auth/types/auth.types';
 
 const strings = AUTH_STRINGS.login;
@@ -42,6 +42,15 @@ export function LoginForm({
           error={fieldError('password')}
         />
 
+        <div className="text-right text-sm">
+          <Link
+            href={AUTH_ROUTES.FORGOT_PASSWORD}
+            className="font-medium text-foreground underline"
+          >
+            {strings.forgotPasswordLink}
+          </Link>
+        </div>
+
         <Button
           type="submit"
           isLoading={loading}
@@ -53,7 +62,7 @@ export function LoginForm({
 
       <p className="text-center text-sm text-foreground/70">
         {strings.noAccountText}{' '}
-        <Link href="/register" className="font-medium text-foreground underline">
+        <Link href={AUTH_ROUTES.REGISTER} className="font-medium text-foreground underline">
           {strings.registerLink}
         </Link>
       </p>
