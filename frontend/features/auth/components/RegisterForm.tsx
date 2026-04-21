@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { AuthLayout } from '@/features/auth/components/AuthLayout';
-import { AuthField } from '@/features/auth/components/minicomponents/AuthField';
-import { FormGeneralError } from '@/features/auth/components/minicomponents/FormGeneralError';
+import { AuthLayout } from '@/components/auth/AuthLayout';
+import { AuthField } from '@/components/auth/AuthField';
+import { FormGeneralError } from '@/components/auth/FormGeneralError';
 import { Button } from '@/components/ui/Button';
-import { AUTH_STRINGS } from '@/features/auth/constants/auth.constants';
+import { AUTH_ROUTES, AUTH_STRINGS } from '@/features/auth/constants/auth.constants';
 import type { RegisterFormProps } from '@/features/auth/types/auth.types';
 
 const strings = AUTH_STRINGS.register;
@@ -75,7 +75,7 @@ export function RegisterForm({
 
       <p className="text-center text-sm text-foreground/70">
         {strings.hasAccountText}{' '}
-        <Link href="/login" className="font-medium text-foreground underline">
+        <Link href={AUTH_ROUTES.LOGIN} className="font-medium text-foreground underline">
           {strings.loginLink}
         </Link>
       </p>
