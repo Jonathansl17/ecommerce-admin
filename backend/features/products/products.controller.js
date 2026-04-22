@@ -5,6 +5,7 @@ import {
   update as updateService,
   remove as removeService,
   adjustSupplyStock as adjustSupplyStockService,
+  getSupplyMovements as getSupplyMovementsService,
 } from './products.service.js';
 import { PRODUCTS_MESSAGES } from './products.constants.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
@@ -61,6 +62,15 @@ export const adjustStock = async (req, res, next) => {
   try {
     const supply = await adjustSupplyStockService(req.params.id, req.body, req.user.id);
     return res.status(HTTP_STATUS.OK).json({ data: supply, error: null, meta: null });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMovements = async (req, res, next) => {
+  try {
+    const result = await getSupplyMovementsService(req.params.id, req.query);
+    return res.status(HTTP_STATUS.OK).json(result);
   } catch (error) {
     next(error);
   }

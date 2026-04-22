@@ -3,13 +3,15 @@ import { UNIT_OF_MEASURE_LABELS } from '@/features/inventory/inventory.constants
 import type { Supply } from '@/lib/types/inventory.types';
 
 const strings = PRODUCTS_MESSAGES.list;
+const historyStrings = PRODUCTS_MESSAGES.history;
 
 interface ProductListProps {
   supplies: Supply[];
   onAdjust: (supply: Supply) => void;
+  onHistory: (supply: Supply) => void;
 }
 
-export function ProductList({ supplies, onAdjust }: ProductListProps) {
+export function ProductList({ supplies, onAdjust, onHistory }: ProductListProps) {
   if (supplies.length === 0) {
     return <p className="text-sm text-foreground/60">{strings.emptyMessage}</p>;
   }
@@ -46,12 +48,20 @@ export function ProductList({ supplies, onAdjust }: ProductListProps) {
                 </span>
               </td>
               <td className="px-4 py-3">
-                <button
-                  onClick={() => onAdjust(supply)}
-                  className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                >
-                  {strings.adjustButton}
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => onAdjust(supply)}
+                    className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    {strings.adjustButton}
+                  </button>
+                  <button
+                    onClick={() => onHistory(supply)}
+                    className="text-sm font-medium text-foreground/50 hover:text-foreground transition-colors"
+                  >
+                    {historyStrings.viewHistory}
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
