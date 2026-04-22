@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { INVENTORY_STRINGS } from '../inventory.constants';
+import { INVENTORY_STRINGS } from '../constants/inventory.constants';
 import type { CreateSupplyEntriesForm, Supply } from '@/lib/types/inventory.types';
 
 const { validation: v } = INVENTORY_STRINGS;

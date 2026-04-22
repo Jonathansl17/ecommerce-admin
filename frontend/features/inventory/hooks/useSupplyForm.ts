@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { INVENTORY_STRINGS } from '../inventory.constants';
+import { INVENTORY_STRINGS } from '../constants/inventory.constants';
 import type { CreateSupplyForm } from '@/lib/types/inventory.types';
 
 const { validation: v } = INVENTORY_STRINGS;
