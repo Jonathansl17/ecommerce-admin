@@ -92,3 +92,4 @@ export interface InventoryReport {
   supplies: SupplyReportRow[];
   rendimiento: RendimientoGroup[];
 }
+
