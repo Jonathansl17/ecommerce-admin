@@ -6,6 +6,7 @@ import { getSupplies } from '@/features/inventory/inventory.api';
 import { useAdjustSupplyStock } from '@/features/products/hooks/useAdjustSupplyStock';
 import { ProductList } from '@/features/products/components/ProductList';
 import { StockAdjustmentModal } from '@/features/products/components/StockAdjustmentModal';
+import { StockMovementHistoryModal } from '@/features/products/components/StockMovementHistoryModal';
 import { PRODUCTS_MESSAGES } from '@/features/products/constants/messages';
 import type { Supply } from '@/lib/types/inventory.types';
 import type { AdjustStockForm } from '@/features/products/types/products.types';
@@ -17,11 +18,14 @@ export default function ProductsPage() {
   const [supplies, setSupplies] = useState<Supply[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [adjustingSupply, setAdjustingSupply] = useState<Supply | null>(null);
+  const [historySupply, setHistorySupply] = useState<Supply | null>(null);
   const [modalKey, setModalKey] = useState(0);
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
 
   const { adjustStock, error: adjustError } = useAdjustSupplyStock((updated) => {
     setSupplies((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
     setAdjustingSupply(null);
+    setHistoryRefreshKey((k) => k + 1);
   });
 
   const loadSupplies = useCallback(async () => {
@@ -57,6 +61,7 @@ export default function ProductsPage() {
           <ProductList
             supplies={supplies}
             onAdjust={(supply) => { setModalKey((k) => k + 1); setAdjustingSupply(supply); }}
+            onHistory={(supply) => setHistorySupply(supply)}
           />
         )}
       </div>
@@ -67,6 +72,12 @@ export default function ProductsPage() {
         onClose={() => setAdjustingSupply(null)}
         onSave={handleSave}
         serverError={adjustError}
+      />
+
+      <StockMovementHistoryModal
+        supply={historySupply}
+        refreshKey={historyRefreshKey}
+        onClose={() => setHistorySupply(null)}
       />
     </>
   );
