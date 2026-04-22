@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from './inventory.constants';
+import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '../constants/inventory.constants';
 import type { Supply } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS.list;
@@ -43,7 +43,7 @@ export function SupplyList({ supplies, onEdit }: SupplyListProps) {
                     ? 'bg-green-100 text-green-700'
                     : 'bg-gray-100 text-gray-600'
                 }`}>
-                  {supply.status === 'active' ? 'Activo' : 'Inactivo'}
+                  {supply.status === 'active' ? strings.statusActive : strings.statusInactive}
                 </span>
               </td>
               <td className="px-4 py-3">

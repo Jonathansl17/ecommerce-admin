@@ -49,6 +49,7 @@ export const INVENTORY_STRINGS = {
     title: 'Reporte de consumo de insumos',
     backButton: '← Volver al inventario',
     reportButton: 'Ver reporte',
+    generating: 'Generando...',
     dateFromLabel: 'Desde',
     dateToLabel: 'Hasta',
     generateButton: 'Generar reporte',
@@ -79,6 +80,7 @@ export const INVENTORY_STRINGS = {
   history: {
     title: 'Historial de movimientos',
     backButton: '← Volver al inventario',
+    clearFilters: 'Limpiar filtros',
     stockLabel: 'Stock actual',
     filterTypeLabel: 'Tipo',
     filterTypeAll: 'Todos los movimientos',
@@ -136,6 +138,11 @@ export const INVENTORY_STRINGS = {
     colStatus: 'Estado',
     colActions: 'Acciones',
     editButton: 'Editar',
+    statusActive: 'Activo',
+    statusInactive: 'Inactivo',
+  },
+  shared: {
+    itemLabel: 'Insumo',
   },
   validation: {
     nameRequired: 'El nombre es obligatorio',
