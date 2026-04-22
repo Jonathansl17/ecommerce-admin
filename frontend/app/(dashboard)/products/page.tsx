@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/features/auth/hooks/AuthContext';
-import { getSupplies } from '@/features/inventory/inventory.api';
+import { getSupplies } from '@/features/inventory/shared/inventory.api';
 import { useAdjustSupplyStock } from '@/features/products/hooks/useAdjustSupplyStock';
 import { ProductList } from '@/features/products/components/ProductList';
 import { StockAdjustmentModal } from '@/features/products/components/StockAdjustmentModal';

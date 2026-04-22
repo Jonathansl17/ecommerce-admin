@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/features/auth/hooks/AuthContext';
-import { getInventoryReport } from '@/features/inventory/inventory.api';
-import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/inventory.constants';
+import { getInventoryReport } from '@/features/inventory/shared/inventory.api';
+import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/constants/inventory.constants';
 import type { InventoryReport } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS.report;
@@ -75,7 +75,7 @@ export default function InventoryReportPage() {
           disabled={!dateFrom || !dateTo || loading}
           className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {loading ? 'Generando...' : strings.generateButton}
+          {loading ? strings.generating : strings.generateButton}
         </button>
       </div>
 
