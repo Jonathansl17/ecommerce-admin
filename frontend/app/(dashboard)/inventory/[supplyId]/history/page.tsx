@@ -3,8 +3,8 @@
 import { use, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/features/auth/hooks/AuthContext';
-import { getSupplyMovements } from '@/features/inventory/inventory.api';
-import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/inventory.constants';
+import { getSupplyMovements } from '@/features/inventory/shared/inventory.api';
+import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/constants/inventory.constants';
 import type { SupplyHistory } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS.history;
@@ -135,7 +135,7 @@ export default function SupplyHistoryPage({
             onClick={() => { setTypeFilter(''); setDateFrom(''); setDateTo(''); }}
             className="text-sm text-foreground/50 hover:text-foreground/80 transition-colors pb-2"
           >
-            Limpiar filtros
+            {INVENTORY_STRINGS.history.clearFilters}
           </button>
         )}
       </div>

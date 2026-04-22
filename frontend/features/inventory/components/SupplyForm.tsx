@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/FormField';
-import { INVENTORY_STRINGS, UNIT_OF_MEASURE_OPTIONS } from './inventory.constants';
+import { INVENTORY_STRINGS, UNIT_OF_MEASURE_OPTIONS } from '../constants/inventory.constants';
 import type { CreateSupplyForm } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS.form;

@@ -3,7 +3,7 @@
 import type { FieldErrors, UseFormRegister } from 'react-hook-form';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/FormField';
-import { UNIT_OF_MEASURE_LABELS } from './inventory.constants';
+import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '../constants/inventory.constants';
 import type { Supply, CreateSupplyEntriesForm, CreateConsumptionForm } from '@/lib/types/inventory.types';
 
 type ItemForm = CreateSupplyEntriesForm | CreateConsumptionForm;
@@ -41,7 +41,9 @@ export function SupplyItemRow({
   return (
     <div className="rounded-md border border-foreground/10 bg-foreground/[0.02] p-3">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-medium text-foreground/60">Insumo {index + 1}</span>
+        <span className="text-xs font-medium text-foreground/60">
+          {INVENTORY_STRINGS.shared.itemLabel} {index + 1}
+        </span>
         {showRemove && (
           <button
             type="button"

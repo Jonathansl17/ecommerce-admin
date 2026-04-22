@@ -4,9 +4,9 @@ import { Modal } from '@/components/ui/Modal';
 import { FormField } from '@/components/ui/FormField';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { UNIT_OF_MEASURE_OPTIONS, INVENTORY_STRINGS } from './inventory.constants';
-import { useEditSupplyForm } from './hooks/useEditSupplyForm';
-import type { EditSupplyModalProps } from './types/inventory.modal.types';
+import { UNIT_OF_MEASURE_OPTIONS, INVENTORY_STRINGS } from '../constants/inventory.constants';
+import { useEditSupplyForm } from '../hooks/useEditSupplyForm';
+import type { EditSupplyModalProps } from '../types/inventory.modal.types';
 
 const strings = INVENTORY_STRINGS.edit;
 
