@@ -76,6 +76,51 @@ export const remove = async (id) => {
   }
 };
 
+export const getSupplyMovements = async (id, { reason, startDate, endDate, page = 1, limit = 20 }) => {
+  const itemId = BigInt(id);
+
+  const supply = await prisma.supply.findUnique({ where: { itemId } });
+  if (!supply) {
+    throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+  }
+
+  const where = { variantId: itemId };
+  if (reason) where.reason = reason;
+  if (startDate || endDate) {
+    where.createdAt = {};
+    if (startDate) where.createdAt.gte = new Date(startDate);
+    if (endDate) where.createdAt.lte = new Date(endDate);
+  }
+
+  const pageNum = Number(page);
+  const limitNum = Number(limit);
+
+  const [total, movements] = await Promise.all([
+    prisma.stockMovement.count({ where }),
+    prisma.stockMovement.findMany({
+      where,
+      include: { admin: { include: { adminUser: true } } },
+      orderBy: { createdAt: 'desc' },
+      skip: (pageNum - 1) * limitNum,
+      take: limitNum,
+    }),
+  ]);
+
+  return {
+    data: movements.map((m) => ({
+      id: m.id.toString(),
+      previousQuantity: m.previousQuantity,
+      newQuantity: m.newQuantity,
+      reason: m.reason,
+      note: m.note,
+      type: m.type,
+      createdAt: m.createdAt.toISOString(),
+      admin: { adminUser: { fullName: m.admin.adminUser.fullName } },
+    })),
+    pagination: { page: pageNum, limit: limitNum, total },
+  };
+};
+
 export const adjustSupplyStock = async (id, { newStock, reason, note }, adminId) => {
   const itemId = BigInt(id);
 
