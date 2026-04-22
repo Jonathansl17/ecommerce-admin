@@ -3,14 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/features/auth/hooks/AuthContext';
-import { SupplyList } from '@/features/inventory/SupplyList';
-import { EditSupplyModal } from '@/features/inventory/EditSupplyModal';
-import { SupplyFormModal } from '@/features/inventory/SupplyFormModal';
-import { SupplyEntryModal } from '@/features/inventory/SupplyEntryModal';
-import { ConsumptionModal } from '@/features/inventory/ConsumptionModal';
-import { InventoryAlerts } from '@/features/inventory/InventoryAlerts';
-import { getSupplies, createSupply, updateSupply, registerEntries, registerConsumption } from '@/features/inventory/inventory.api';
-import { INVENTORY_STRINGS } from '@/features/inventory/inventory.constants';
+import { SupplyList } from '@/features/inventory/components/SupplyList';
+import { EditSupplyModal } from '@/features/inventory/components/EditSupplyModal';
+import { SupplyFormModal } from '@/features/inventory/components/SupplyFormModal';
+import { SupplyEntryModal } from '@/features/inventory/components/SupplyEntryModal';
+import { ConsumptionModal } from '@/features/inventory/components/ConsumptionModal';
+import { InventoryAlerts } from '@/features/inventory/components/InventoryAlerts';
+import { getSupplies, createSupply, updateSupply, registerEntries, registerConsumption } from '@/features/inventory/shared/inventory.api';
+import { INVENTORY_STRINGS } from '@/features/inventory/constants/inventory.constants';
 import type { Supply, CreateSupplyForm, UpdateSupplyForm, CreateSupplyEntriesForm, CreateConsumptionForm } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS;
