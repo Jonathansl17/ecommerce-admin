@@ -121,6 +121,85 @@ export const getSupplyMovements = async (id, { reason, startDate, endDate, page 
   };
 };
 
+export const bulkAdjustStock = async (adjustments, reason, note, adminId) => {
+  const results = await Promise.allSettled(
+    adjustments.map(async ({ supplyId, newStock }) => {
+      const itemId = BigInt(supplyId);
+
+      const supply = await prisma.supply.findUnique({
+        where: { itemId },
+        include: { item: true },
+      });
+
+      if (!supply) throw new Error(`Producto ${supplyId} no encontrado`);
+
+      const previousQuantity = Math.round(Number(supply.currentStock));
+
+      await prisma.$transaction(async (tx) => {
+        await tx.stockMovement.create({
+          data: {
+            variantId: itemId,
+            adminId: BigInt(adminId),
+            type: 'manual_adjustment',
+            previousQuantity,
+            newQuantity: newStock,
+            reason,
+            note: note || null,
+          },
+        });
+
+        const updatedSupply = await tx.supply.update({
+          where: { itemId },
+          data: { currentStock: newStock },
+          include: { item: true },
+        });
+
+        const minThreshold = Number(updatedSupply.minThreshold);
+        const shouldAlert = newStock <= 0 || (minThreshold > 0 && newStock <= minThreshold);
+
+        if (shouldAlert) {
+          const alertType = newStock <= 0 ? 'out_of_stock' : 'low_stock';
+          const existingAlert = await tx.supplyAlert.findFirst({ where: { supplyId: itemId } });
+          if (existingAlert) {
+            await tx.supplyAlert.update({
+              where: { id: existingAlert.id },
+              data: { type: alertType, threshold: updatedSupply.minThreshold, active: true },
+            });
+          } else {
+            await tx.supplyAlert.create({
+              data: { supplyId: itemId, type: alertType, threshold: updatedSupply.minThreshold, active: true },
+            });
+          }
+        } else {
+          await tx.supplyAlert.updateMany({
+            where: { supplyId: itemId, active: true },
+            data: { active: false },
+          });
+        }
+      });
+
+      return { supplyId, success: true, newStock };
+    })
+  );
+
+  const processedResults = results.map((result, index) => {
+    if (result.status === 'fulfilled') return result.value;
+    return {
+      supplyId: adjustments[index].supplyId,
+      success: false,
+      error: result.reason?.message || 'Error desconocido',
+    };
+  });
+
+  const successful = processedResults.filter((r) => r.success).length;
+  const failed = processedResults.filter((r) => !r.success).length;
+
+  return {
+    results: processedResults,
+    summary: { total: adjustments.length, successful, failed },
+  };
+};
+
 export const adjustSupplyStock = async (id, { newStock, reason, note }, adminId) => {
   const itemId = BigInt(id);
 
