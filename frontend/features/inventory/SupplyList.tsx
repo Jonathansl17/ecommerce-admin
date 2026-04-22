@@ -43,7 +43,7 @@ export function SupplyList({ supplies, onEdit }: SupplyListProps) {
                     ? 'bg-green-100 text-green-700'
                     : 'bg-gray-100 text-gray-600'
                 }`}>
-                  {supply.status === 'active' ? 'Activo' : 'Inactivo'}
+                  {supply.status === 'active' ? strings.statusActive : strings.statusInactive}
                 </span>
               </td>
               <td className="px-4 py-3">

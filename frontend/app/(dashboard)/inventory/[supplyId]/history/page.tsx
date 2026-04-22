@@ -135,7 +135,7 @@ export default function SupplyHistoryPage({
             onClick={() => { setTypeFilter(''); setDateFrom(''); setDateTo(''); }}
             className="text-sm text-foreground/50 hover:text-foreground/80 transition-colors pb-2"
           >
-            Limpiar filtros
+            {INVENTORY_STRINGS.history.clearFilters}
           </button>
         )}
       </div>

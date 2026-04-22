@@ -75,7 +75,7 @@ export default function InventoryReportPage() {
           disabled={!dateFrom || !dateTo || loading}
           className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {loading ? 'Generando...' : strings.generateButton}
+          {loading ? strings.generating : strings.generateButton}
         </button>
       </div>
 
