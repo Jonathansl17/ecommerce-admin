@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/FormField';
 import { SupplyItemRow } from './SupplyItemRow';
-import { INVENTORY_STRINGS } from './inventory.constants';
-import { useSupplyEntryForm } from './hooks/useSupplyEntryForm';
-import type { SupplyEntryModalProps } from './types/inventory.modal.types';
+import { INVENTORY_STRINGS } from '../constants/inventory.constants';
+import { useSupplyEntryForm } from '../hooks/useSupplyEntryForm';
+import type { SupplyEntryModalProps } from '../types/inventory.modal.types';
 
 const strings = INVENTORY_STRINGS.entry;
 

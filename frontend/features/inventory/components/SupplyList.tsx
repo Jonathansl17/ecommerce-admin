@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from './inventory.constants';
+import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '../constants/inventory.constants';
 import type { Supply } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS.list;

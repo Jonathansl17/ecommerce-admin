@@ -1,5 +1,5 @@
 import { PRODUCTS_MESSAGES } from '../constants/messages';
-import { UNIT_OF_MEASURE_LABELS } from '@/features/inventory/inventory.constants';
+import { UNIT_OF_MEASURE_LABELS } from '@/features/inventory/constants/inventory.constants';
 import type { Supply } from '@/lib/types/inventory.types';
 
 const strings = PRODUCTS_MESSAGES.list;

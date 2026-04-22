@@ -3,8 +3,8 @@
 import { use, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/features/auth/hooks/AuthContext';
-import { getSupplyMovements } from '@/features/inventory/inventory.api';
-import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/inventory.constants';
+import { getSupplyMovements } from '@/features/inventory/shared/inventory.api';
+import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/constants/inventory.constants';
 import type { SupplyHistory } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS.history;
