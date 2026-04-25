@@ -51,7 +51,7 @@ export function useLoginForm() {
         return;
       }
 
-      auth.login(response.token, response.usuario);
+      auth.login(response.usuario);
       router.push(AUTH_ROUTES.DASHBOARD);
     } catch (err) {
       const apiError = err as ApiErrorResponse;
