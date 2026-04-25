@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { crearError } from './errorHandler.js';
 import { HTTP_STATUS } from '../constants/http.constants.js';
-import { estaTokenRevocado } from '../../features/auth/auth.service.js';
+import { estaTokenRevocado } from '../../features/auth/auth.tokens.service.js';
+import { COOKIE_NAMES } from '../../features/auth/auth.constants.js';
 
 const AUTH_ERRORS = {
   TOKEN_MISSING: 'Token de autenticación requerido',
@@ -11,8 +12,7 @@ const AUTH_ERRORS = {
 };
 
 export const requireAuth = async (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = req.cookies?.[COOKIE_NAMES.ACCESS];
 
   if (!token) {
     return next(crearError(AUTH_ERRORS.TOKEN_MISSING, HTTP_STATUS.UNAUTHORIZED));
