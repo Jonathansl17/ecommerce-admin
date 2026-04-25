@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/features/auth/hooks/AuthContext';
 import { SupplyList } from '@/features/inventory/components/SupplyList';
 import { EditSupplyModal } from '@/features/inventory/components/EditSupplyModal';
 import { SupplyFormModal } from '@/features/inventory/components/SupplyFormModal';
@@ -16,7 +15,6 @@ import type { Supply, CreateSupplyForm, UpdateSupplyForm, CreateSupplyEntriesFor
 const strings = INVENTORY_STRINGS;
 
 export default function InventoryPage() {
-  const { token } = useAuth();
   const [supplies, setSupplies] = useState<Supply[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
@@ -36,25 +34,23 @@ export default function InventoryPage() {
   const [quickEntrySupplyId, setQuickEntrySupplyId] = useState<string | undefined>(undefined);
 
   const loadSupplies = useCallback(async () => {
-    if (!token) return;
     try {
-      const data = await getSupplies(token);
+      const data = await getSupplies();
       setSupplies(data);
       setFetchError(null);
     } catch {
       setFetchError(strings.errors.fetchError);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     loadSupplies();
   }, [loadSupplies]);
 
   const handleCreate = async (data: CreateSupplyForm) => {
-    if (!token) return;
     try {
       setSupplyFormError(null);
-      const newSupply = await createSupply(data, token);
+      const newSupply = await createSupply(data);
       setSupplies((prev) => [...prev, newSupply]);
       setSupplyFormOpen(false);
     } catch (err: unknown) {
@@ -68,10 +64,9 @@ export default function InventoryPage() {
   };
 
   const handleCreateEntry = async (data: CreateSupplyEntriesForm) => {
-    if (!token) return;
     try {
       setEntryError(null);
-      const updatedSupplies = await registerEntries(data, token);
+      const updatedSupplies = await registerEntries(data);
       setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
       setEntryOpen(false);
       setQuickEntrySupplyId(undefined);
@@ -81,10 +76,9 @@ export default function InventoryPage() {
   };
 
   const handleConsumption = async (data: CreateConsumptionForm) => {
-    if (!token) return;
     try {
       setConsumptionError(null);
-      const updatedSupplies = await registerConsumption(data, token);
+      const updatedSupplies = await registerConsumption(data);
       setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
       setConsumptionOpen(false);
     } catch (err: unknown) {
@@ -98,10 +92,9 @@ export default function InventoryPage() {
   };
 
   const handleUpdate = async (id: string, data: UpdateSupplyForm) => {
-    if (!token) return;
     try {
       setEditError(null);
-      const updated = await updateSupply(id, data, token);
+      const updated = await updateSupply(id, data);
       setSupplies((prev) => prev.map((s) => (s.id === id ? updated : s)));
       setEditingSupply(null);
     } catch (err: unknown) {

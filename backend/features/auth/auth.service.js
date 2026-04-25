@@ -1,10 +1,16 @@
-import crypto from 'node:crypto';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import prisma from '../../shared/db/prisma.js';
 import { AUTH_CONFIG, AUTH_MESSAGES } from './auth.constants.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
+import {
+  emitirPar,
+  buscarRefreshPorRaw,
+  marcarRefreshRotado,
+  revocarRefreshsActivosDelUsuario,
+  revocarRefreshPorRaw,
+  revocarAccessJti,
+} from './auth.tokens.service.js';
 
 const normalizarEmail = (email) => email.toLowerCase().trim();
 
@@ -14,14 +20,24 @@ const seleccionarCamposPublicos = (adminUser) => ({
   email: adminUser.email,
 });
 
-const generarToken = (usuario, roleName) => {
-  const jti = crypto.randomUUID();
-  return jwt.sign(
-    { sub: usuario.id.toString(), email: usuario.email, rol: roleName, jti },
-    process.env.JWT_SECRET,
-    { expiresIn: AUTH_CONFIG.JWT_EXPIRES_IN }
-  );
-};
+const obtenerUsuarioConRol = (id) =>
+  prisma.adminUser.findUnique({
+    where: { id: typeof id === 'bigint' ? id : BigInt(id) },
+    select: {
+      id: true,
+      email: true,
+      fullName: true,
+      accountStatus: true,
+      admin: { select: { role: { select: { name: true } } } },
+    },
+  });
+
+const armarUsuarioConRol = (usuario, roleName) => ({
+  id: usuario.id.toString(),
+  email: usuario.email,
+  fullName: usuario.fullName,
+  rol: roleName,
+});
 
 export const register = async ({ fullName, email, password }) => {
   const passwordHash = await bcrypt.hash(password, AUTH_CONFIG.SALT_ROUNDS);
@@ -102,38 +118,52 @@ export const iniciarSesion = async ({ email, password }) => {
   if (!roleName) {
     throw crearError(AUTH_MESSAGES.ROL_NO_CONFIGURADO, HTTP_STATUS.INTERNAL_ERROR);
   }
-  const token = generarToken(usuario, roleName);
 
-  return {
-    token,
-    usuario: {
-      id: usuario.id.toString(),
-      email: usuario.email,
-      fullName: usuario.fullName,
-      rol: roleName,
-    },
-  };
+  const par = await emitirPar(usuario, roleName);
+
+  return { ...par, usuario: armarUsuarioConRol(usuario, roleName) };
 };
 
-export const cerrarSesion = async (jti, expiresAt) => {
-  await prisma.revokedToken.upsert({
-    where: { jti },
-    create: { jti, expiresAt },
-    update: {},
-  });
+export const rotarRefresh = async (rawRefresh) => {
+  if (!rawRefresh) {
+    throw crearError(AUTH_MESSAGES.SESION_EXPIRADA, HTTP_STATUS.UNAUTHORIZED);
+  }
+
+  const registro = await buscarRefreshPorRaw(rawRefresh);
+  if (!registro || registro.revokedAt || registro.rotatedAt || registro.expiresAt < new Date()) {
+    if (registro && !registro.revokedAt) {
+      await revocarRefreshsActivosDelUsuario(registro.userId);
+    }
+    throw crearError(AUTH_MESSAGES.SESION_EXPIRADA, HTTP_STATUS.UNAUTHORIZED);
+  }
+
+  const usuario = await obtenerUsuarioConRol(registro.userId);
+  if (!usuario || usuario.accountStatus !== 'active') {
+    throw crearError(AUTH_MESSAGES.SESION_EXPIRADA, HTTP_STATUS.UNAUTHORIZED);
+  }
+
+  const roleName = usuario.admin?.role?.name;
+  if (!roleName) {
+    throw crearError(AUTH_MESSAGES.ROL_NO_CONFIGURADO, HTTP_STATUS.INTERNAL_ERROR);
+  }
+
+  const par = await emitirPar(usuario, roleName);
+  await marcarRefreshRotado(registro.id);
+
+  return { ...par, usuario: armarUsuarioConRol(usuario, roleName) };
 };
 
-export const estaTokenRevocado = async (jti) => {
-  const token = await prisma.revokedToken.findUnique({
-    where: { jti },
-    select: { id: true },
-  });
-  return !!token;
+export const revocarSesion = async ({ rawRefresh, accessJti, accessExp }) => {
+  await Promise.all([
+    revocarRefreshPorRaw(rawRefresh),
+    accessJti ? revocarAccessJti(accessJti, new Date(accessExp * 1000)) : Promise.resolve(),
+  ]);
 };
 
-export const limpiarTokensExpirados = async () => {
-  const resultado = await prisma.revokedToken.deleteMany({
-    where: { expiresAt: { lt: new Date() } },
-  });
-  return resultado.count;
+export const obtenerUsuarioActivo = async (id) => {
+  const usuario = await obtenerUsuarioConRol(id);
+  if (!usuario || usuario.accountStatus !== 'active') return null;
+  const roleName = usuario.admin?.role?.name;
+  if (!roleName) return null;
+  return armarUsuarioConRol(usuario, roleName);
 };
