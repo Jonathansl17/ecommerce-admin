@@ -2,7 +2,6 @@
 
 import { use, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/features/auth/hooks/AuthContext';
 import { getSupplyMovements } from '@/features/inventory/shared/inventory.api';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/constants/inventory.constants';
 import type { SupplyHistory } from '@/lib/types/inventory.types';
@@ -27,7 +26,6 @@ export default function SupplyHistoryPage({
   params: Promise<{ supplyId: string }>;
 }) {
   const { supplyId } = use(params);
-  const { token } = useAuth();
 
   const [history, setHistory] = useState<SupplyHistory | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -36,19 +34,17 @@ export default function SupplyHistoryPage({
   const [dateTo, setDateTo] = useState('');
 
   const loadMovements = useCallback(async () => {
-    if (!token) return;
     try {
       setFetchError(null);
       const data = await getSupplyMovements(
         supplyId,
         { type: typeFilter || undefined, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined },
-        token
       );
       setHistory(data);
     } catch {
       setFetchError(INVENTORY_STRINGS.errors.historyError);
     }
-  }, [token, supplyId, typeFilter, dateFrom, dateTo]);
+  }, [supplyId, typeFilter, dateFrom, dateTo]);
 
   useEffect(() => {
     loadMovements();
