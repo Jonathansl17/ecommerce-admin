@@ -1,168 +1,143 @@
-import { API_BASE_URL, REQUEST_TIMEOUT_MS } from '@/lib/constants/api.constants';
-import type { Supply, CreateSupplyForm, UpdateSupplyForm, CreateSupplyEntryForm, CreateSupplyEntriesForm, CreateConsumptionForm, SupplyHistory, InventoryReport } from '@/lib/types/inventory.types';
+import { apiFetch, ApiError } from '@/lib/http/apiFetch';
+import { REQUEST_TIMEOUT_MS } from '@/lib/constants/api.constants';
+import type {
+  Supply,
+  CreateSupplyForm,
+  UpdateSupplyForm,
+  CreateSupplyEntryForm,
+  CreateSupplyEntriesForm,
+  CreateConsumptionForm,
+  SupplyHistory,
+  InventoryReport,
+} from '@/lib/types/inventory.types';
 
-export async function getSupplies(token: string): Promise<Supply[]> {
-  const res = await fetch(`${API_BASE_URL}/inventory/supplies`, {
-    headers: { Authorization: `Bearer ${token}` },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
+const TIMEOUT = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
 
-  if (!res.ok) throw new Error('fetch_error');
-
-  const body: { data: Supply[]; error: null } = await res.json();
+const unwrap = async <T>(promise: Promise<{ data: T }>): Promise<T> => {
+  const body = await promise;
   return body.data;
+};
+
+const rethrowErrorBody = (err: unknown): never => {
+  if (err instanceof ApiError) {
+    throw err.body ?? {};
+  }
+  throw err;
+};
+
+export async function getSupplies(): Promise<Supply[]> {
+  try {
+    return await unwrap(
+      apiFetch<{ data: Supply[] }>('/inventory/supplies', { signal: TIMEOUT })
+    );
+  } catch {
+    throw new Error('fetch_error');
+  }
 }
 
-export async function createSupply(
-  data: CreateSupplyForm,
-  token: string
-): Promise<Supply> {
-  const res = await fetch(`${API_BASE_URL}/inventory/supplies`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw body;
+export async function createSupply(data: CreateSupplyForm): Promise<Supply> {
+  try {
+    return await unwrap(
+      apiFetch<{ data: Supply }>('/inventory/supplies', {
+        method: 'POST',
+        body: data as unknown as Record<string, unknown>,
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      })
+    );
+  } catch (err) {
+    return rethrowErrorBody(err);
   }
-
-  const body: { data: Supply } = await res.json();
-  return body.data;
 }
 
 export async function getInventoryReport(
   dateFrom: string,
   dateTo: string,
-  token: string
 ): Promise<InventoryReport> {
   const params = new URLSearchParams({ dateFrom, dateTo });
-  const res = await fetch(`${API_BASE_URL}/inventory/report?${params}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
-
-  if (!res.ok) throw new Error('fetch_error');
-
-  const body: { data: InventoryReport } = await res.json();
-  return body.data;
+  try {
+    return await unwrap(
+      apiFetch<{ data: InventoryReport }>(`/inventory/report?${params}`, {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      })
+    );
+  } catch {
+    throw new Error('fetch_error');
+  }
 }
 
 export async function getSupplyMovements(
   supplyId: string,
   filters: { type?: string; dateFrom?: string; dateTo?: string },
-  token: string
 ): Promise<SupplyHistory> {
   const params = new URLSearchParams();
   if (filters.type) params.set('type', filters.type);
   if (filters.dateFrom) params.set('dateFrom', filters.dateFrom);
   if (filters.dateTo) params.set('dateTo', filters.dateTo);
 
-  const res = await fetch(
-    `${API_BASE_URL}/inventory/supplies/${supplyId}/movements?${params}`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    }
-  );
-
-  if (!res.ok) throw new Error('fetch_error');
-
-  const body: { data: SupplyHistory } = await res.json();
-  return body.data;
+  try {
+    return await unwrap(
+      apiFetch<{ data: SupplyHistory }>(
+        `/inventory/supplies/${supplyId}/movements?${params}`,
+        { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) }
+      )
+    );
+  } catch {
+    throw new Error('fetch_error');
+  }
 }
 
-export async function createSupplyEntry(
-  data: CreateSupplyEntryForm,
-  token: string
-): Promise<Supply> {
-  const res = await fetch(`${API_BASE_URL}/inventory/supplies/${data.supplyId}/entries`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ quantity: data.quantity, date: data.date }),
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw body;
+export async function createSupplyEntry(data: CreateSupplyEntryForm): Promise<Supply> {
+  try {
+    return await unwrap(
+      apiFetch<{ data: Supply }>(`/inventory/supplies/${data.supplyId}/entries`, {
+        method: 'POST',
+        body: { quantity: data.quantity, date: data.date },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      })
+    );
+  } catch (err) {
+    return rethrowErrorBody(err);
   }
-
-  const body: { data: Supply } = await res.json();
-  return body.data;
 }
 
-export async function updateSupply(
-  id: string,
-  data: UpdateSupplyForm,
-  token: string
-): Promise<Supply> {
-  const res = await fetch(`${API_BASE_URL}/inventory/supplies/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw body;
+export async function updateSupply(id: string, data: UpdateSupplyForm): Promise<Supply> {
+  try {
+    return await unwrap(
+      apiFetch<{ data: Supply }>(`/inventory/supplies/${id}`, {
+        method: 'PUT',
+        body: data as unknown as Record<string, unknown>,
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      })
+    );
+  } catch (err) {
+    return rethrowErrorBody(err);
   }
-
-  const body: { data: Supply } = await res.json();
-  return body.data;
 }
 
-export async function registerEntries(
-  data: CreateSupplyEntriesForm,
-  token: string
-): Promise<Supply[]> {
-  const res = await fetch(`${API_BASE_URL}/inventory/entries`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify(data),
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw body;
+export async function registerEntries(data: CreateSupplyEntriesForm): Promise<Supply[]> {
+  try {
+    return await unwrap(
+      apiFetch<{ data: Supply[] }>('/inventory/entries', {
+        method: 'POST',
+        body: data as unknown as Record<string, unknown>,
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      })
+    );
+  } catch (err) {
+    return rethrowErrorBody(err);
   }
-
-  const body: { data: Supply[] } = await res.json();
-  return body.data;
 }
 
-export async function registerConsumption(
-  data: CreateConsumptionForm,
-  token: string
-): Promise<Supply[]> {
-  const res = await fetch(`${API_BASE_URL}/inventory/consumption`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw body;
+export async function registerConsumption(data: CreateConsumptionForm): Promise<Supply[]> {
+  try {
+    return await unwrap(
+      apiFetch<{ data: Supply[] }>('/inventory/consumption', {
+        method: 'POST',
+        body: data as unknown as Record<string, unknown>,
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      })
+    );
+  } catch (err) {
+    return rethrowErrorBody(err);
   }
-
-  const body: { data: Supply[] } = await res.json();
-  return body.data;
 }

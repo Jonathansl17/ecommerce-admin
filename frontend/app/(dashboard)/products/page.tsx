@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/features/auth/hooks/AuthContext';
 import { getSupplies } from '@/features/inventory/shared/inventory.api';
 import { useAdjustSupplyStock } from '@/features/products/hooks/useAdjustSupplyStock';
 import { ProductList } from '@/features/products/components/ProductList';
@@ -15,7 +14,6 @@ import type { AdjustStockForm } from '@/features/products/types/products.types';
 const strings = PRODUCTS_MESSAGES;
 
 export default function ProductsPage() {
-  const { token } = useAuth();
   const [supplies, setSupplies] = useState<Supply[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [adjustingSupply, setAdjustingSupply] = useState<Supply | null>(null);
@@ -31,15 +29,14 @@ export default function ProductsPage() {
   });
 
   const loadSupplies = useCallback(async () => {
-    if (!token) return;
     try {
-      const data = await getSupplies(token);
+      const data = await getSupplies();
       setSupplies(data);
       setFetchError(null);
     } catch {
       setFetchError(strings.errors.fetchError);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     loadSupplies();

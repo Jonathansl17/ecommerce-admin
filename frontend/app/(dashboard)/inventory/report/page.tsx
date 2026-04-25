@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/features/auth/hooks/AuthContext';
 import { getInventoryReport } from '@/features/inventory/shared/inventory.api';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/constants/inventory.constants';
 import type { InventoryReport } from '@/lib/types/inventory.types';
@@ -10,7 +9,6 @@ import type { InventoryReport } from '@/lib/types/inventory.types';
 const strings = INVENTORY_STRINGS.report;
 
 export default function InventoryReportPage() {
-  const { token } = useAuth();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [report, setReport] = useState<InventoryReport | null>(null);
@@ -18,11 +16,11 @@ export default function InventoryReportPage() {
   const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
-    if (!token || !dateFrom || !dateTo) return;
+    if (!dateFrom || !dateTo) return;
     setLoading(true);
     setError(null);
     try {
-      const data = await getInventoryReport(dateFrom, dateTo, token);
+      const data = await getInventoryReport(dateFrom, dateTo);
       setReport(data);
     } catch {
       setError(INVENTORY_STRINGS.errors.reportError);
