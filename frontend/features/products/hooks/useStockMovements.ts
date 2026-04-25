@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '@/features/auth/hooks/AuthContext';
-import { API_BASE_URL, REQUEST_TIMEOUT_MS } from '@/lib/constants/api.constants';
+import { apiFetch } from '@/lib/http/apiFetch';
+import { REQUEST_TIMEOUT_MS } from '@/lib/constants/api.constants';
 import { PRODUCTS_API } from '../constants/api';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
 import { STOCK_MOVEMENT_PAGINATION } from '../constants/stock-movement';
@@ -12,7 +12,6 @@ import type {
 } from '../types/stock-movement';
 
 export function useStockMovements(supplyId: string) {
-  const { token } = useAuth();
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +27,6 @@ export function useStockMovements(supplyId: string) {
 
   const fetchMovements = useCallback(
     async (newFilters?: StockMovementFilters) => {
-      if (!token) return;
       if (newFilters !== undefined) activeFiltersRef.current = newFilters;
 
       const f = activeFiltersRef.current;
@@ -43,17 +41,11 @@ export function useStockMovements(supplyId: string) {
         if (f.startDate) params.set('startDate', f.startDate);
         if (f.endDate) params.set('endDate', f.endDate);
 
-        const res = await fetch(
-          `${API_BASE_URL}${PRODUCTS_API.MOVEMENTS(supplyId)}?${params}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-          }
+        const data = await apiFetch<StockMovementResponse>(
+          `${PRODUCTS_API.MOVEMENTS(supplyId)}?${params}`,
+          { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) }
         );
 
-        if (!res.ok) throw new Error(PRODUCTS_MESSAGES.history.errorLoading);
-
-        const data: StockMovementResponse = await res.json();
         setMovements(data.data);
         setPagination(data.pagination);
       } catch (err) {
@@ -62,7 +54,7 @@ export function useStockMovements(supplyId: string) {
         setIsLoading(false);
       }
     },
-    [token, supplyId]
+    [supplyId]
   );
 
   useEffect(() => {
