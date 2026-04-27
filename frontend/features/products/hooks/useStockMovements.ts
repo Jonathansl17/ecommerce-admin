@@ -11,7 +11,7 @@ import type {
   StockMovementResponse,
 } from '../types/stock-movement';
 
-export function useStockMovements(supplyId: string) {
+export function useStockMovements(variantId: string) {
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +42,7 @@ export function useStockMovements(supplyId: string) {
         if (f.endDate) params.set('endDate', f.endDate);
 
         const data = await apiFetch<StockMovementResponse>(
-          `${PRODUCTS_API.MOVEMENTS(supplyId)}?${params}`,
+          `${PRODUCTS_API.MOVEMENTS(variantId)}?${params}`,
           { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) }
         );
 
@@ -54,7 +54,7 @@ export function useStockMovements(supplyId: string) {
         setIsLoading(false);
       }
     },
-    [supplyId]
+    [variantId]
   );
 
   useEffect(() => {
