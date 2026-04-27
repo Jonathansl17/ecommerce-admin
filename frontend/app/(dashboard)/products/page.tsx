@@ -1,37 +1,50 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { getSupplies } from '@/features/inventory/shared/inventory.api';
+import { apiFetch } from '@/lib/http/apiFetch';
+import { REQUEST_TIMEOUT_MS } from '@/lib/constants/api.constants';
+import { PRODUCTS_API } from '@/features/products/constants/api';
+import { PRODUCTS_MESSAGES } from '@/features/products/constants/messages';
 import { useAdjustSupplyStock } from '@/features/products/hooks/useAdjustSupplyStock';
 import { ProductList } from '@/features/products/components/ProductList';
 import { StockAdjustmentModal } from '@/features/products/components/StockAdjustmentModal';
 import { StockMovementHistoryModal } from '@/features/products/components/StockMovementHistoryModal';
 import { BulkStockAdjustmentTable } from '@/features/products/components/BulkStockAdjustmentTable';
-import { PRODUCTS_MESSAGES } from '@/features/products/constants/messages';
-import type { Supply } from '@/lib/types/inventory.types';
-import type { AdjustStockForm } from '@/features/products/types/products.types';
+import type { Product, ProductVariant, AdjustStockForm } from '@/features/products/types/products.types';
 
 const strings = PRODUCTS_MESSAGES;
 
+interface ActiveVariant {
+  variant: ProductVariant;
+  productName: string;
+}
+
 export default function ProductsPage() {
-  const [supplies, setSupplies] = useState<Supply[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [adjustingSupply, setAdjustingSupply] = useState<Supply | null>(null);
-  const [historySupply, setHistorySupply] = useState<Supply | null>(null);
+  const [adjustingVariant, setAdjustingVariant] = useState<ActiveVariant | null>(null);
+  const [historyVariant, setHistoryVariant] = useState<ActiveVariant | null>(null);
   const [modalKey, setModalKey] = useState(0);
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
   const [isBulkMode, setIsBulkMode] = useState(false);
 
   const { adjustStock, error: adjustError } = useAdjustSupplyStock((updated) => {
-    setSupplies((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
-    setAdjustingSupply(null);
+    setProducts((prev) =>
+      prev.map((p) => ({
+        ...p,
+        variants: p.variants.map((v) => (v.id === updated.id ? updated : v)),
+      }))
+    );
+    setAdjustingVariant(null);
     setHistoryRefreshKey((k) => k + 1);
   });
 
-  const loadSupplies = useCallback(async () => {
+  const loadProducts = useCallback(async () => {
     try {
-      const data = await getSupplies();
-      setSupplies(data);
+      const data = await apiFetch<Product[]>(PRODUCTS_API.GET_ALL, {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+      setProducts(data);
       setFetchError(null);
     } catch {
       setFetchError(strings.errors.fetchError);
@@ -39,8 +52,8 @@ export default function ProductsPage() {
   }, []);
 
   useEffect(() => {
-    loadSupplies();
-  }, [loadSupplies]);
+    loadProducts();
+  }, [loadProducts]);
 
   const handleSave = async (id: string, data: AdjustStockForm) => {
     await adjustStock(id, data);
@@ -48,7 +61,7 @@ export default function ProductsPage() {
 
   const handleBulkDone = () => {
     setIsBulkMode(false);
-    loadSupplies();
+    loadProducts();
   };
 
   return (
@@ -84,30 +97,37 @@ export default function ProductsPage() {
         </div>
 
         {fetchError ? (
-          <p role="alert" className="text-sm text-red-500">{fetchError}</p>
+          <p role="alert" className="text-sm text-red-500">
+            {fetchError}
+          </p>
         ) : isBulkMode ? (
-          <BulkStockAdjustmentTable supplies={supplies} onDone={handleBulkDone} />
+          <BulkStockAdjustmentTable products={products} onDone={handleBulkDone} />
         ) : (
           <ProductList
-            supplies={supplies}
-            onAdjust={(supply) => { setModalKey((k) => k + 1); setAdjustingSupply(supply); }}
-            onHistory={(supply) => setHistorySupply(supply)}
+            products={products}
+            onAdjust={(variant, productName) => {
+              setModalKey((k) => k + 1);
+              setAdjustingVariant({ variant, productName });
+            }}
+            onHistory={(variant, productName) => setHistoryVariant({ variant, productName })}
           />
         )}
       </div>
 
       <StockAdjustmentModal
         key={modalKey}
-        supply={adjustingSupply}
-        onClose={() => setAdjustingSupply(null)}
+        variant={adjustingVariant?.variant ?? null}
+        productName={adjustingVariant?.productName}
+        onClose={() => setAdjustingVariant(null)}
         onSave={handleSave}
         serverError={adjustError}
       />
 
       <StockMovementHistoryModal
-        supply={historySupply}
+        variant={historyVariant?.variant ?? null}
+        productName={historyVariant?.productName}
         refreshKey={historyRefreshKey}
-        onClose={() => setHistorySupply(null)}
+        onClose={() => setHistoryVariant(null)}
       />
     </>
   );

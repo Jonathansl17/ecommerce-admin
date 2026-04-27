@@ -3,11 +3,10 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { adjustStockSchema } from '../shared/validators';
-import type { AdjustStockForm } from '../types/products.types';
-import type { Supply } from '@/lib/types/inventory.types';
+import type { AdjustStockForm, ProductVariant } from '../types/products.types';
 
 export function useStockAdjustmentForm(
-  supply: Supply | null,
+  variant: ProductVariant | null,
   onSave: (id: string, data: AdjustStockForm) => Promise<void>
 ) {
   const {
@@ -20,8 +19,8 @@ export function useStockAdjustmentForm(
   });
 
   const onFormSubmit = async (data: AdjustStockForm) => {
-    if (!supply) return;
-    await onSave(supply.id, data);
+    if (!variant) return;
+    await onSave(variant.id, data);
   };
 
   return {

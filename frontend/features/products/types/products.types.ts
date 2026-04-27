@@ -1,8 +1,29 @@
+export type ProductStatus = 'active' | 'inactive';
+
 export type StockAdjustmentReason =
   | 'manual_adjustment'
   | 'error_correction'
   | 'damaged_product'
   | 'return';
+
+export interface Product {
+  id: string;
+  name: string;
+  description?: string | null;
+  price: number;
+  status: ProductStatus;
+  createdAt: string;
+  updatedAt: string;
+  variants: ProductVariant[];
+}
+
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  name: string;
+  priceOverride?: number | null;
+  currentStock: number;
+}
 
 export interface AdjustStockForm {
   newStock: number;
@@ -11,16 +32,16 @@ export interface AdjustStockForm {
 }
 
 export interface BulkAdjustmentRow {
-  supplyId: string;
-  name: string;
+  variantId: string;
+  productName: string;
+  variantName: string;
   currentStock: number;
   newStock: number | null;
   isSelected: boolean;
-  unitOfMeasure: string;
 }
 
 export interface BulkAdjustmentItem {
-  supplyId: string;
+  variantId: string;
   newStock: number;
 }
 
@@ -31,7 +52,7 @@ export interface BulkAdjustStockRequest {
 }
 
 export interface BulkAdjustmentResult {
-  supplyId: string;
+  variantId: string;
   success: boolean;
   newStock?: number;
   error?: string;

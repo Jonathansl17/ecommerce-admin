@@ -4,17 +4,17 @@ import {
   create as createService,
   update as updateService,
   remove as removeService,
-  adjustSupplyStock as adjustSupplyStockService,
-  getSupplyMovements as getSupplyMovementsService,
-  bulkAdjustStock as bulkAdjustStockService,
+  adjustVariantStock as adjustVariantStockService,
+  getVariantMovements as getVariantMovementsService,
+  bulkAdjustVariantStock as bulkAdjustVariantStockService,
 } from './products.service.js';
 import { PRODUCTS_MESSAGES } from './products.constants.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 
 export const getAll = async (req, res, next) => {
   try {
-    const productos = await getAllService();
-    return res.status(HTTP_STATUS.OK).json(productos);
+    const products = await getAllService();
+    return res.status(HTTP_STATUS.OK).json(products);
   } catch (error) {
     next(error);
   }
@@ -22,8 +22,8 @@ export const getAll = async (req, res, next) => {
 
 export const getById = async (req, res, next) => {
   try {
-    const producto = await getByIdService(req.params.id);
-    return res.status(HTTP_STATUS.OK).json(producto);
+    const product = await getByIdService(req.params.id);
+    return res.status(HTTP_STATUS.OK).json(product);
   } catch (error) {
     next(error);
   }
@@ -31,8 +31,8 @@ export const getById = async (req, res, next) => {
 
 export const create = async (req, res, next) => {
   try {
-    const producto = await createService(req.body);
-    return res.status(HTTP_STATUS.CREATED).json(producto);
+    const product = await createService(req.body);
+    return res.status(HTTP_STATUS.CREATED).json(product);
   } catch (error) {
     next(error);
   }
@@ -40,8 +40,8 @@ export const create = async (req, res, next) => {
 
 export const update = async (req, res, next) => {
   try {
-    const producto = await updateService(req.params.id, req.body);
-    return res.status(HTTP_STATUS.OK).json(producto);
+    const product = await updateService(req.params.id, req.body);
+    return res.status(HTTP_STATUS.OK).json(product);
   } catch (error) {
     next(error);
   }
@@ -49,38 +49,38 @@ export const update = async (req, res, next) => {
 
 export const remove = async (req, res, next) => {
   try {
-    const producto = await removeService(req.params.id);
+    const product = await removeService(req.params.id);
     return res.status(HTTP_STATUS.OK).json({
       message: PRODUCTS_MESSAGES.ELIMINADO_EXITOSO,
-      producto,
+      product,
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const adjustStock = async (req, res, next) => {
+export const adjustVariantStock = async (req, res, next) => {
   try {
-    const supply = await adjustSupplyStockService(req.params.id, req.body, req.user.id);
-    return res.status(HTTP_STATUS.OK).json({ data: supply, error: null, meta: null });
+    const variant = await adjustVariantStockService(req.params.variantId, req.body, req.user.id);
+    return res.status(HTTP_STATUS.OK).json({ data: variant, error: null, meta: null });
   } catch (error) {
     next(error);
   }
 };
 
-export const getMovements = async (req, res, next) => {
+export const getVariantMovements = async (req, res, next) => {
   try {
-    const result = await getSupplyMovementsService(req.params.id, req.query);
+    const result = await getVariantMovementsService(req.params.variantId, req.query);
     return res.status(HTTP_STATUS.OK).json(result);
   } catch (error) {
     next(error);
   }
 };
 
-export const bulkAdjustStock = async (req, res, next) => {
+export const bulkAdjustVariantStock = async (req, res, next) => {
   try {
     const { adjustments, reason, note } = req.body;
-    const result = await bulkAdjustStockService(adjustments, reason, note, req.user.id);
+    const result = await bulkAdjustVariantStockService(adjustments, reason, note, req.user.id);
     return res.status(HTTP_STATUS.OK).json(result);
   } catch (error) {
     next(error);
