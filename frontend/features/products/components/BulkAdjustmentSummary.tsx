@@ -48,8 +48,8 @@ export function BulkAdjustmentSummary({ summary, onClose }: BulkAdjustmentSummar
               {summary.results
                 .filter((r) => !r.success)
                 .map((r) => (
-                  <li key={r.supplyId} className="text-xs text-red-600 dark:text-red-400">
-                    • ID {r.supplyId}: {r.error}
+                  <li key={r.productId} className="text-xs text-red-600 dark:text-red-400">
+                    • ID {r.productId}: {r.error}
                   </li>
                 ))}
             </ul>
