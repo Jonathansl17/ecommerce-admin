@@ -6,23 +6,21 @@ import { BulkStockAdjustmentRow } from './BulkStockAdjustmentRow';
 import { BulkAdjustmentSummary } from './BulkAdjustmentSummary';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
 import { STOCK_ADJUSTMENT_REASON_OPTIONS, BULK_ADJUSTMENT_VALIDATION } from '../constants/validation';
-import type { BulkAdjustmentRow, BulkAdjustStockResponse, StockAdjustmentReason } from '../types/products.types';
-import type { Supply } from '@/lib/types/inventory.types';
+import type { BulkAdjustmentRow, BulkAdjustStockResponse, StockAdjustmentReason, Product } from '../types/products.types';
 
 interface BulkStockAdjustmentTableProps {
-  supplies: Supply[];
+  products: Product[];
   onDone: () => void;
 }
 
-export function BulkStockAdjustmentTable({ supplies, onDone }: BulkStockAdjustmentTableProps) {
+export function BulkStockAdjustmentTable({ products, onDone }: BulkStockAdjustmentTableProps) {
   const [rows, setRows] = useState<BulkAdjustmentRow[]>(
-    supplies.map((s) => ({
-      supplyId: s.id,
-      name: s.name,
-      currentStock: Number(s.currentStock),
+    products.map((p) => ({
+      productId: p.id,
+      productName: p.name,
+      currentStock: p.currentStock,
       newStock: null,
       isSelected: false,
-      unitOfMeasure: s.unitOfMeasure,
     }))
   );
 
@@ -55,18 +53,21 @@ export function BulkStockAdjustmentTable({ supplies, onDone }: BulkStockAdjustme
     setRows((prev) => prev.map((row) => ({ ...row, isSelected: checked })));
   }, []);
 
-  const handleRowChange = useCallback((supplyId: string, updates: Partial<BulkAdjustmentRow>) => {
-    setRows((prev) =>
-      prev.map((row) => (row.supplyId === supplyId ? { ...row, ...updates } : row))
-    );
-  }, []);
+  const handleRowChange = useCallback(
+    (productId: string, updates: Partial<BulkAdjustmentRow>) => {
+      setRows((prev) =>
+        prev.map((row) => (row.productId === productId ? { ...row, ...updates } : row))
+      );
+    },
+    []
+  );
 
   const handleSubmit = async () => {
     if (readyToAdjust.length < BULK_ADJUSTMENT_VALIDATION.MIN_SELECTED) return;
 
     await bulkAdjust({
       adjustments: readyToAdjust.map((row) => ({
-        supplyId: row.supplyId,
+        productId: row.productId,
         newStock: row.newStock!,
       })),
       reason,
@@ -126,8 +127,7 @@ export function BulkStockAdjustmentTable({ supplies, onDone }: BulkStockAdjustme
                   className="rounded"
                 />
               </th>
-              <th className="px-4 py-3 font-medium">{strings.colName}</th>
-              <th className="px-4 py-3 font-medium">{strings.colUnit}</th>
+              <th className="px-4 py-3 font-medium">{strings.colProduct}</th>
               <th className="px-4 py-3 font-medium">{strings.colCurrentStock}</th>
               <th className="px-4 py-3 font-medium">{strings.colNewStock}</th>
             </tr>
@@ -135,7 +135,7 @@ export function BulkStockAdjustmentTable({ supplies, onDone }: BulkStockAdjustme
           <tbody className="divide-y divide-foreground/10">
             {rows.map((row) => (
               <BulkStockAdjustmentRow
-                key={row.supplyId}
+                key={row.productId}
                 row={row}
                 onChange={handleRowChange}
                 disabled={isLoading}

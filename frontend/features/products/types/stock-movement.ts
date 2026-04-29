@@ -1,4 +1,4 @@
-export type StockMovementType = 'sale' | 'manual_adjustment';
+export type ProductStockMovementType = 'sale' | 'manual_adjustment' | 'production';
 
 export type StockMovementReason =
   | 'manual_adjustment'
@@ -18,7 +18,7 @@ export interface StockMovement {
   newQuantity: number;
   reason: StockMovementReason | null;
   note: string | null;
-  type: StockMovementType;
+  type: ProductStockMovementType;
   createdAt: string;
   admin: StockMovementAdmin;
 }
