@@ -5,21 +5,21 @@ import {
   create,
   update,
   remove,
-  adjustVariantStock,
-  getVariantMovements,
-  bulkAdjustVariantStock,
+  adjustProductStock,
+  getProductMovements,
+  bulkAdjustProductStock,
 } from './products.controller.js';
 import { validateAdjustStock, validateBulkAdjustStock } from './products.validator.js';
 import { requireAuth } from '../../shared/middleware/authMiddleware.js';
 
 const router = Router();
 
-// Rutas específicas de variantes (antes de /:id para evitar conflictos de matching)
-router.post('/variants/bulk-adjust', requireAuth, validateBulkAdjustStock, bulkAdjustVariantStock);
-router.post('/variants/:variantId/adjust-stock', requireAuth, validateAdjustStock, adjustVariantStock);
-router.get('/variants/:variantId/movements', requireAuth, getVariantMovements);
+// Rutas de ajuste masivo y por producto (antes de /:id para evitar conflictos)
+router.post('/bulk-adjust', requireAuth, validateBulkAdjustStock, bulkAdjustProductStock);
+router.post('/:productId/adjust-stock', requireAuth, validateAdjustStock, adjustProductStock);
+router.get('/:productId/movements', requireAuth, getProductMovements);
 
-// Rutas de producto
+// Rutas CRUD de producto
 router.get('/', getAll);
 router.post('/', create);
 router.get('/:id', getById);

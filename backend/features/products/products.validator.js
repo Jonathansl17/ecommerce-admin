@@ -20,7 +20,7 @@ export const validateAdjustStock = (req, res, next) => {
 };
 
 const bulkAdjustmentItemSchema = z.object({
-  variantId: z.string().min(1, 'El ID de la variante es requerido'),
+  productId: z.string().min(1, 'El ID del producto es requerido'),
   newStock: z
     .number({ invalid_type_error: 'La cantidad debe ser un número' })
     .min(0, 'La cantidad no puede ser negativa'),
@@ -29,7 +29,7 @@ const bulkAdjustmentItemSchema = z.object({
 const bulkAdjustStockSchema = z.object({
   adjustments: z
     .array(bulkAdjustmentItemSchema)
-    .min(1, 'Debe incluir al menos una variante'),
+    .min(1, 'Debe incluir al menos un producto'),
   reason: z.enum(STOCK_ADJUSTMENT_REASONS, { error: 'Motivo no válido' }),
   note: z.string().max(500).optional(),
 });

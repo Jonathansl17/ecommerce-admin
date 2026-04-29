@@ -7,17 +7,17 @@ import { StockMovementRow } from './StockMovementRow';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
 import { STOCK_MOVEMENT_PAGINATION } from '../constants/stock-movement';
 import type { StockMovementFilters as FilterType } from '../types/stock-movement';
-import type { ProductVariant } from '../types/products.types';
+import type { Product } from '../types/products.types';
 
 const strings = PRODUCTS_MESSAGES.history;
 
 interface StockMovementHistoryProps {
-  variant: ProductVariant;
+  product: Product;
   refreshKey: number;
 }
 
-export function StockMovementHistory({ variant, refreshKey }: StockMovementHistoryProps) {
-  const { movements, isLoading, error, pagination, refetch } = useStockMovements(variant.id);
+export function StockMovementHistory({ product, refreshKey }: StockMovementHistoryProps) {
+  const { movements, isLoading, error, pagination, refetch } = useStockMovements(product.id);
   const currentFiltersRef = useRef<FilterType>({
     page: 1,
     limit: STOCK_MOVEMENT_PAGINATION.DEFAULT_LIMIT,

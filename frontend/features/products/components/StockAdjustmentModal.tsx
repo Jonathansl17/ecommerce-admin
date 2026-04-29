@@ -7,32 +7,26 @@ import { Button } from '@/components/ui/Button';
 import { useStockAdjustmentForm } from '../hooks/useStockAdjustmentForm';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
 import { STOCK_ADJUSTMENT_REASON_OPTIONS, STOCK_ADJUSTMENT_VALIDATION } from '../constants/validation';
-import type { ProductVariant, AdjustStockForm } from '../types/products.types';
+import type { Product, AdjustStockForm } from '../types/products.types';
 
 const strings = PRODUCTS_MESSAGES.adjust;
 
 interface StockAdjustmentModalProps {
-  variant: ProductVariant | null;
-  productName?: string;
+  product: Product | null;
   onClose: () => void;
   onSave: (id: string, data: AdjustStockForm) => Promise<void>;
   serverError?: string | null;
 }
 
 export function StockAdjustmentModal({
-  variant,
-  productName,
+  product,
   onClose,
   onSave,
   serverError,
 }: StockAdjustmentModalProps) {
-  const { register, handleSubmit, errors, isSubmitting } = useStockAdjustmentForm(variant, onSave);
+  const { register, handleSubmit, errors, isSubmitting } = useStockAdjustmentForm(product, onSave);
 
-  if (!variant) return null;
-
-  const modalTitle = productName
-    ? `${strings.title} — ${productName} / ${variant.name}`
-    : `${strings.title} — ${variant.name}`;
+  if (!product) return null;
 
   const footer = (
     <>
@@ -59,7 +53,7 @@ export function StockAdjustmentModal({
   return (
     <Modal
       titleId="adjust-modal-title"
-      title={modalTitle}
+      title={`${strings.title} — ${product.name}`}
       onClose={onClose}
       footer={footer}
       size="sm"
@@ -69,7 +63,7 @@ export function StockAdjustmentModal({
           <input
             id="adjust-current-stock"
             type="number"
-            value={variant.currentStock}
+            value={product.currentStock}
             readOnly
             className="w-full rounded-md border border-foreground/10 bg-foreground/5 px-3 py-2 text-foreground/60 cursor-not-allowed"
           />

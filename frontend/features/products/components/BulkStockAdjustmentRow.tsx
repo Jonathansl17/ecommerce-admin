@@ -4,7 +4,7 @@ import type { BulkAdjustmentRow } from '../types/products.types';
 
 interface BulkStockAdjustmentRowProps {
   row: BulkAdjustmentRow;
-  onChange: (variantId: string, updates: Partial<BulkAdjustmentRow>) => void;
+  onChange: (productId: string, updates: Partial<BulkAdjustmentRow>) => void;
   disabled?: boolean;
 }
 
@@ -19,15 +19,13 @@ export function BulkStockAdjustmentRow({ row, onChange, disabled }: BulkStockAdj
         <input
           type="checkbox"
           checked={row.isSelected}
-          onChange={(e) => onChange(row.variantId, { isSelected: e.target.checked })}
+          onChange={(e) => onChange(row.productId, { isSelected: e.target.checked })}
           disabled={disabled}
           className="rounded"
         />
       </td>
 
       <td className="px-4 py-3 font-medium text-foreground">{row.productName}</td>
-
-      <td className="px-4 py-3 text-foreground/70">{row.variantName}</td>
 
       <td className="px-4 py-3 text-foreground/70">{row.currentStock}</td>
 
@@ -40,7 +38,7 @@ export function BulkStockAdjustmentRow({ row, onChange, disabled }: BulkStockAdj
             value={row.newStock ?? ''}
             onChange={(e) => {
               const value = e.target.value === '' ? null : Number(e.target.value);
-              onChange(row.variantId, {
+              onChange(row.productId, {
                 newStock: value,
                 isSelected: value !== null,
               });
