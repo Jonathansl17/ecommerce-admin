@@ -8,7 +8,6 @@ const serializeVariant = (variant) => ({
   productId: variant.productId.toString(),
   name: variant.name,
   priceOverride: variant.priceOverride !== null ? Number(variant.priceOverride) : null,
-  currentStock: variant.currentStock,
 });
 
 const serializeProduct = (product) => ({
@@ -17,6 +16,7 @@ const serializeProduct = (product) => ({
   description: product.description ?? null,
   price: Number(product.price),
   status: product.status,
+  currentStock: product.currentStock,
   createdAt: product.createdAt.toISOString(),
   updatedAt: product.updatedAt.toISOString(),
   variants: (product.variants ?? []).map(serializeVariant),
@@ -85,13 +85,13 @@ export const remove = async (id) => {
   }
 };
 
-export const adjustVariantStock = async (variantId, { newStock, reason, note }, adminId) => {
-  const id = BigInt(variantId);
+export const adjustProductStock = async (productId, { newStock, reason, note }, adminId) => {
+  const id = BigInt(productId);
 
-  const variant = await prisma.productVariant.findUnique({ where: { id } });
-  if (!variant) throw crearError(PRODUCTS_MESSAGES.VARIANTE_NO_ENCONTRADA, HTTP_STATUS.NOT_FOUND);
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
 
-  const previousQuantity = variant.currentStock;
+  const previousQuantity = product.currentStock;
   if (previousQuantity === newStock) {
     throw crearError(PRODUCTS_MESSAGES.MISMO_STOCK, HTTP_STATUS.CONFLICT);
   }
@@ -99,7 +99,7 @@ export const adjustVariantStock = async (variantId, { newStock, reason, note }, 
   return prisma.$transaction(async (tx) => {
     await tx.productStockMovement.create({
       data: {
-        variantId: id,
+        productId: id,
         adminId: BigInt(adminId),
         type: 'manual_adjustment',
         previousQuantity,
@@ -109,22 +109,23 @@ export const adjustVariantStock = async (variantId, { newStock, reason, note }, 
       },
     });
 
-    const updated = await tx.productVariant.update({
+    const updated = await tx.product.update({
       where: { id },
       data: { currentStock: newStock },
+      include: { variants: true },
     });
 
-    return serializeVariant(updated);
+    return serializeProduct(updated);
   });
 };
 
-export const getVariantMovements = async (variantId, { reason, startDate, endDate, page = 1, limit = 20 }) => {
-  const id = BigInt(variantId);
+export const getProductMovements = async (productId, { reason, startDate, endDate, page = 1, limit = 20 }) => {
+  const id = BigInt(productId);
 
-  const variant = await prisma.productVariant.findUnique({ where: { id } });
-  if (!variant) throw crearError(PRODUCTS_MESSAGES.VARIANTE_NO_ENCONTRADA, HTTP_STATUS.NOT_FOUND);
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
 
-  const where = { variantId: id };
+  const where = { productId: id };
   if (reason) where.reason = reason;
   if (startDate || endDate) {
     where.createdAt = {};
@@ -145,7 +146,6 @@ export const getVariantMovements = async (variantId, { reason, startDate, endDat
     }),
   ]);
 
-  // Resolver nombres de admin en una sola consulta
   const adminIds = [...new Set(movements.map((m) => m.adminId))];
   const admins =
     adminIds.length > 0
@@ -171,20 +171,20 @@ export const getVariantMovements = async (variantId, { reason, startDate, endDat
   };
 };
 
-export const bulkAdjustVariantStock = async (adjustments, reason, note, adminId) => {
+export const bulkAdjustProductStock = async (adjustments, reason, note, adminId) => {
   const results = await Promise.allSettled(
-    adjustments.map(async ({ variantId, newStock }) => {
-      const id = BigInt(variantId);
+    adjustments.map(async ({ productId, newStock }) => {
+      const id = BigInt(productId);
 
-      const variant = await prisma.productVariant.findUnique({ where: { id } });
-      if (!variant) throw new Error(`Variante ${variantId} no encontrada`);
+      const product = await prisma.product.findUnique({ where: { id } });
+      if (!product) throw new Error(`Producto ${productId} no encontrado`);
 
-      const previousQuantity = variant.currentStock;
+      const previousQuantity = product.currentStock;
 
       await prisma.$transaction(async (tx) => {
         await tx.productStockMovement.create({
           data: {
-            variantId: id,
+            productId: id,
             adminId: BigInt(adminId),
             type: 'manual_adjustment',
             previousQuantity,
@@ -193,20 +193,20 @@ export const bulkAdjustVariantStock = async (adjustments, reason, note, adminId)
             note: note ?? null,
           },
         });
-        await tx.productVariant.update({
+        await tx.product.update({
           where: { id },
           data: { currentStock: newStock },
         });
       });
 
-      return { variantId, success: true, newStock };
+      return { productId, success: true, newStock };
     })
   );
 
   const processedResults = results.map((result, index) => {
     if (result.status === 'fulfilled') return result.value;
     return {
-      variantId: adjustments[index].variantId,
+      productId: adjustments[index].productId,
       success: false,
       error: result.reason?.message ?? 'Error desconocido',
     };

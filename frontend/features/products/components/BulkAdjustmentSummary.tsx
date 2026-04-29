@@ -42,14 +42,14 @@ export function BulkAdjustmentSummary({ summary, onClose }: BulkAdjustmentSummar
         {summary.summary.failed > 0 && (
           <div className="mb-4">
             <p className="text-sm font-medium text-red-600 dark:text-red-400 mb-2">
-              Variantes que fallaron:
+              Productos que fallaron:
             </p>
             <ul className="space-y-1">
               {summary.results
                 .filter((r) => !r.success)
                 .map((r) => (
-                  <li key={r.variantId} className="text-xs text-red-600 dark:text-red-400">
-                    • ID {r.variantId}: {r.error}
+                  <li key={r.productId} className="text-xs text-red-600 dark:text-red-400">
+                    • ID {r.productId}: {r.error}
                   </li>
                 ))}
             </ul>

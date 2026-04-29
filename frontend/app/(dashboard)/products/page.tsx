@@ -10,32 +10,22 @@ import { ProductList } from '@/features/products/components/ProductList';
 import { StockAdjustmentModal } from '@/features/products/components/StockAdjustmentModal';
 import { StockMovementHistoryModal } from '@/features/products/components/StockMovementHistoryModal';
 import { BulkStockAdjustmentTable } from '@/features/products/components/BulkStockAdjustmentTable';
-import type { Product, ProductVariant, AdjustStockForm } from '@/features/products/types/products.types';
+import type { Product, AdjustStockForm } from '@/features/products/types/products.types';
 
 const strings = PRODUCTS_MESSAGES;
-
-interface ActiveVariant {
-  variant: ProductVariant;
-  productName: string;
-}
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [adjustingVariant, setAdjustingVariant] = useState<ActiveVariant | null>(null);
-  const [historyVariant, setHistoryVariant] = useState<ActiveVariant | null>(null);
+  const [adjustingProduct, setAdjustingProduct] = useState<Product | null>(null);
+  const [historyProduct, setHistoryProduct] = useState<Product | null>(null);
   const [modalKey, setModalKey] = useState(0);
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
   const [isBulkMode, setIsBulkMode] = useState(false);
 
   const { adjustStock, error: adjustError } = useAdjustSupplyStock((updated) => {
-    setProducts((prev) =>
-      prev.map((p) => ({
-        ...p,
-        variants: p.variants.map((v) => (v.id === updated.id ? updated : v)),
-      }))
-    );
-    setAdjustingVariant(null);
+    setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    setAdjustingProduct(null);
     setHistoryRefreshKey((k) => k + 1);
   });
 
@@ -105,29 +95,27 @@ export default function ProductsPage() {
         ) : (
           <ProductList
             products={products}
-            onAdjust={(variant, productName) => {
+            onAdjust={(product) => {
               setModalKey((k) => k + 1);
-              setAdjustingVariant({ variant, productName });
+              setAdjustingProduct(product);
             }}
-            onHistory={(variant, productName) => setHistoryVariant({ variant, productName })}
+            onHistory={(product) => setHistoryProduct(product)}
           />
         )}
       </div>
 
       <StockAdjustmentModal
         key={modalKey}
-        variant={adjustingVariant?.variant ?? null}
-        productName={adjustingVariant?.productName}
-        onClose={() => setAdjustingVariant(null)}
+        product={adjustingProduct}
+        onClose={() => setAdjustingProduct(null)}
         onSave={handleSave}
         serverError={adjustError}
       />
 
       <StockMovementHistoryModal
-        variant={historyVariant?.variant ?? null}
-        productName={historyVariant?.productName}
+        product={historyProduct}
         refreshKey={historyRefreshKey}
-        onClose={() => setHistoryVariant(null)}
+        onClose={() => setHistoryProduct(null)}
       />
     </>
   );

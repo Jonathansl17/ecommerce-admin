@@ -4,7 +4,7 @@ export const PRODUCTS_API = {
   CREATE: '/products',
   UPDATE: (id: string) => `/products/${id}`,
   DELETE: (id: string) => `/products/${id}`,
-  ADJUST_STOCK: (variantId: string) => `/products/variants/${variantId}/adjust-stock`,
-  MOVEMENTS: (variantId: string) => `/products/variants/${variantId}/movements`,
-  BULK_ADJUST_STOCK: '/products/variants/bulk-adjust',
+  ADJUST_STOCK: (productId: string) => `/products/${productId}/adjust-stock`,
+  MOVEMENTS: (productId: string) => `/products/${productId}/movements`,
+  BULK_ADJUST_STOCK: '/products/bulk-adjust',
 } as const;

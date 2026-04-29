@@ -4,9 +4,9 @@ import {
   create as createService,
   update as updateService,
   remove as removeService,
-  adjustVariantStock as adjustVariantStockService,
-  getVariantMovements as getVariantMovementsService,
-  bulkAdjustVariantStock as bulkAdjustVariantStockService,
+  adjustProductStock as adjustProductStockService,
+  getProductMovements as getProductMovementsService,
+  bulkAdjustProductStock as bulkAdjustProductStockService,
 } from './products.service.js';
 import { PRODUCTS_MESSAGES } from './products.constants.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
@@ -59,28 +59,28 @@ export const remove = async (req, res, next) => {
   }
 };
 
-export const adjustVariantStock = async (req, res, next) => {
+export const adjustProductStock = async (req, res, next) => {
   try {
-    const variant = await adjustVariantStockService(req.params.variantId, req.body, req.user.id);
-    return res.status(HTTP_STATUS.OK).json({ data: variant, error: null, meta: null });
+    const product = await adjustProductStockService(req.params.productId, req.body, req.user.id);
+    return res.status(HTTP_STATUS.OK).json({ data: product, error: null, meta: null });
   } catch (error) {
     next(error);
   }
 };
 
-export const getVariantMovements = async (req, res, next) => {
+export const getProductMovements = async (req, res, next) => {
   try {
-    const result = await getVariantMovementsService(req.params.variantId, req.query);
+    const result = await getProductMovementsService(req.params.productId, req.query);
     return res.status(HTTP_STATUS.OK).json(result);
   } catch (error) {
     next(error);
   }
 };
 
-export const bulkAdjustVariantStock = async (req, res, next) => {
+export const bulkAdjustProductStock = async (req, res, next) => {
   try {
     const { adjustments, reason, note } = req.body;
-    const result = await bulkAdjustVariantStockService(adjustments, reason, note, req.user.id);
+    const result = await bulkAdjustProductStockService(adjustments, reason, note, req.user.id);
     return res.status(HTTP_STATUS.OK).json(result);
   } catch (error) {
     next(error);

@@ -15,16 +15,13 @@ interface BulkStockAdjustmentTableProps {
 
 export function BulkStockAdjustmentTable({ products, onDone }: BulkStockAdjustmentTableProps) {
   const [rows, setRows] = useState<BulkAdjustmentRow[]>(
-    products.flatMap((p) =>
-      p.variants.map((v) => ({
-        variantId: v.id,
-        productName: p.name,
-        variantName: v.name,
-        currentStock: v.currentStock,
-        newStock: null,
-        isSelected: false,
-      }))
-    )
+    products.map((p) => ({
+      productId: p.id,
+      productName: p.name,
+      currentStock: p.currentStock,
+      newStock: null,
+      isSelected: false,
+    }))
   );
 
   const [reason, setReason] = useState<StockAdjustmentReason>('manual_adjustment');
@@ -57,9 +54,9 @@ export function BulkStockAdjustmentTable({ products, onDone }: BulkStockAdjustme
   }, []);
 
   const handleRowChange = useCallback(
-    (variantId: string, updates: Partial<BulkAdjustmentRow>) => {
+    (productId: string, updates: Partial<BulkAdjustmentRow>) => {
       setRows((prev) =>
-        prev.map((row) => (row.variantId === variantId ? { ...row, ...updates } : row))
+        prev.map((row) => (row.productId === productId ? { ...row, ...updates } : row))
       );
     },
     []
@@ -70,7 +67,7 @@ export function BulkStockAdjustmentTable({ products, onDone }: BulkStockAdjustme
 
     await bulkAdjust({
       adjustments: readyToAdjust.map((row) => ({
-        variantId: row.variantId,
+        productId: row.productId,
         newStock: row.newStock!,
       })),
       reason,
@@ -131,7 +128,6 @@ export function BulkStockAdjustmentTable({ products, onDone }: BulkStockAdjustme
                 />
               </th>
               <th className="px-4 py-3 font-medium">{strings.colProduct}</th>
-              <th className="px-4 py-3 font-medium">{strings.colVariant}</th>
               <th className="px-4 py-3 font-medium">{strings.colCurrentStock}</th>
               <th className="px-4 py-3 font-medium">{strings.colNewStock}</th>
             </tr>
@@ -139,7 +135,7 @@ export function BulkStockAdjustmentTable({ products, onDone }: BulkStockAdjustme
           <tbody className="divide-y divide-foreground/10">
             {rows.map((row) => (
               <BulkStockAdjustmentRow
-                key={row.variantId}
+                key={row.productId}
                 row={row}
                 onChange={handleRowChange}
                 disabled={isLoading}

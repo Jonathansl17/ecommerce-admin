@@ -12,6 +12,7 @@ export interface Product {
   description?: string | null;
   price: number;
   status: ProductStatus;
+  currentStock: number;
   createdAt: string;
   updatedAt: string;
   variants: ProductVariant[];
@@ -22,7 +23,6 @@ export interface ProductVariant {
   productId: string;
   name: string;
   priceOverride?: number | null;
-  currentStock: number;
 }
 
 export interface AdjustStockForm {
@@ -32,16 +32,15 @@ export interface AdjustStockForm {
 }
 
 export interface BulkAdjustmentRow {
-  variantId: string;
+  productId: string;
   productName: string;
-  variantName: string;
   currentStock: number;
   newStock: number | null;
   isSelected: boolean;
 }
 
 export interface BulkAdjustmentItem {
-  variantId: string;
+  productId: string;
   newStock: number;
 }
 
@@ -52,7 +51,7 @@ export interface BulkAdjustStockRequest {
 }
 
 export interface BulkAdjustmentResult {
-  variantId: string;
+  productId: string;
   success: boolean;
   newStock?: number;
   error?: string;
