@@ -1,7 +1,7 @@
 'use client';
 
-import { useAuth } from '@/lib/context/AuthContext';
-import { AUTH_STRINGS } from '@/lib/constants/auth.constants';
+import { useAuth } from '@/features/auth/hooks/AuthContext';
+import { AUTH_STRINGS } from '@/features/auth/constants/auth.constants';
 
 const badgeLabel = AUTH_STRINGS.dashboard.adminBadgeLabel;
 

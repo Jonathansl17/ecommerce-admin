@@ -1,22 +1,35 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { limpiarTokensExpirados } from './features/auth/auth.service.js';
+import cookieParser from 'cookie-parser';
+import { limpiarTokensExpirados } from './features/auth/auth.tokens.service.js';
 import productsRoutes from './features/products/products.routes.js';
 import clientsRoutes from './features/clients/clients.routes.js';
 import authRoutes from './features/auth/auth.routes.js';
+import passwordRecoveryRoutes from './features/password-recovery/password-recovery.routes.js';
+import inventoryRoutes from './features/inventory/inventory.routes.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
+import { requireFetchHeader } from './shared/middleware/csrfMiddleware.js';
 import { APP_CONFIG } from './shared/constants/app.constants.js';
 
 const app = express();
 const PORT = process.env.PORT || APP_CONFIG.PORT;
 
-app.use(cors());
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:4000';
+
+app.use(cors({
+  origin: FRONTEND_ORIGIN,
+  credentials: true,
+}));
 app.use(express.json());
+app.use(cookieParser());
+app.use(requireFetchHeader);
 
 app.use('/api/products', productsRoutes);
 app.use('/api/clients', clientsRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/password-recovery', passwordRecoveryRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 app.use(errorHandler);
 

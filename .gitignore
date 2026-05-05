@@ -42,3 +42,8 @@ generated/prisma
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# .txt
+US-GesInv.txt
+US-Resto.txt
+US-GesInv copy.txt
