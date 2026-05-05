@@ -4,6 +4,9 @@ import {
   create as createService,
   update as updateService,
   remove as removeService,
+  adjustSupplyStock as adjustSupplyStockService,
+  getSupplyMovements as getSupplyMovementsService,
+  bulkAdjustStock as bulkAdjustStockService,
 } from './products.service.js';
 import { PRODUCTS_MESSAGES } from './products.constants.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
@@ -51,6 +54,34 @@ export const remove = async (req, res, next) => {
       message: PRODUCTS_MESSAGES.ELIMINADO_EXITOSO,
       producto,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const adjustStock = async (req, res, next) => {
+  try {
+    const supply = await adjustSupplyStockService(req.params.id, req.body, req.user.id);
+    return res.status(HTTP_STATUS.OK).json({ data: supply, error: null, meta: null });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMovements = async (req, res, next) => {
+  try {
+    const result = await getSupplyMovementsService(req.params.id, req.query);
+    return res.status(HTTP_STATUS.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const bulkAdjustStock = async (req, res, next) => {
+  try {
+    const { adjustments, reason, note } = req.body;
+    const result = await bulkAdjustStockService(adjustments, reason, note, req.user.id);
+    return res.status(HTTP_STATUS.OK).json(result);
   } catch (error) {
     next(error);
   }
