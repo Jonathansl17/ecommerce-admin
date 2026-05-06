@@ -7,22 +7,26 @@ import { Button } from '@/components/ui/Button';
 import { useStockAdjustmentForm } from '../hooks/useStockAdjustmentForm';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
 import { STOCK_ADJUSTMENT_REASON_OPTIONS, STOCK_ADJUSTMENT_VALIDATION } from '../constants/validation';
-import type { Supply } from '@/lib/types/inventory.types';
-import type { AdjustStockForm } from '../types/products.types';
+import type { Product, AdjustStockForm } from '../types/products.types';
 
 const strings = PRODUCTS_MESSAGES.adjust;
 
 interface StockAdjustmentModalProps {
-  supply: Supply | null;
+  product: Product | null;
   onClose: () => void;
   onSave: (id: string, data: AdjustStockForm) => Promise<void>;
   serverError?: string | null;
 }
 
-export function StockAdjustmentModal({ supply, onClose, onSave, serverError }: StockAdjustmentModalProps) {
-  const { register, handleSubmit, errors, isSubmitting } = useStockAdjustmentForm(supply, onSave);
+export function StockAdjustmentModal({
+  product,
+  onClose,
+  onSave,
+  serverError,
+}: StockAdjustmentModalProps) {
+  const { register, handleSubmit, errors, isSubmitting } = useStockAdjustmentForm(product, onSave);
 
-  if (!supply) return null;
+  if (!product) return null;
 
   const footer = (
     <>
@@ -49,7 +53,7 @@ export function StockAdjustmentModal({ supply, onClose, onSave, serverError }: S
   return (
     <Modal
       titleId="adjust-modal-title"
-      title={`${strings.title} — ${supply.name}`}
+      title={`${strings.title} — ${product.name}`}
       onClose={onClose}
       footer={footer}
       size="sm"
@@ -59,7 +63,7 @@ export function StockAdjustmentModal({ supply, onClose, onSave, serverError }: S
           <input
             id="adjust-current-stock"
             type="number"
-            value={Number(supply.currentStock)}
+            value={product.currentStock}
             readOnly
             className="w-full rounded-md border border-foreground/10 bg-foreground/5 px-3 py-2 text-foreground/60 cursor-not-allowed"
           />
@@ -70,7 +74,7 @@ export function StockAdjustmentModal({ supply, onClose, onSave, serverError }: S
             id="adjust-new-stock"
             type="number"
             min={STOCK_ADJUSTMENT_VALIDATION.NEW_STOCK_MIN}
-            step="any"
+            step="1"
             placeholder={strings.newStockPlaceholder}
             hasError={!!errors.newStock}
             {...register('newStock', { valueAsNumber: true })}
@@ -108,7 +112,9 @@ export function StockAdjustmentModal({ supply, onClose, onSave, serverError }: S
         </FormField>
 
         {serverError && (
-          <p role="alert" className="text-sm text-red-500">{serverError}</p>
+          <p role="alert" className="text-sm text-red-500">
+            {serverError}
+          </p>
         )}
       </form>
     </Modal>
