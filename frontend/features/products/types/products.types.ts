@@ -65,3 +65,17 @@ export interface BulkAdjustStockResponse {
     failed: number;
   };
 }
+
+export interface CreateProductDTO {
+  name: string;
+  description?: string;
+  price: number;
+  status?: ProductStatus;
+}
+
+export interface CreateProductFormData {
+  name: string;
+  description: string;
+  price: number;
+  status: ProductStatus;
+}
