@@ -3,88 +3,129 @@ import { PRODUCTS_MESSAGES, PRODUCTS_CONFIG } from './products.constants.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 
-const incluirSupply = {
-  supply: true,
-};
+const serializeVariant = (variant) => ({
+  id: variant.id.toString(),
+  productId: variant.productId.toString(),
+  name: variant.name,
+  priceOverride: variant.priceOverride !== null ? Number(variant.priceOverride) : null,
+});
+
+const serializeProduct = (product) => ({
+  id: product.id.toString(),
+  name: product.name,
+  description: product.description ?? null,
+  price: Number(product.price),
+  status: product.status,
+  currentStock: product.currentStock,
+  createdAt: product.createdAt.toISOString(),
+  updatedAt: product.updatedAt.toISOString(),
+  variants: (product.variants ?? []).map(serializeVariant),
+});
 
 export const getAll = async () => {
-  return prisma.item.findMany({
-    include: incluirSupply,
+  const products = await prisma.product.findMany({
+    include: { variants: true },
+    orderBy: { name: 'asc' },
   });
+  return products.map(serializeProduct);
 };
 
 export const getById = async (id) => {
-  const item = await prisma.item.findUnique({
+  const product = await prisma.product.findUnique({
     where: { id: BigInt(id) },
-    include: incluirSupply,
+    include: { variants: true },
   });
-
-  if (!item) {
-    throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
-  }
-
-  return item;
+  if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+  return serializeProduct(product);
 };
 
-export const create = async ({ name, itemType, status }) => {
-  try {
-    return await prisma.item.create({
-      data: {
-        name,
-        itemType: itemType ?? PRODUCTS_CONFIG.TIPO_POR_DEFECTO,
-        status: status ?? PRODUCTS_CONFIG.ESTADO_POR_DEFECTO,
-      },
-      include: incluirSupply,
-    });
-  } catch (error) {
-    throw error;
-  }
+export const create = async ({ name, description, price, status }) => {
+  const product = await prisma.product.create({
+    data: {
+      name,
+      description: description ?? null,
+      price,
+      status: status ?? PRODUCTS_CONFIG.ESTADO_POR_DEFECTO,
+    },
+    include: { variants: true },
+  });
+  return serializeProduct(product);
 };
 
 export const update = async (id, data) => {
-  const { name, itemType, status } = data;
-
+  const { name, description, price, status } = data;
   try {
-    return await prisma.item.update({
+    const product = await prisma.product.update({
       where: { id: BigInt(id) },
       data: {
         ...(name !== undefined && { name }),
-        ...(itemType !== undefined && { itemType }),
+        ...(description !== undefined && { description }),
+        ...(price !== undefined && { price }),
         ...(status !== undefined && { status }),
       },
-      include: incluirSupply,
+      include: { variants: true },
     });
+    return serializeProduct(product);
   } catch (error) {
-    if (error.code === 'P2025') {
-      throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
-    }
+    if (error.code === 'P2025') throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
     throw error;
   }
 };
 
 export const remove = async (id) => {
   try {
-    return await prisma.item.delete({
+    const product = await prisma.product.delete({
       where: { id: BigInt(id) },
-      include: incluirSupply,
+      include: { variants: true },
     });
+    return serializeProduct(product);
   } catch (error) {
-    if (error.code === 'P2025') {
-      throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
-    }
+    if (error.code === 'P2025') throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
     throw error;
   }
 };
 
-export const getSupplyMovements = async (id, { reason, startDate, endDate, page = 1, limit = 20 }) => {
-  const itemId = BigInt(id);
+export const adjustProductStock = async (productId, { newStock, reason, note }, adminId) => {
+  const id = BigInt(productId);
 
-  const supply = await prisma.supply.findUnique({ where: { itemId } });
-  if (!supply) {
-    throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+
+  const previousQuantity = product.currentStock;
+  if (previousQuantity === newStock) {
+    throw crearError(PRODUCTS_MESSAGES.MISMO_STOCK, HTTP_STATUS.CONFLICT);
   }
 
-  const where = { variantId: itemId };
+  return prisma.$transaction(async (tx) => {
+    await tx.productStockMovement.create({
+      data: {
+        productId: id,
+        adminId: BigInt(adminId),
+        type: 'manual_adjustment',
+        previousQuantity,
+        newQuantity: newStock,
+        reason: reason ?? null,
+        note: note ?? null,
+      },
+    });
+
+    const updated = await tx.product.update({
+      where: { id },
+      data: { currentStock: newStock },
+      include: { variants: true },
+    });
+
+    return serializeProduct(updated);
+  });
+};
+
+export const getProductMovements = async (productId, { reason, startDate, endDate, page = 1, limit = 20 }) => {
+  const id = BigInt(productId);
+
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+
+  const where = { productId: id };
   if (reason) where.reason = reason;
   if (startDate || endDate) {
     where.createdAt = {};
@@ -96,15 +137,24 @@ export const getSupplyMovements = async (id, { reason, startDate, endDate, page 
   const limitNum = Number(limit);
 
   const [total, movements] = await Promise.all([
-    prisma.stockMovement.count({ where }),
-    prisma.stockMovement.findMany({
+    prisma.productStockMovement.count({ where }),
+    prisma.productStockMovement.findMany({
       where,
-      include: { admin: { include: { adminUser: true } } },
       orderBy: { createdAt: 'desc' },
       skip: (pageNum - 1) * limitNum,
       take: limitNum,
     }),
   ]);
+
+  const adminIds = [...new Set(movements.map((m) => m.adminId))];
+  const admins =
+    adminIds.length > 0
+      ? await prisma.admin.findMany({
+          where: { adminUserId: { in: adminIds } },
+          include: { adminUser: true },
+        })
+      : [];
+  const adminMap = new Map(admins.map((a) => [a.adminUserId.toString(), a.adminUser.fullName]));
 
   return {
     data: movements.map((m) => ({
@@ -115,79 +165,50 @@ export const getSupplyMovements = async (id, { reason, startDate, endDate, page 
       note: m.note,
       type: m.type,
       createdAt: m.createdAt.toISOString(),
-      admin: { adminUser: { fullName: m.admin.adminUser.fullName } },
+      admin: { adminUser: { fullName: adminMap.get(m.adminId.toString()) ?? 'Administrador' } },
     })),
     pagination: { page: pageNum, limit: limitNum, total },
   };
 };
 
-export const bulkAdjustStock = async (adjustments, reason, note, adminId) => {
+export const bulkAdjustProductStock = async (adjustments, reason, note, adminId) => {
   const results = await Promise.allSettled(
-    adjustments.map(async ({ supplyId, newStock }) => {
-      const itemId = BigInt(supplyId);
+    adjustments.map(async ({ productId, newStock }) => {
+      const id = BigInt(productId);
 
-      const supply = await prisma.supply.findUnique({
-        where: { itemId },
-        include: { item: true },
-      });
+      const product = await prisma.product.findUnique({ where: { id } });
+      if (!product) throw new Error(`Producto ${productId} no encontrado`);
 
-      if (!supply) throw new Error(`Producto ${supplyId} no encontrado`);
-
-      const previousQuantity = Math.round(Number(supply.currentStock));
+      const previousQuantity = product.currentStock;
 
       await prisma.$transaction(async (tx) => {
-        await tx.stockMovement.create({
+        await tx.productStockMovement.create({
           data: {
-            variantId: itemId,
+            productId: id,
             adminId: BigInt(adminId),
             type: 'manual_adjustment',
             previousQuantity,
             newQuantity: newStock,
             reason,
-            note: note || null,
+            note: note ?? null,
           },
         });
-
-        const updatedSupply = await tx.supply.update({
-          where: { itemId },
+        await tx.product.update({
+          where: { id },
           data: { currentStock: newStock },
-          include: { item: true },
         });
-
-        const minThreshold = Number(updatedSupply.minThreshold);
-        const shouldAlert = newStock <= 0 || (minThreshold > 0 && newStock <= minThreshold);
-
-        if (shouldAlert) {
-          const alertType = newStock <= 0 ? 'out_of_stock' : 'low_stock';
-          const existingAlert = await tx.supplyAlert.findFirst({ where: { supplyId: itemId } });
-          if (existingAlert) {
-            await tx.supplyAlert.update({
-              where: { id: existingAlert.id },
-              data: { type: alertType, threshold: updatedSupply.minThreshold, active: true },
-            });
-          } else {
-            await tx.supplyAlert.create({
-              data: { supplyId: itemId, type: alertType, threshold: updatedSupply.minThreshold, active: true },
-            });
-          }
-        } else {
-          await tx.supplyAlert.updateMany({
-            where: { supplyId: itemId, active: true },
-            data: { active: false },
-          });
-        }
       });
 
-      return { supplyId, success: true, newStock };
+      return { productId, success: true, newStock };
     })
   );
 
   const processedResults = results.map((result, index) => {
     if (result.status === 'fulfilled') return result.value;
     return {
-      supplyId: adjustments[index].supplyId,
+      productId: adjustments[index].productId,
       success: false,
-      error: result.reason?.message || 'Error desconocido',
+      error: result.reason?.message ?? 'Error desconocido',
     };
   });
 
@@ -198,72 +219,4 @@ export const bulkAdjustStock = async (adjustments, reason, note, adminId) => {
     results: processedResults,
     summary: { total: adjustments.length, successful, failed },
   };
-};
-
-export const adjustSupplyStock = async (id, { newStock, reason, note }, adminId) => {
-  const itemId = BigInt(id);
-
-  const supply = await prisma.supply.findUnique({
-    where: { itemId },
-    include: { item: true },
-  });
-
-  if (!supply) {
-    throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
-  }
-
-  const previousQuantity = Math.round(Number(supply.currentStock));
-
-  if (previousQuantity === newStock) {
-    throw crearError(PRODUCTS_MESSAGES.MISMO_STOCK, HTTP_STATUS.CONFLICT);
-  }
-
-  return prisma.$transaction(async (tx) => {
-    await tx.stockMovement.create({
-      data: {
-        variantId: itemId,
-        adminId: BigInt(adminId),
-        type: 'manual_adjustment',
-        previousQuantity,
-        newQuantity: newStock,
-        reason,
-        note: note || null,
-      },
-    });
-
-    const updatedSupply = await tx.supply.update({
-      where: { itemId },
-      data: { currentStock: newStock },
-      include: { item: true },
-    });
-
-    const minThreshold = Number(updatedSupply.minThreshold);
-    const shouldAlert = newStock <= 0 || (minThreshold > 0 && newStock <= minThreshold);
-
-    if (shouldAlert) {
-      const alertType = newStock <= 0 ? 'out_of_stock' : 'low_stock';
-      const existingAlert = await tx.supplyAlert.findFirst({ where: { supplyId: itemId } });
-      if (existingAlert) {
-        await tx.supplyAlert.update({
-          where: { id: existingAlert.id },
-          data: { type: alertType, threshold: updatedSupply.minThreshold, active: true },
-        });
-      } else {
-        await tx.supplyAlert.create({
-          data: { supplyId: itemId, type: alertType, threshold: updatedSupply.minThreshold, active: true },
-        });
-      }
-    } else {
-      await tx.supplyAlert.updateMany({ where: { supplyId: itemId, active: true }, data: { active: false } });
-    }
-
-    return {
-      id: updatedSupply.item.id.toString(),
-      name: updatedSupply.item.name,
-      status: updatedSupply.item.status,
-      unitOfMeasure: updatedSupply.unitOfMeasure,
-      currentStock: updatedSupply.currentStock,
-      minThreshold: updatedSupply.minThreshold,
-    };
-  });
 };
