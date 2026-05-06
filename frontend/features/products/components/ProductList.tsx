@@ -8,9 +8,11 @@ interface ProductListProps {
   products: Product[];
   onAdjust: (product: Product) => void;
   onHistory: (product: Product) => void;
+  onEdit: (product: Product) => void;
+  onDelete: (product: Product) => void;
 }
 
-export function ProductList({ products, onAdjust, onHistory }: ProductListProps) {
+export function ProductList({ products, onAdjust, onHistory, onEdit, onDelete }: ProductListProps) {
   if (products.length === 0) {
     return <p className="text-sm text-foreground/60">{strings.emptyMessage}</p>;
   }
@@ -69,6 +71,18 @@ export function ProductList({ products, onAdjust, onHistory }: ProductListProps)
                     className="text-sm font-medium text-foreground/50 hover:text-foreground transition-colors"
                   >
                     {historyStrings.viewHistory}
+                  </button>
+                  <button
+                    onClick={() => onEdit(product)}
+                    className="text-sm font-medium text-amber-600 hover:text-amber-700 transition-colors"
+                  >
+                    {strings.editButton}
+                  </button>
+                  <button
+                    onClick={() => onDelete(product)}
+                    className="text-sm font-medium text-red-500 hover:text-red-600 transition-colors"
+                  >
+                    {strings.deleteButton}
                   </button>
                 </div>
               </td>

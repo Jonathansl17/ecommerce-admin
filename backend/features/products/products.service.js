@@ -73,16 +73,21 @@ export const update = async (id, data) => {
 };
 
 export const remove = async (id) => {
-  try {
-    const product = await prisma.product.delete({
-      where: { id: BigInt(id) },
-      include: { variants: true },
-    });
-    return serializeProduct(product);
-  } catch (error) {
-    if (error.code === 'P2025') throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
-    throw error;
-  }
+  const bigId = BigInt(id);
+
+  const product = await prisma.product.findUnique({
+    where: { id: bigId },
+    include: { variants: true },
+  });
+  if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.productStockMovement.deleteMany({ where: { productId: bigId } });
+    await tx.productVariant.deleteMany({ where: { productId: bigId } });
+    await tx.product.delete({ where: { id: bigId } });
+  });
+
+  return serializeProduct(product);
 };
 
 export const adjustProductStock = async (productId, { newStock, reason, note }, adminId) => {
