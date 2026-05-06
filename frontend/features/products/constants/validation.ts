@@ -22,3 +22,22 @@ export const BULK_ADJUSTMENT_VALIDATION = {
   NEW_STOCK_MAX: 999999,
   NOTE_MAX_LENGTH: 500,
 } as const;
+
+export const CREATE_PRODUCT_VALIDATION = {
+  NAME: {
+    MIN_LENGTH: 3,
+    MAX_LENGTH: 100,
+  },
+  PRICE: {
+    MIN: 0.01,
+    MAX: 999999.99,
+  },
+  DESCRIPTION: {
+    MAX_LENGTH: 500,
+  },
+} as const;
+
+export const PRODUCT_STATUS_OPTIONS = [
+  { value: 'active' as const, label: 'Activo' },
+  { value: 'inactive' as const, label: 'Inactivo' },
+];
