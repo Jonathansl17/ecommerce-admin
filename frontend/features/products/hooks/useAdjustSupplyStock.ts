@@ -3,20 +3,19 @@ import { apiFetch, ApiError } from '@/lib/http/apiFetch';
 import { REQUEST_TIMEOUT_MS } from '@/lib/constants/api.constants';
 import { PRODUCTS_API } from '../constants/api';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
-import type { AdjustStockForm } from '../types/products.types';
-import type { Supply } from '@/lib/types/inventory.types';
+import type { AdjustStockForm, Product } from '../types/products.types';
 
-export function useAdjustSupplyStock(onSuccess?: (updated: Supply) => void) {
+export function useAdjustSupplyStock(onSuccess?: (updated: Product) => void) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const adjustStock = useCallback(
-    async (id: string, data: AdjustStockForm): Promise<void> => {
+    async (productId: string, data: AdjustStockForm): Promise<void> => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const body = await apiFetch<{ data: Supply }>(PRODUCTS_API.ADJUST_STOCK(id), {
+        const body = await apiFetch<{ data: Product }>(PRODUCTS_API.ADJUST_STOCK(productId), {
           method: 'POST',
           body: data as unknown as Record<string, unknown>,
           signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),

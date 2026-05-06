@@ -20,7 +20,7 @@ export const validateAdjustStock = (req, res, next) => {
 };
 
 const bulkAdjustmentItemSchema = z.object({
-  supplyId: z.string().min(1, 'El ID del producto es requerido'),
+  productId: z.string().min(1, 'El ID del producto es requerido'),
   newStock: z
     .number({ invalid_type_error: 'La cantidad debe ser un número' })
     .min(0, 'La cantidad no puede ser negativa'),
