@@ -4,7 +4,7 @@ import type { BulkAdjustmentRow } from '../types/products.types';
 
 interface BulkStockAdjustmentRowProps {
   row: BulkAdjustmentRow;
-  onChange: (supplyId: string, updates: Partial<BulkAdjustmentRow>) => void;
+  onChange: (productId: string, updates: Partial<BulkAdjustmentRow>) => void;
   disabled?: boolean;
 }
 
@@ -12,20 +12,20 @@ export function BulkStockAdjustmentRow({ row, onChange, disabled }: BulkStockAdj
   const isSameStock = row.newStock !== null && row.newStock === row.currentStock;
 
   return (
-    <tr className={`hover:bg-foreground/5 transition-colors ${row.isSelected ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''}`}>
+    <tr
+      className={`hover:bg-foreground/5 transition-colors ${row.isSelected ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''}`}
+    >
       <td className="px-4 py-3">
         <input
           type="checkbox"
           checked={row.isSelected}
-          onChange={(e) => onChange(row.supplyId, { isSelected: e.target.checked })}
+          onChange={(e) => onChange(row.productId, { isSelected: e.target.checked })}
           disabled={disabled}
           className="rounded"
         />
       </td>
 
-      <td className="px-4 py-3 font-medium text-foreground">{row.name}</td>
-
-      <td className="px-4 py-3 text-foreground/70">{row.unitOfMeasure}</td>
+      <td className="px-4 py-3 font-medium text-foreground">{row.productName}</td>
 
       <td className="px-4 py-3 text-foreground/70">{row.currentStock}</td>
 
@@ -38,7 +38,7 @@ export function BulkStockAdjustmentRow({ row, onChange, disabled }: BulkStockAdj
             value={row.newStock ?? ''}
             onChange={(e) => {
               const value = e.target.value === '' ? null : Number(e.target.value);
-              onChange(row.supplyId, {
+              onChange(row.productId, {
                 newStock: value,
                 isSelected: value !== null,
               });
