@@ -31,9 +31,6 @@ export const update = async (req, res, next) => {
 export const getReport = async (req, res, next) => {
   try {
     const { dateFrom, dateTo } = req.query;
-    if (!dateFrom || !dateTo) {
-      return res.status(400).json({ error: 'Los parámetros dateFrom y dateTo son requeridos', data: null, meta: null });
-    }
     const data = await getReportService(dateFrom, dateTo);
     return res.status(HTTP_STATUS.OK).json({ data, error: null, meta: null });
   } catch (error) {
