@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PRODUCTS_CONFIG, PRODUCTS_MESSAGES } from './products.constants.js';
 
 const STOCK_ADJUSTMENT_REASONS = ['manual_adjustment', 'error_correction', 'damaged_product', 'return'];
 
@@ -36,6 +37,29 @@ const bulkAdjustStockSchema = z.object({
 
 export const validateBulkAdjustStock = (req, res, next) => {
   const result = bulkAdjustStockSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ error: result.error.errors[0].message });
+  }
+  req.body = result.data;
+  next();
+};
+
+const updateProductSchema = z.object({
+  name: z.string().min(3).max(100).optional(),
+  description: z.string().max(500).nullable().optional(),
+  price: z.number().min(1).optional(),
+  status: z.enum(['active', 'inactive']).optional(),
+  minThreshold: z
+    .number({ invalid_type_error: PRODUCTS_MESSAGES.UMBRAL_INVALIDO })
+    .int(PRODUCTS_MESSAGES.UMBRAL_INVALIDO)
+    .min(PRODUCTS_CONFIG.UMBRAL_MIN, PRODUCTS_MESSAGES.UMBRAL_INVALIDO)
+    .max(PRODUCTS_CONFIG.UMBRAL_MAX, PRODUCTS_MESSAGES.UMBRAL_INVALIDO)
+    .nullable()
+    .optional(),
+});
+
+export const validateUpdateProduct = (req, res, next) => {
+  const result = updateProductSchema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({ error: result.error.errors[0].message });
   }

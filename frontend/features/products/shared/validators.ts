@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { STOCK_ADJUSTMENT_VALIDATION, CREATE_PRODUCT_VALIDATION } from '../constants/validation';
+import { STOCK_ADJUSTMENT_VALIDATION, CREATE_PRODUCT_VALIDATION, THRESHOLD_VALIDATION } from '../constants/validation';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
 
-const { validation, createValidation } = PRODUCTS_MESSAGES;
+const { validation, createValidation, thresholdValidation } = PRODUCTS_MESSAGES;
 
 export const adjustStockSchema = z.object({
   newStock: z
@@ -34,4 +34,20 @@ export const createProductSchema = z.object({
   status: z.enum(['active', 'inactive']),
 });
 
-export const editProductSchema = createProductSchema;
+const thresholdSchema = z.preprocess(
+  (v) => {
+    if (v === '' || v === undefined || v === null) return null;
+    const n = Number(v);
+    return Number.isNaN(n) ? null : n;
+  },
+  z
+    .number()
+    .int(thresholdValidation.integer)
+    .min(THRESHOLD_VALIDATION.MIN, thresholdValidation.min)
+    .max(THRESHOLD_VALIDATION.MAX, thresholdValidation.max)
+    .nullable()
+);
+
+export const editProductSchema = createProductSchema.extend({
+  minThreshold: thresholdSchema.optional().default(null),
+});
