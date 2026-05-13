@@ -79,3 +79,17 @@ export interface CreateProductFormData {
   price: number;
   status: ProductStatus;
 }
+
+export interface EditProductDTO {
+  name?: string;
+  description?: string | null;
+  price?: number;
+  status?: ProductStatus;
+}
+
+export interface EditProductFormData {
+  name: string;
+  description: string;
+  price: number;
+  status: ProductStatus;
+}

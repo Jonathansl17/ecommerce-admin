@@ -6,7 +6,7 @@ const { validation, createValidation } = PRODUCTS_MESSAGES;
 
 export const adjustStockSchema = z.object({
   newStock: z
-    .number({ invalid_type_error: validation.newStockRequired })
+    .number({ error: validation.newStockRequired })
     .min(STOCK_ADJUSTMENT_VALIDATION.NEW_STOCK_MIN, validation.newStockMin),
   reason: z.enum(
     ['manual_adjustment', 'error_correction', 'damaged_product', 'return'],
@@ -20,7 +20,7 @@ export const adjustStockSchema = z.object({
 
 export const createProductSchema = z.object({
   name: z
-    .string({ required_error: createValidation.nameRequired })
+    .string({ error: createValidation.nameRequired })
     .min(CREATE_PRODUCT_VALIDATION.NAME.MIN_LENGTH, createValidation.nameMin)
     .max(CREATE_PRODUCT_VALIDATION.NAME.MAX_LENGTH, createValidation.nameMax),
   description: z
@@ -28,8 +28,10 @@ export const createProductSchema = z.object({
     .max(CREATE_PRODUCT_VALIDATION.DESCRIPTION.MAX_LENGTH, createValidation.descriptionMax)
     .optional(),
   price: z
-    .number({ invalid_type_error: createValidation.priceRequired })
+    .number({ error: createValidation.priceRequired })
     .min(CREATE_PRODUCT_VALIDATION.PRICE.MIN, createValidation.priceMin)
     .max(CREATE_PRODUCT_VALIDATION.PRICE.MAX, createValidation.priceMax),
   status: z.enum(['active', 'inactive']),
 });
+
+export const editProductSchema = createProductSchema;
