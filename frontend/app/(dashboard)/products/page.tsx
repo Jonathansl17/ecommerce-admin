@@ -7,13 +7,23 @@ import { PRODUCTS_API } from '@/features/products/constants/api';
 import { PRODUCTS_MESSAGES } from '@/features/products/constants/messages';
 import { useAdjustSupplyStock } from '@/features/products/hooks/useAdjustSupplyStock';
 import { useCreateProduct } from '@/features/products/hooks/useCreateProduct';
+import { useEditProduct } from '@/features/products/hooks/useEditProduct';
+import { useDeleteProduct } from '@/features/products/hooks/useDeleteProduct';
 import { productsReducer, initialProductsState } from '@/features/products/reducers/productsReducer';
 import { ProductList } from '@/features/products/components/ProductList';
 import { StockAdjustmentModal } from '@/features/products/components/StockAdjustmentModal';
 import { StockMovementHistoryModal } from '@/features/products/components/StockMovementHistoryModal';
 import { BulkStockAdjustmentTable } from '@/features/products/components/BulkStockAdjustmentTable';
 import { CreateProductModal } from '@/features/products/components/CreateProductModal';
-import type { Product, AdjustStockForm, CreateProductFormData } from '@/features/products/types/products.types';
+import { EditProductModal } from '@/features/products/components/EditProductModal';
+import { DeleteProductModal } from '@/features/products/components/DeleteProductModal';
+import { ProductAlerts } from '@/features/stock-alerts/components/ProductAlerts';
+import type {
+  Product,
+  AdjustStockForm,
+  CreateProductFormData,
+  EditProductFormData,
+} from '@/features/products/types/products.types';
 
 const strings = PRODUCTS_MESSAGES;
 
@@ -21,6 +31,8 @@ export default function ProductsPage() {
   const [state, dispatch] = useReducer(productsReducer, initialProductsState);
   const [adjustingProduct, setAdjustingProduct] = useState<Product | null>(null);
   const [historyProduct, setHistoryProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
   const [modalKey, setModalKey] = useState(0);
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
   const [isBulkMode, setIsBulkMode] = useState(false);
@@ -33,6 +45,8 @@ export default function ProductsPage() {
   });
 
   const { create } = useCreateProduct(dispatch);
+  const { edit } = useEditProduct(dispatch);
+  const { remove } = useDeleteProduct(dispatch);
 
   const loadProducts = useCallback(async () => {
     dispatch({ type: 'FETCH_START' });
@@ -72,6 +86,29 @@ export default function ProductsPage() {
     }
   };
 
+  const handleEdit = async (data: EditProductFormData) => {
+    if (!editingProduct) return;
+    const dto = {
+      name: data.name,
+      price: data.price,
+      status: data.status,
+      description: data.description || null,
+      minThreshold: data.minThreshold ?? null,
+    };
+    const product = await edit(editingProduct.id, dto);
+    if (product) {
+      setEditingProduct(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletingProduct) return;
+    const success = await remove(deletingProduct.id);
+    if (success) {
+      setDeletingProduct(null);
+    }
+  };
+
   const handleOpenCreate = () => {
     dispatch({ type: 'CREATE_CLEAR_ERROR' });
     setIsCreateOpen(true);
@@ -80,6 +117,26 @@ export default function ProductsPage() {
   const handleCloseCreate = () => {
     dispatch({ type: 'CREATE_CLEAR_ERROR' });
     setIsCreateOpen(false);
+  };
+
+  const handleOpenEdit = (product: Product) => {
+    dispatch({ type: 'UPDATE_CLEAR_ERROR' });
+    setEditingProduct(product);
+  };
+
+  const handleCloseEdit = () => {
+    dispatch({ type: 'UPDATE_CLEAR_ERROR' });
+    setEditingProduct(null);
+  };
+
+  const handleOpenDelete = (product: Product) => {
+    dispatch({ type: 'DELETE_CLEAR_ERROR' });
+    setDeletingProduct(product);
+  };
+
+  const handleCloseDelete = () => {
+    dispatch({ type: 'DELETE_CLEAR_ERROR' });
+    setDeletingProduct(null);
   };
 
   return (
@@ -129,14 +186,25 @@ export default function ProductsPage() {
         ) : isBulkMode ? (
           <BulkStockAdjustmentTable products={state.products} onDone={handleBulkDone} />
         ) : (
-          <ProductList
+          <>
+            <ProductAlerts
+              products={state.products}
+              onAdjust={(product) => {
+                setModalKey((k) => k + 1);
+                setAdjustingProduct(product);
+              }}
+            />
+            <ProductList
             products={state.products}
             onAdjust={(product) => {
               setModalKey((k) => k + 1);
               setAdjustingProduct(product);
             }}
             onHistory={(product) => setHistoryProduct(product)}
+            onEdit={handleOpenEdit}
+            onDelete={handleOpenDelete}
           />
+          </>
         )}
       </div>
 
@@ -145,6 +213,25 @@ export default function ProductsPage() {
           onClose={handleCloseCreate}
           onSave={handleCreate}
           serverError={state.createError}
+        />
+      )}
+
+      {editingProduct && (
+        <EditProductModal
+          product={editingProduct}
+          onClose={handleCloseEdit}
+          onSave={handleEdit}
+          serverError={state.updateError}
+        />
+      )}
+
+      {deletingProduct && (
+        <DeleteProductModal
+          product={deletingProduct}
+          isDeleting={state.isDeleting}
+          onClose={handleCloseDelete}
+          onConfirm={handleDelete}
+          serverError={state.deleteError}
         />
       )}
 

@@ -9,7 +9,7 @@ import {
   getProductMovements,
   bulkAdjustProductStock,
 } from './products.controller.js';
-import { validateAdjustStock, validateBulkAdjustStock } from './products.validator.js';
+import { validateAdjustStock, validateBulkAdjustStock, validateUpdateProduct } from './products.validator.js';
 import { requireAuth } from '../../shared/middleware/authMiddleware.js';
 
 const router = Router();
@@ -23,7 +23,7 @@ router.get('/:productId/movements', requireAuth, getProductMovements);
 router.get('/', getAll);
 router.post('/', create);
 router.get('/:id', getById);
-router.put('/:id', update);
+router.put('/:id', validateUpdateProduct, update);
 router.delete('/:id', remove);
 
 export default router;

@@ -4,21 +4,22 @@ import { Modal } from '@/components/ui/Modal';
 import { FormField } from '@/components/ui/FormField';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { useCreateProductForm } from '../hooks/useCreateProductForm';
+import { useEditProductForm } from '../hooks/useEditProductForm';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
-import { CREATE_PRODUCT_VALIDATION, PRODUCT_STATUS_OPTIONS } from '../constants/validation';
-import type { CreateProductFormData } from '../types/products.types';
+import { CREATE_PRODUCT_VALIDATION, PRODUCT_STATUS_OPTIONS, THRESHOLD_VALIDATION } from '../constants/validation';
+import type { EditProductFormData, Product } from '../types/products.types';
 
-const strings = PRODUCTS_MESSAGES.create;
+const strings = PRODUCTS_MESSAGES.edit;
 
-interface CreateProductModalProps {
+interface EditProductModalProps {
+  product: Product;
   onClose: () => void;
-  onSave: (data: CreateProductFormData) => Promise<void>;
+  onSave: (data: EditProductFormData) => Promise<void>;
   serverError?: string | null;
 }
 
-export function CreateProductModal({ onClose, onSave, serverError }: CreateProductModalProps) {
-  const { register, handleSubmit, errors, isSubmitting } = useCreateProductForm(onSave);
+export function EditProductModal({ product, onClose, onSave, serverError }: EditProductModalProps) {
+  const { register, handleSubmit, errors, isSubmitting } = useEditProductForm(product, onSave);
 
   const footer = (
     <>
@@ -32,7 +33,7 @@ export function CreateProductModal({ onClose, onSave, serverError }: CreateProdu
       </button>
       <Button
         type="submit"
-        form="create-product-form"
+        form="edit-product-form"
         isLoading={isSubmitting}
         loadingText={strings.savingButton}
         className="w-auto px-4"
@@ -44,16 +45,16 @@ export function CreateProductModal({ onClose, onSave, serverError }: CreateProdu
 
   return (
     <Modal
-      titleId="create-product-modal-title"
-      title={strings.title}
+      titleId="edit-product-modal-title"
+      title={`${strings.title} — ${product.name}`}
       onClose={onClose}
       footer={footer}
       size="md"
     >
-      <form id="create-product-form" onSubmit={handleSubmit} className="space-y-4">
-        <FormField id="create-name" label={strings.nameLabel} error={errors.name?.message}>
+      <form id="edit-product-form" onSubmit={handleSubmit} className="space-y-4">
+        <FormField id="edit-name" label={strings.nameLabel} error={errors.name?.message}>
           <Input
-            id="create-name"
+            id="edit-name"
             type="text"
             placeholder={strings.namePlaceholder}
             maxLength={CREATE_PRODUCT_VALIDATION.NAME.MAX_LENGTH}
@@ -63,12 +64,12 @@ export function CreateProductModal({ onClose, onSave, serverError }: CreateProdu
         </FormField>
 
         <FormField
-          id="create-description"
+          id="edit-description"
           label={strings.descriptionLabel}
           error={errors.description?.message}
         >
           <textarea
-            id="create-description"
+            id="edit-description"
             placeholder={strings.descriptionPlaceholder}
             maxLength={CREATE_PRODUCT_VALIDATION.DESCRIPTION.MAX_LENGTH}
             rows={3}
@@ -79,9 +80,9 @@ export function CreateProductModal({ onClose, onSave, serverError }: CreateProdu
           />
         </FormField>
 
-        <FormField id="create-price" label={strings.priceLabel} error={errors.price?.message}>
+        <FormField id="edit-price" label={strings.priceLabel} error={errors.price?.message}>
           <Input
-            id="create-price"
+            id="edit-price"
             type="number"
             min={CREATE_PRODUCT_VALIDATION.PRICE.MIN}
             max={CREATE_PRODUCT_VALIDATION.PRICE.MAX}
@@ -92,9 +93,9 @@ export function CreateProductModal({ onClose, onSave, serverError }: CreateProdu
           />
         </FormField>
 
-        <FormField id="create-status" label={strings.statusLabel} error={errors.status?.message}>
+        <FormField id="edit-status" label={strings.statusLabel} error={errors.status?.message}>
           <select
-            id="create-status"
+            id="edit-status"
             {...register('status')}
             className={`w-full rounded-md border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30 ${
               errors.status ? 'border-red-500' : 'border-foreground/20'
@@ -106,6 +107,24 @@ export function CreateProductModal({ onClose, onSave, serverError }: CreateProdu
               </option>
             ))}
           </select>
+        </FormField>
+
+        <FormField
+          id="edit-min-threshold"
+          label={strings.minThresholdLabel}
+          error={errors.minThreshold?.message}
+        >
+          <Input
+            id="edit-min-threshold"
+            type="number"
+            min={THRESHOLD_VALIDATION.MIN}
+            max={THRESHOLD_VALIDATION.MAX}
+            step="1"
+            placeholder={strings.minThresholdPlaceholder}
+            hasError={!!errors.minThreshold}
+            {...register('minThreshold')}
+          />
+          <p className="mt-1 text-xs text-foreground/50">{strings.minThresholdHint}</p>
         </FormField>
 
         {serverError && (

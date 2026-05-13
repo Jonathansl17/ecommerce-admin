@@ -29,8 +29,8 @@ export const CREATE_PRODUCT_VALIDATION = {
     MAX_LENGTH: 100,
   },
   PRICE: {
-    MIN: 0.01,
-    MAX: 999999.99,
+    MIN: 1,
+    MAX: 999999,
   },
   DESCRIPTION: {
     MAX_LENGTH: 500,
@@ -41,3 +41,8 @@ export const PRODUCT_STATUS_OPTIONS = [
   { value: 'active' as const, label: 'Activo' },
   { value: 'inactive' as const, label: 'Inactivo' },
 ];
+
+export const THRESHOLD_VALIDATION = {
+  MIN: 1,
+  MAX: 999999,
+} as const;
