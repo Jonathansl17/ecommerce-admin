@@ -70,6 +70,9 @@ export const PRODUCTS_MESSAGES = {
     priceLabel: 'Precio',
     pricePlaceholder: '0.00',
     statusLabel: 'Estado',
+    minThresholdLabel: 'Umbral mínimo de stock (opcional)',
+    minThresholdPlaceholder: 'Ej. 10',
+    minThresholdHint: 'Se mostrará alerta cuando el stock llegue o caiga por debajo de este valor.',
     saveButton: 'Guardar cambios',
     savingButton: 'Guardando...',
     cancelButton: 'Cancelar',
@@ -90,6 +93,11 @@ export const PRODUCTS_MESSAGES = {
     priceMin: 'El precio debe ser mayor a 0',
     priceMax: 'El precio no puede superar 999,999.99',
     descriptionMax: 'La descripción no puede superar los 500 caracteres',
+  },
+  thresholdValidation: {
+    min: 'El umbral mínimo debe ser al menos 1',
+    max: 'El umbral mínimo no puede superar 999,999',
+    integer: 'El umbral mínimo debe ser un número entero',
   },
   bulk: {
     title: 'Ajuste masivo de stock',

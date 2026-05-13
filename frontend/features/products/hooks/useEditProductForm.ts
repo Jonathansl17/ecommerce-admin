@@ -20,6 +20,7 @@ export function useEditProductForm(
       description: product.description ?? '',
       price: product.price,
       status: product.status,
+      minThreshold: product.minThreshold ?? null,
     },
   });
 
