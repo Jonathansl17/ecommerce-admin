@@ -17,6 +17,7 @@ import { BulkStockAdjustmentTable } from '@/features/products/components/BulkSto
 import { CreateProductModal } from '@/features/products/components/CreateProductModal';
 import { EditProductModal } from '@/features/products/components/EditProductModal';
 import { DeleteProductModal } from '@/features/products/components/DeleteProductModal';
+import { ProductAlerts } from '@/features/stock-alerts/components/ProductAlerts';
 import type {
   Product,
   AdjustStockForm,
@@ -92,6 +93,7 @@ export default function ProductsPage() {
       price: data.price,
       status: data.status,
       description: data.description || null,
+      minThreshold: data.minThreshold ?? null,
     };
     const product = await edit(editingProduct.id, dto);
     if (product) {
@@ -184,7 +186,15 @@ export default function ProductsPage() {
         ) : isBulkMode ? (
           <BulkStockAdjustmentTable products={state.products} onDone={handleBulkDone} />
         ) : (
-          <ProductList
+          <>
+            <ProductAlerts
+              products={state.products}
+              onAdjust={(product) => {
+                setModalKey((k) => k + 1);
+                setAdjustingProduct(product);
+              }}
+            />
+            <ProductList
             products={state.products}
             onAdjust={(product) => {
               setModalKey((k) => k + 1);
@@ -194,6 +204,7 @@ export default function ProductsPage() {
             onEdit={handleOpenEdit}
             onDelete={handleOpenDelete}
           />
+          </>
         )}
       </div>
 

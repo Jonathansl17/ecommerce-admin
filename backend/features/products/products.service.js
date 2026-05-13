@@ -17,6 +17,7 @@ const serializeProduct = (product) => ({
   price: Number(product.price),
   status: product.status,
   currentStock: product.currentStock,
+  minThreshold: product.minThreshold ?? null,
   createdAt: product.createdAt.toISOString(),
   updatedAt: product.updatedAt.toISOString(),
   variants: (product.variants ?? []).map(serializeVariant),
@@ -53,7 +54,7 @@ export const create = async ({ name, description, price, status }) => {
 };
 
 export const update = async (id, data) => {
-  const { name, description, price, status } = data;
+  const { name, description, price, status, minThreshold } = data;
   try {
     const product = await prisma.product.update({
       where: { id: BigInt(id) },
@@ -62,6 +63,7 @@ export const update = async (id, data) => {
         ...(description !== undefined && { description }),
         ...(price !== undefined && { price }),
         ...(status !== undefined && { status }),
+        ...('minThreshold' in data && { minThreshold: minThreshold ?? null }),
       },
       include: { variants: true },
     });

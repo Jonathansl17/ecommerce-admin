@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useEditProductForm } from '../hooks/useEditProductForm';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
-import { CREATE_PRODUCT_VALIDATION, PRODUCT_STATUS_OPTIONS } from '../constants/validation';
+import { CREATE_PRODUCT_VALIDATION, PRODUCT_STATUS_OPTIONS, THRESHOLD_VALIDATION } from '../constants/validation';
 import type { EditProductFormData, Product } from '../types/products.types';
 
 const strings = PRODUCTS_MESSAGES.edit;
@@ -107,6 +107,24 @@ export function EditProductModal({ product, onClose, onSave, serverError }: Edit
               </option>
             ))}
           </select>
+        </FormField>
+
+        <FormField
+          id="edit-min-threshold"
+          label={strings.minThresholdLabel}
+          error={errors.minThreshold?.message}
+        >
+          <Input
+            id="edit-min-threshold"
+            type="number"
+            min={THRESHOLD_VALIDATION.MIN}
+            max={THRESHOLD_VALIDATION.MAX}
+            step="1"
+            placeholder={strings.minThresholdPlaceholder}
+            hasError={!!errors.minThreshold}
+            {...register('minThreshold')}
+          />
+          <p className="mt-1 text-xs text-foreground/50">{strings.minThresholdHint}</p>
         </FormField>
 
         {serverError && (
