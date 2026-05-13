@@ -1,4 +1,6 @@
-import { getAll as getAllService, create as createService, update as updateService, createEntry as createEntryService, createEntries as createEntriesService, createConsumption as createConsumptionService, getMovements as getMovementsService, getReport as getReportService } from './inventory.service.js';
+import { getAll as getAllService, create as createService, update as updateService } from './inventory.supply.service.js';
+import { createEntry as createEntryService, createEntries as createEntriesService, createConsumption as createConsumptionService } from './inventory.movement.service.js';
+import { getMovements as getMovementsService, getReport as getReportService } from './inventory.report.service.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 
 export const getAll = async (req, res, next) => {
