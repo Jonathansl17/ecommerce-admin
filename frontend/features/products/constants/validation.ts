@@ -29,8 +29,8 @@ export const CREATE_PRODUCT_VALIDATION = {
     MAX_LENGTH: 100,
   },
   PRICE: {
-    MIN: 0.01,
-    MAX: 999999.99,
+    MIN: 1,
+    MAX: 999999,
   },
   DESCRIPTION: {
     MAX_LENGTH: 500,
