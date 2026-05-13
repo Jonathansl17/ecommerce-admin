@@ -17,6 +17,7 @@ const serializeProduct = (product) => ({
   price: Number(product.price),
   status: product.status,
   currentStock: product.currentStock,
+  minThreshold: product.minThreshold ?? null,
   createdAt: product.createdAt.toISOString(),
   updatedAt: product.updatedAt.toISOString(),
   variants: (product.variants ?? []).map(serializeVariant),
@@ -53,7 +54,7 @@ export const create = async ({ name, description, price, status }) => {
 };
 
 export const update = async (id, data) => {
-  const { name, description, price, status } = data;
+  const { name, description, price, status, minThreshold } = data;
   try {
     const product = await prisma.product.update({
       where: { id: BigInt(id) },
@@ -62,6 +63,7 @@ export const update = async (id, data) => {
         ...(description !== undefined && { description }),
         ...(price !== undefined && { price }),
         ...(status !== undefined && { status }),
+        ...('minThreshold' in data && { minThreshold: minThreshold ?? null }),
       },
       include: { variants: true },
     });
@@ -73,16 +75,21 @@ export const update = async (id, data) => {
 };
 
 export const remove = async (id) => {
-  try {
-    const product = await prisma.product.delete({
-      where: { id: BigInt(id) },
-      include: { variants: true },
-    });
-    return serializeProduct(product);
-  } catch (error) {
-    if (error.code === 'P2025') throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
-    throw error;
-  }
+  const bigId = BigInt(id);
+
+  const product = await prisma.product.findUnique({
+    where: { id: bigId },
+    include: { variants: true },
+  });
+  if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.productStockMovement.deleteMany({ where: { productId: bigId } });
+    await tx.productVariant.deleteMany({ where: { productId: bigId } });
+    await tx.product.delete({ where: { id: bigId } });
+  });
+
+  return serializeProduct(product);
 };
 
 export const adjustProductStock = async (productId, { newStock, reason, note }, adminId) => {

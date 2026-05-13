@@ -295,17 +295,6 @@ model StockMovement {
   @@map("stock_movements")
 }
 
-model VariantAlert {
-  id        BigInt    @id @default(autoincrement())
-  variantId BigInt    @map("variant_id")
-  type      AlertType
-  threshold Int
-  active    Boolean
-
-  @@index([variantId])
-  @@map("variant_alerts")
-}
-
 model CustomOrder {
   id                   BigInt            @id @default(autoincrement())
   clientId             BigInt            @map("client_id")
@@ -380,6 +369,7 @@ model Product {
   price          Decimal                @db.Decimal(10, 2)
   status         ProductStatus
   currentStock   Int                    @default(0) @map("current_stock")
+  minThreshold   Int?                   @map("min_threshold")
   createdAt      DateTime               @default(now()) @map("created_at")
   updatedAt      DateTime               @updatedAt @map("updated_at")
   variants       ProductVariant[]
