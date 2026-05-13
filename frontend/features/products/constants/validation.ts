@@ -41,3 +41,8 @@ export const PRODUCT_STATUS_OPTIONS = [
   { value: 'active' as const, label: 'Activo' },
   { value: 'inactive' as const, label: 'Inactivo' },
 ];
+
+export const THRESHOLD_VALIDATION = {
+  MIN: 1,
+  MAX: 999999,
+} as const;

@@ -369,6 +369,7 @@ model Product {
   price          Decimal                @db.Decimal(10, 2)
   status         ProductStatus
   currentStock   Int                    @default(0) @map("current_stock")
+  minThreshold   Int?                   @map("min_threshold")
   createdAt      DateTime               @default(now()) @map("created_at")
   updatedAt      DateTime               @updatedAt @map("updated_at")
   variants       ProductVariant[]
