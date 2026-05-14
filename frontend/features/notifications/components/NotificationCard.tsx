@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Check } from 'lucide-react';
 import type {
   Notification,
@@ -158,6 +159,15 @@ export function NotificationCard({ notification, onMarkRead }: NotificationCardP
         >
           <ReviewContent content={reviewContent} />
         </div>
+      )}
+
+      {entityType === 'review' && (
+        <Link
+          href="/reviews"
+          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+        >
+          Ver en panel de moderación →
+        </Link>
       )}
     </article>
   );

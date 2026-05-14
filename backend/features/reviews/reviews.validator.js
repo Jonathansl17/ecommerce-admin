@@ -31,6 +31,8 @@ const notifyNewReviewSchema = z.object({
       REVIEW_VALIDATION.CLIENT_NAME_MAX,
       `El nombre del cliente no puede superar ${REVIEW_VALIDATION.CLIENT_NAME_MAX} caracteres`
     ),
+  clientId: z.string().optional(),
+  clientEmail: z.string().email().optional().or(z.literal('')),
   rating: z
     .number({ required_error: 'La calificación es requerida' })
     .int('La calificación debe ser un número entero')
@@ -47,6 +49,38 @@ const notifyNewReviewSchema = z.object({
 
 export const validateNotifyNewReview = (req, res, next) => {
   const result = notifyNewReviewSchema.safeParse(req.body);
+  if (!result.success) return responderErrores(res, result.error);
+  req.body = result.data;
+  next();
+};
+
+const rejectReviewSchema = z.object({
+  reason: z.enum([
+    'offensive_content',
+    'spam',
+    'false_information',
+    'off_topic',
+    'other',
+  ]),
+  notes: z.string().max(500).optional(),
+});
+
+export const validateRejectReview = (req, res, next) => {
+  const result = rejectReviewSchema.safeParse(req.body);
+  if (!result.success) return responderErrores(res, result.error);
+  req.body = result.data;
+  next();
+};
+
+const respondToReviewSchema = z.object({
+  text: z
+    .string({ required_error: 'El texto de la respuesta es requerido' })
+    .min(1, 'El texto de la respuesta no puede estar vacío')
+    .max(500, 'El texto de la respuesta no puede superar 500 caracteres'),
+});
+
+export const validateRespondToReview = (req, res, next) => {
+  const result = respondToReviewSchema.safeParse(req.body);
   if (!result.success) return responderErrores(res, result.error);
   req.body = result.data;
   next();
