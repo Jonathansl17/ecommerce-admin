@@ -167,9 +167,15 @@ export const createReviewNotification = async (reviewData, targetAdminIds) => {
     ? 'Reseña negativa recibida'
     : 'Nueva reseña de producto';
 
-  const entityId = reviewData.reviewId && !Number.isNaN(Number(reviewData.reviewId))
-    ? BigInt(reviewData.reviewId)
-    : null;
+  // Prefer the internal Review PK (BigInt) when available so that the
+  // entityId column points to the reviews table. Fall back to the external
+  // reviewId string for backwards-compatibility with callers that don't yet
+  // persist a Review record.
+  const entityId = reviewData.internalReviewId
+    ? BigInt(reviewData.internalReviewId)
+    : reviewData.reviewId && !Number.isNaN(Number(reviewData.reviewId))
+      ? BigInt(reviewData.reviewId)
+      : null;
 
   const created = await prisma.$transaction(
     targetAdminIds.map((adminId) =>
