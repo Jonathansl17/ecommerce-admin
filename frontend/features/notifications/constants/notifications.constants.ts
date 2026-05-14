@@ -3,7 +3,7 @@ export const NOTIFICATION_STRINGS = {
     title: 'Notificaciones',
     markAllRead: 'Marcar todas como leídas',
     empty: 'No tienes notificaciones',
-    emptySubtitle: 'Aquí aparecerán las notificaciones de nuevos pedidos.',
+    emptySubtitle: 'Aquí aparecerán las notificaciones de nuevos pedidos y reseñas.',
     settingsTitle: 'Preferencias de notificaciones',
   },
   card: {
@@ -21,8 +21,16 @@ export const NOTIFICATION_STRINGS = {
     shippingLabel: 'Envío a',
     unitPrice: 'c/u',
   },
+  review: {
+    priorityBadge: 'Reseña negativa',
+    priorityBanner: 'Reseña prioritaria — calificación baja',
+    productLabel: 'Producto',
+    ratingLabel: 'Calificación',
+    clientLabel: 'Cliente',
+  },
   preferences: {
     orderNotificationsLabel: 'Recibir notificaciones de nuevos pedidos',
+    reviewNotificationsLabel: 'Recibir notificaciones de nuevas reseñas',
     saving: 'Guardando...',
     saved: 'Guardado',
     error: 'Error al guardar',
@@ -31,6 +39,8 @@ export const NOTIFICATION_STRINGS = {
   toast: {
     newOrder: 'Nuevo pedido recibido',
     customizationBadge: 'Personalización',
+    newReview: 'Nueva reseña de producto',
+    priorityBadge: 'Reseña negativa',
   },
   errors: {
     fetchError: 'No se pudieron cargar las notificaciones',

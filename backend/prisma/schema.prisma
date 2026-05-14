@@ -113,10 +113,11 @@ model AdminUser {
 }
 
 model NotificationPreference {
-  adminUserId               BigInt    @id @map("admin_user_id")
-  receiveOrderNotifications Boolean   @default(true) @map("receive_order_notifications")
-  updatedAt                 DateTime  @updatedAt @map("updated_at")
-  adminUser                 AdminUser @relation(fields: [adminUserId], references: [id])
+  adminUserId                BigInt    @id @map("admin_user_id")
+  receiveOrderNotifications  Boolean   @default(true) @map("receive_order_notifications")
+  receiveReviewNotifications Boolean   @default(true) @map("receive_review_notifications")
+  updatedAt                  DateTime  @updatedAt @map("updated_at")
+  adminUser                  AdminUser @relation(fields: [adminUserId], references: [id])
 
   @@map("notification_preferences")
 }
