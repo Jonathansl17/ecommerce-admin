@@ -7,6 +7,7 @@ export const NOTIFICATION_MESSAGES = {
 export const NOTIFICATION_EVENTS = {
   NEW_ORDER: 'new_order',
   MARK_READ: 'mark_read',
+  NEW_REVIEW: 'new_review',
 };
 
 export const NOTIFICATION_CONFIG = {
@@ -14,4 +15,6 @@ export const NOTIFICATION_CONFIG = {
   KEEPALIVE_INTERVAL_MS: 30_000,
   DEFAULT_ORDER_TITLE: 'Nuevo pedido recibido',
   DEFAULT_ORDER_ENTITY_TYPE: 'order',
+  DEFAULT_REVIEW_ENTITY_TYPE: 'review',
+  LOW_RATING_THRESHOLD: 2,
 };

@@ -5,7 +5,8 @@ import { API_BASE_URL } from '@/lib/constants/api.constants';
 import type { Notification } from '../types/notifications.types';
 
 interface UseSSENotificationsOptions {
-  onNewNotification: (notification: Notification) => void;
+  onNewNotification?: (notification: Notification) => void;
+  onNewReview?: (notification: Notification) => void;
 }
 
 interface UseSSENotificationsResult {
@@ -14,13 +15,19 @@ interface UseSSENotificationsResult {
 
 export function useSSENotifications({
   onNewNotification,
+  onNewReview,
 }: UseSSENotificationsOptions): UseSSENotificationsResult {
   const [isConnected, setIsConnected] = useState(false);
   const onNewNotificationRef = useRef(onNewNotification);
+  const onNewReviewRef = useRef(onNewReview);
 
-  // Keep the callback ref current without re-triggering the effect
+  // Keep callback refs current without re-triggering the effect
   useEffect(() => {
     onNewNotificationRef.current = onNewNotification;
+  });
+
+  useEffect(() => {
+    onNewReviewRef.current = onNewReview;
   });
 
   useEffect(() => {
@@ -34,7 +41,16 @@ export function useSSENotifications({
     es.addEventListener('new_order', (event: MessageEvent) => {
       try {
         const payload = JSON.parse(event.data as string) as { notification: Notification };
-        onNewNotificationRef.current(payload.notification);
+        onNewNotificationRef.current?.(payload.notification);
+      } catch {
+        // Malformed SSE payload — ignore
+      }
+    });
+
+    es.addEventListener('new_review', (event: MessageEvent) => {
+      try {
+        const payload = JSON.parse(event.data as string) as { notification: Notification };
+        onNewReviewRef.current?.(payload.notification);
       } catch {
         // Malformed SSE payload — ignore
       }

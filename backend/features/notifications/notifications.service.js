@@ -80,6 +80,7 @@ export const getPreferences = async (adminId) => {
     create: {
       adminUserId: adminId,
       receiveOrderNotifications: true,
+      receiveReviewNotifications: true,
     },
     update: {},
   });
@@ -90,18 +91,25 @@ export const getPreferences = async (adminId) => {
 /**
  * Update notification preferences for an admin.
  * @param {BigInt} adminId
- * @param {{ receiveOrderNotifications: boolean }} data
+ * @param {{ receiveOrderNotifications?: boolean, receiveReviewNotifications?: boolean }} data
  */
 export const updatePreferences = async (adminId, data) => {
+  const updatePayload = {};
+  if (data.receiveOrderNotifications !== undefined) {
+    updatePayload.receiveOrderNotifications = data.receiveOrderNotifications;
+  }
+  if (data.receiveReviewNotifications !== undefined) {
+    updatePayload.receiveReviewNotifications = data.receiveReviewNotifications;
+  }
+
   const prefs = await prisma.notificationPreference.upsert({
     where: { adminUserId: adminId },
     create: {
       adminUserId: adminId,
-      receiveOrderNotifications: data.receiveOrderNotifications,
+      receiveOrderNotifications: data.receiveOrderNotifications ?? true,
+      receiveReviewNotifications: data.receiveReviewNotifications ?? true,
     },
-    update: {
-      receiveOrderNotifications: data.receiveOrderNotifications,
-    },
+    update: updatePayload,
   });
 
   return serializePreferences(prefs);
@@ -145,6 +153,51 @@ export const createOrderNotification = async (orderData, targetAdminIds) => {
   return created.map(serializeNotification);
 };
 
+/**
+ * Create AdminNotification records for a set of admin IDs (review notification).
+ * @param {{ reviewId: string, productName: string, productId: string, clientName: string, rating: number, reviewText: string, isPriority: boolean }} reviewData
+ * @param {BigInt[]} targetAdminIds
+ * @returns {import('@prisma/client').AdminNotification[]}
+ */
+export const createReviewNotification = async (reviewData, targetAdminIds) => {
+  if (targetAdminIds.length === 0) return [];
+
+  const now = new Date();
+  const title = reviewData.isPriority
+    ? 'Reseña negativa recibida'
+    : 'Nueva reseña de producto';
+
+  const entityId = reviewData.reviewId && !Number.isNaN(Number(reviewData.reviewId))
+    ? BigInt(reviewData.reviewId)
+    : null;
+
+  const created = await prisma.$transaction(
+    targetAdminIds.map((adminId) =>
+      prisma.adminNotification.create({
+        data: {
+          adminId,
+          type: 'internal',
+          title,
+          content: JSON.stringify({
+            productName: reviewData.productName,
+            productId: reviewData.productId,
+            clientName: reviewData.clientName,
+            rating: reviewData.rating,
+            reviewText: reviewData.reviewText,
+            isPriority: reviewData.isPriority,
+          }),
+          entityType: NOTIFICATION_CONFIG.DEFAULT_REVIEW_ENTITY_TYPE,
+          entityId,
+          read: false,
+          sentAt: now,
+        },
+      })
+    )
+  );
+
+  return created.map(serializeNotification);
+};
+
 // ─── Serializers ──────────────────────────────────────────────────────────────
 
 function serializeNotification(n) {
@@ -166,6 +219,7 @@ function serializePreferences(p) {
   return {
     adminUserId: p.adminUserId.toString(),
     receiveOrderNotifications: p.receiveOrderNotifications,
+    receiveReviewNotifications: p.receiveReviewNotifications,
     updatedAt: p.updatedAt.toISOString(),
   };
 }
