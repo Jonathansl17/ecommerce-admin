@@ -1,0 +1,14 @@
+export const ORDER_MESSAGES = {
+  NOTIFICATION_SENT: 'Notificación de pedido enviada correctamente',
+};
+
+export const ORDER_VALIDATION = {
+  ORDER_ID_MIN: 1,
+  CLIENT_NAME_MIN: 1,
+  CLIENT_NAME_MAX: 150,
+  PRODUCTS_MIN: 1,
+  PRODUCT_NAME_MIN: 1,
+  PRODUCT_NAME_MAX: 150,
+  SHIPPING_ADDRESS_MIN: 1,
+  SHIPPING_ADDRESS_MAX: 300,
+};
