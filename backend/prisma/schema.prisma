@@ -98,17 +98,27 @@ enum NotificationType {
 }
 
 model AdminUser {
-  id             BigInt                @id @default(autoincrement())
-  fullName       String                @map("full_name") @db.VarChar(100)
-  email          String                @unique @db.VarChar(150)
-  passwordHash   String                @map("password_hash") @db.VarChar(255)
-  accountStatus  AccountStatus         @map("account_status")
-  createdAt      DateTime              @default(now()) @map("created_at")
-  updatedAt      DateTime              @updatedAt @map("updated_at")
-  recoveryTokens AdminRecoveryToken[]
-  admin          Admin?
+  id                     BigInt                    @id @default(autoincrement())
+  fullName               String                    @map("full_name") @db.VarChar(100)
+  email                  String                    @unique @db.VarChar(150)
+  passwordHash           String                    @map("password_hash") @db.VarChar(255)
+  accountStatus          AccountStatus             @map("account_status")
+  createdAt              DateTime                  @default(now()) @map("created_at")
+  updatedAt              DateTime                  @updatedAt @map("updated_at")
+  recoveryTokens         AdminRecoveryToken[]
+  admin                  Admin?
+  notificationPreference NotificationPreference?
 
   @@map("admin_users")
+}
+
+model NotificationPreference {
+  adminUserId               BigInt    @id @map("admin_user_id")
+  receiveOrderNotifications Boolean   @default(true) @map("receive_order_notifications")
+  updatedAt                 DateTime  @updatedAt @map("updated_at")
+  adminUser                 AdminUser @relation(fields: [adminUserId], references: [id])
+
+  @@map("notification_preferences")
 }
 
 model AdminRecoveryToken {
@@ -370,6 +380,7 @@ model Product {
   status         ProductStatus
   currentStock   Int                    @default(0) @map("current_stock")
   minThreshold   Int?                   @map("min_threshold")
+  isCustomizable Boolean                @default(false) @map("is_customizable")
   createdAt      DateTime               @default(now()) @map("created_at")
   updatedAt      DateTime               @updatedAt @map("updated_at")
   variants       ProductVariant[]

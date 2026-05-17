@@ -8,6 +8,8 @@ import clientsRoutes from './features/clients/clients.routes.js';
 import authRoutes from './features/auth/auth.routes.js';
 import passwordRecoveryRoutes from './features/password-recovery/password-recovery.routes.js';
 import inventoryRoutes from './features/inventory/inventory.routes.js';
+import notificationsRoutes from './features/notifications/notifications.routes.js';
+import ordersRoutes from './features/orders/orders.routes.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
 import { requireFetchHeader } from './shared/middleware/csrfMiddleware.js';
 import { APP_CONFIG } from './shared/constants/app.constants.js';
@@ -23,6 +25,14 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+
+// Routes exempt from CSRF header check are registered before requireFetchHeader.
+// /api/orders/notify is a webhook-style POST called by the external client app —
+// it won't send the x-requested-with header that browsers inject via fetch.
+// Notification GET routes (including SSE /stream) are safe methods and would
+// pass the CSRF check regardless, but they are grouped with this block for clarity.
+app.use('/api/orders', ordersRoutes);
+
 app.use(requireFetchHeader);
 
 app.use('/api/products', productsRoutes);
@@ -30,6 +40,7 @@ app.use('/api/clients', clientsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/password-recovery', passwordRecoveryRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 app.use(errorHandler);
 
