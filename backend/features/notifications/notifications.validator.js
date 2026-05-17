@@ -11,9 +11,11 @@ const responderErrores = (res, error) => {
 
 const updatePreferencesSchema = z.object({
   receiveOrderNotifications: z.boolean({
-    required_error: 'El campo receiveOrderNotifications es requerido',
     error: 'El campo receiveOrderNotifications debe ser un booleano',
-  }),
+  }).optional(),
+  receiveReviewNotifications: z.boolean({
+    error: 'El campo receiveReviewNotifications debe ser un booleano',
+  }).optional(),
 });
 
 export const validateUpdatePreferences = (req, res, next) => {

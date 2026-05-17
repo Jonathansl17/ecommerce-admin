@@ -10,6 +10,7 @@ import passwordRecoveryRoutes from './features/password-recovery/password-recove
 import inventoryRoutes from './features/inventory/inventory.routes.js';
 import notificationsRoutes from './features/notifications/notifications.routes.js';
 import ordersRoutes from './features/orders/orders.routes.js';
+import reviewsRoutes from './features/reviews/reviews.routes.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
 import { requireFetchHeader } from './shared/middleware/csrfMiddleware.js';
 import { APP_CONFIG } from './shared/constants/app.constants.js';
@@ -32,6 +33,7 @@ app.use(cookieParser());
 // Notification GET routes (including SSE /stream) are safe methods and would
 // pass the CSRF check regardless, but they are grouped with this block for clarity.
 app.use('/api/orders', ordersRoutes);
+app.use('/api/reviews', reviewsRoutes);
 
 app.use(requireFetchHeader);
 
