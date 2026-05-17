@@ -91,6 +91,12 @@ enum ModerationReason {
   other
 }
 
+enum ReviewStatus {
+  pending
+  approved
+  rejected
+}
+
 enum NotificationType {
   internal
   email
@@ -98,17 +104,28 @@ enum NotificationType {
 }
 
 model AdminUser {
-  id             BigInt                @id @default(autoincrement())
-  fullName       String                @map("full_name") @db.VarChar(100)
-  email          String                @unique @db.VarChar(150)
-  passwordHash   String                @map("password_hash") @db.VarChar(255)
-  accountStatus  AccountStatus         @map("account_status")
-  createdAt      DateTime              @default(now()) @map("created_at")
-  updatedAt      DateTime              @updatedAt @map("updated_at")
-  recoveryTokens AdminRecoveryToken[]
-  admin          Admin?
+  id                     BigInt                    @id @default(autoincrement())
+  fullName               String                    @map("full_name") @db.VarChar(100)
+  email                  String                    @unique @db.VarChar(150)
+  passwordHash           String                    @map("password_hash") @db.VarChar(255)
+  accountStatus          AccountStatus             @map("account_status")
+  createdAt              DateTime                  @default(now()) @map("created_at")
+  updatedAt              DateTime                  @updatedAt @map("updated_at")
+  recoveryTokens         AdminRecoveryToken[]
+  admin                  Admin?
+  notificationPreference NotificationPreference?
 
   @@map("admin_users")
+}
+
+model NotificationPreference {
+  adminUserId                BigInt    @id @map("admin_user_id")
+  receiveOrderNotifications  Boolean   @default(true) @map("receive_order_notifications")
+  receiveReviewNotifications Boolean   @default(true) @map("receive_review_notifications")
+  updatedAt                  DateTime  @updatedAt @map("updated_at")
+  adminUser                  AdminUser @relation(fields: [adminUserId], references: [id])
+
+  @@map("notification_preferences")
 }
 
 model AdminRecoveryToken {
@@ -313,30 +330,52 @@ model CustomOrder {
   @@map("custom_orders")
 }
 
+model Review {
+  id               BigInt            @id @default(autoincrement())
+  externalId       String            @map("external_id") @db.VarChar(100)
+  productId        String            @map("product_id") @db.VarChar(100)
+  productName      String            @map("product_name") @db.VarChar(100)
+  clientId         String?           @map("client_id") @db.VarChar(100)
+  clientName       String            @map("client_name") @db.VarChar(100)
+  clientEmail      String?           @map("client_email") @db.VarChar(150)
+  rating           Int
+  reviewText       String            @map("review_text") @db.Text
+  isPriority       Boolean           @default(false) @map("is_priority")
+  status           ReviewStatus      @default(pending)
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  adminResponse    AdminResponse?
+  moderationRecord ModerationRecord?
+
+  @@index([status])
+  @@index([externalId])
+  @@map("reviews")
+}
+
 model AdminResponse {
   id          BigInt   @id @default(autoincrement())
-  reviewId    BigInt   @map("review_id")
+  reviewId    BigInt   @unique @map("review_id")
   adminId     BigInt   @map("admin_id")
   text        String   @db.VarChar(500)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   admin       Admin    @relation(fields: [adminId], references: [adminUserId])
+  review      Review   @relation(fields: [reviewId], references: [id])
 
-  @@index([reviewId])
   @@index([adminId])
   @@map("admin_responses")
 }
 
 model ModerationRecord {
   id          BigInt           @id @default(autoincrement())
-  reviewId    BigInt           @map("review_id")
+  reviewId    BigInt           @unique @map("review_id")
   adminId     BigInt           @map("admin_id")
   reason      ModerationReason
   notes       String?
   createdAt   DateTime         @default(now()) @map("created_at")
   admin       Admin            @relation(fields: [adminId], references: [adminUserId])
+  review      Review           @relation(fields: [reviewId], references: [id])
 
-  @@index([reviewId])
   @@index([adminId])
   @@map("moderation_records")
 }
@@ -370,6 +409,7 @@ model Product {
   status         ProductStatus
   currentStock   Int                    @default(0) @map("current_stock")
   minThreshold   Int?                   @map("min_threshold")
+  isCustomizable Boolean                @default(false) @map("is_customizable")
   createdAt      DateTime               @default(now()) @map("created_at")
   updatedAt      DateTime               @updatedAt @map("updated_at")
   variants       ProductVariant[]
