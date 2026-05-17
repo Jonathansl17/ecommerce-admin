@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bell, ChevronRight, Menu } from 'lucide-react';
+import { ChevronRight, Menu } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/AuthContext';
+import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -63,12 +64,7 @@ export function AdminHeader({ onMenuOpen }: AdminHeaderProps) {
 
       {/* Derecha — acciones */}
       <div className="flex items-center gap-2">
-        <Link
-          href="/notifications"
-          className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-        >
-          <Bell className="h-5 w-5" />
-        </Link>
+        <NotificationBell />
 
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
           <span className="text-sm font-semibold">{initials}</span>
