@@ -22,7 +22,17 @@ export default function NotificationsPage() {
     [refetch]
   );
 
-  useSSENotifications({ onNewNotification: handleNewNotification });
+  const handleNewReview = useCallback(
+    (_notification: Notification) => {
+      refetch();
+    },
+    [refetch]
+  );
+
+  useSSENotifications({
+    onNewNotification: handleNewNotification,
+    onNewReview: handleNewReview,
+  });
 
   const hasUnread = unreadCount > 0;
 

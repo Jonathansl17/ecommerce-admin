@@ -72,7 +72,8 @@ export async function getPreferences(): Promise<NotificationPreference> {
 }
 
 export async function updatePreferences(data: {
-  receiveOrderNotifications: boolean;
+  receiveOrderNotifications?: boolean;
+  receiveReviewNotifications?: boolean;
 }): Promise<NotificationPreference> {
   try {
     return await unwrap(

@@ -27,7 +27,18 @@ export interface OrderNotificationContent {
   hasCustomization: boolean;
 }
 
+export interface ReviewNotificationContent {
+  reviewId: string;
+  productName: string;
+  productId: string;
+  clientName: string;
+  rating: number;
+  reviewText: string;
+  isPriority: boolean;
+}
+
 export interface NotificationPreference {
   adminUserId: string;
   receiveOrderNotifications: boolean;
+  receiveReviewNotifications: boolean;
 }
