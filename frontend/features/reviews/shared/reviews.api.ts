@@ -2,7 +2,9 @@ import { apiFetch, ApiError } from '@/lib/http/apiFetch';
 import { REQUEST_TIMEOUT_MS } from '@/lib/constants/api.constants';
 import type {
   Review,
+  ReviewListResponse,
   ReviewStatus,
+  ReviewStats,
   RejectReviewPayload,
   RespondReviewPayload,
 } from '../types/reviews.types';
@@ -22,8 +24,21 @@ const rethrowErrorBody = (err: unknown): never => {
 export async function getReviews(status?: ReviewStatus): Promise<Review[]> {
   const params = status ? `?status=${status}` : '';
   try {
+    const result = await unwrap(
+      apiFetch<{ data: ReviewListResponse }>(`/reviews${params}`, {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      })
+    );
+    return result.items;
+  } catch {
+    throw new Error('fetch_error');
+  }
+}
+
+export async function getReviewStats(): Promise<ReviewStats> {
+  try {
     return await unwrap(
-      apiFetch<{ data: Review[] }>(`/reviews${params}`, {
+      apiFetch<{ data: ReviewStats }>(`/reviews/stats`, {
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       })
     );
