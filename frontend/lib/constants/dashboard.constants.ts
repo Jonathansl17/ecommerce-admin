@@ -1,7 +1,7 @@
 export const DASHBOARD_ROUTES = {
-  PRODUCTS: '/productos',
-  ORDERS: '/pedidos',
-  CUSTOMERS: '/clientes',
+  PRODUCTS: '/products',
+  ORDERS: '/sales',
+  CUSTOMERS: '/users',
 } as const;
 
 export const QUICK_LINKS = [
