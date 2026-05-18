@@ -6,7 +6,6 @@ import type {
   ReviewStatus,
   ReviewStats,
   RejectReviewPayload,
-  RespondReviewPayload,
 } from '../types/reviews.types';
 
 const unwrap = async <T>(promise: Promise<{ data: T }>): Promise<T> => {
@@ -72,26 +71,11 @@ export async function approveReview(id: string): Promise<Review> {
   }
 }
 
-export async function rejectReview(id: string, data: RejectReviewPayload): Promise<Review> {
+export async function rejectReview(id: string, _data: RejectReviewPayload): Promise<Review> {
   try {
     return await unwrap(
       apiFetch<{ data: Review }>(`/reviews/${id}/reject`, {
-        method: 'POST',
-        body: data as unknown as Record<string, unknown>,
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      })
-    );
-  } catch (err) {
-    return rethrowErrorBody(err);
-  }
-}
-
-export async function respondToReview(id: string, data: RespondReviewPayload): Promise<Review> {
-  try {
-    return await unwrap(
-      apiFetch<{ data: Review }>(`/reviews/${id}/respond`, {
-        method: 'POST',
-        body: data as unknown as Record<string, unknown>,
+        method: 'PATCH',
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       })
     );

@@ -7,20 +7,6 @@ export type ModerationReason =
   | 'off_topic'
   | 'other';
 
-export interface AdminResponseData {
-  id: string;
-  text: string;
-  adminName: string | null;
-  createdAt: string;
-}
-
-export interface ModerationRecordData {
-  id: string;
-  reason: ModerationReason;
-  notes: string | null;
-  createdAt: string;
-}
-
 export interface ReviewClientUser {
   id: string;
   fullName: string;
@@ -47,8 +33,6 @@ export interface Review {
   updatedAt: string;
   clientUser: ReviewClientUser;
   product: ReviewProduct;
-  adminResponse?: AdminResponseData | null;
-  moderationRecord?: ModerationRecordData | null;
 }
 
 export interface ReviewListResponse {
@@ -66,8 +50,4 @@ export interface ReviewStats {
 export interface RejectReviewPayload {
   reason: ModerationReason;
   notes?: string;
-}
-
-export interface RespondReviewPayload {
-  text: string;
 }
