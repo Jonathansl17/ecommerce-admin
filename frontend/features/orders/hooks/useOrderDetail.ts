@@ -17,25 +17,30 @@ export function useOrderDetail(id: string): UseOrderDetailReturn {
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const load = useCallback(() => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+  const load = useCallback(
+    ({ silent = false }: { silent?: boolean } = {}) => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-    setCargando(true);
-    setError(null);
+      if (!silent) setCargando(true);
+      setError(null);
 
-    fetchOrder(id, { signal: controller.signal })
-      .then((data) => {
-        setPedido(data);
-        setCargando(false);
-      })
-      .catch((err: unknown) => {
-        if (err instanceof Error && err.name === 'AbortError') return;
-        setError(toFetchDetailError(err));
-        setCargando(false);
-      });
-  }, [id]);
+      return fetchOrder(id, { signal: controller.signal })
+        .then((data) => {
+          setPedido(data);
+          setCargando(false);
+        })
+        .catch((err: unknown) => {
+          if (err instanceof Error && err.name === 'AbortError') return;
+          setError(toFetchDetailError(err));
+          setCargando(false);
+        });
+    },
+    [id],
+  );
+
+  const recargar = useCallback(() => load({ silent: true }), [load]);
 
   useEffect(() => {
     load();
@@ -44,5 +49,5 @@ export function useOrderDetail(id: string): UseOrderDetailReturn {
     };
   }, [load]);
 
-  return { pedido, cargando, error, recargar: load, setPedido };
+  return { pedido, cargando, error, recargar, setPedido };
 }
