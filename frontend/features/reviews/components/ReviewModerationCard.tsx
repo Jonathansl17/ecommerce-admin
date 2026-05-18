@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type CSSProperties } from 'react';
+import { useState } from 'react';
 import { MessageSquare, ThumbsUp, XCircle } from 'lucide-react';
 import type { Review, ModerationReason } from '../types/reviews.types';
 import { REVIEWS_STRINGS, MODERATION_REASON_LABELS } from '../constants/reviews.constants';
@@ -45,43 +45,28 @@ export function ReviewModerationCard({
   const isThisLoading = loadingId === review.id;
   const isPending = review.status === 'pending';
   const canRespond =
-    review.status === 'approved' && review.adminResponse === null;
+    review.status === 'approved' && !review.adminResponse;
 
-  const cardStyle: CSSProperties = review.isPriority
-    ? { borderLeftColor: '#ef4444', borderLeftWidth: '4px' }
-    : {};
+  const productName = review.product?.name ?? '';
+  const clientName = review.clientUser?.fullName ?? '';
 
   return (
     <>
       <article
-        className={[
-          'rounded-lg border border-border bg-card p-4 transition-colors',
-          review.isPriority ? 'border-l-4' : '',
-        ]
-          .filter(Boolean)
-          .join(' ')}
-        style={cardStyle}
-        aria-label={`Reseña de ${review.clientName} sobre ${review.productName}`}
+        className="rounded-lg border border-border bg-card p-4 transition-colors"
+        aria-label={`Reseña de ${clientName} sobre ${productName}`}
       >
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-sm font-semibold text-foreground">{review.productName}</p>
+              <p className="text-sm font-semibold text-foreground">{productName}</p>
               <ReviewStatusBadge status={review.status} />
-              {review.isPriority && (
-                <span
-                  className="inline-block rounded px-2 py-0.5 text-xs font-medium"
-                  style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}
-                >
-                  {strings.priorityBadge}
-                </span>
-              )}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <StarRating rating={review.rating} />
               <span className="text-xs text-muted-foreground">·</span>
-              <span className="text-xs text-muted-foreground">{review.clientName}</span>
+              <span className="text-xs text-muted-foreground">{clientName}</span>
               <span className="text-xs text-muted-foreground">·</span>
               <span className="text-xs text-muted-foreground">{timeAgo(review.createdAt)}</span>
             </div>
@@ -89,7 +74,7 @@ export function ReviewModerationCard({
         </div>
 
         {/* Review text */}
-        <p className="mt-3 text-sm text-foreground">{review.reviewText}</p>
+        <p className="mt-3 text-sm text-foreground">{review.comment}</p>
 
         {/* Admin response */}
         {review.adminResponse && (
