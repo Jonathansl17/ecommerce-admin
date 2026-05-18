@@ -175,13 +175,13 @@ export default function OrderDetailPage({ params }: PageProps) {
       </section>
 
       {/* Status timeline */}
-      {pedido.orderStatusNotifications.length > 0 && (
+      {(pedido.orderStatusNotifications ?? []).length > 0 && (
         <section className="rounded-lg border border-border bg-card p-5">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             {s.sectionTimeline}
           </h2>
           <ol className="relative space-y-4 border-l border-border pl-5">
-            {pedido.orderStatusNotifications.map((notification, index) => (
+            {(pedido.orderStatusNotifications ?? []).map((notification, index) => (
               <li key={notification.id} className="relative">
                 <span
                   className="absolute -left-[1.4rem] top-1 flex h-3 w-3 items-center justify-center"
