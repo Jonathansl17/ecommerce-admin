@@ -8,11 +8,12 @@ import type { AdminOrderItem } from '../types/orders.types';
 const { detail: s } = ORDERS_STRINGS;
 
 interface OrderItemsListProps {
-  items: AdminOrderItem[];
+  items: AdminOrderItem[] | undefined;
 }
 
 export function OrderItemsList({ items }: OrderItemsListProps) {
-  if (items.length === 0) {
+  const list = items ?? [];
+  if (list.length === 0) {
     return <p className="text-sm text-muted-foreground">{s.noItems}</p>;
   }
 
@@ -36,7 +37,7 @@ export function OrderItemsList({ items }: OrderItemsListProps) {
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => {
+          {list.map((item) => {
             const productName = item.variant.product.item?.name ?? s.unknownProduct;
             const imageUrl = item.variant.product.imageUrl;
             const lineTotal = item.quantity * item.unitPriceSnap;
