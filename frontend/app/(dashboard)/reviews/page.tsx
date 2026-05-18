@@ -12,7 +12,7 @@ const strings = REVIEWS_STRINGS;
 export default function ReviewsPage() {
   const { reviews, isLoading, error, statusFilter, setStatusFilter, refetch } =
     useReviews();
-  const { approve, reject, respond, loadingId } = useReviewActions();
+  const { approve, reject, loadingId } = useReviewActions();
 
   const handleApprove = useCallback(
     (id: string) => {
@@ -30,15 +30,6 @@ export default function ReviewsPage() {
       });
     },
     [reject, refetch]
-  );
-
-  const handleRespond = useCallback(
-    (id: string, text: string) => {
-      void respond(id, text, (_updated: Review) => {
-        refetch();
-      });
-    },
-    [respond, refetch]
   );
 
   return (
@@ -77,7 +68,6 @@ export default function ReviewsPage() {
           onFilterChange={setStatusFilter}
           onApprove={handleApprove}
           onReject={handleReject}
-          onRespond={handleRespond}
           loadingId={loadingId}
         />
       )}

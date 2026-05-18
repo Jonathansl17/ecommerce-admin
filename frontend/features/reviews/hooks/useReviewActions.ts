@@ -2,11 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import type { Review, ModerationReason } from '../types/reviews.types';
-import {
-  approveReview,
-  rejectReview,
-  respondToReview,
-} from '../shared/reviews.api';
+import { approveReview, rejectReview } from '../shared/reviews.api';
 
 interface UseReviewActionsReturn {
   approve: (id: string, onSuccess: (updated: Review) => void) => Promise<void>;
@@ -14,11 +10,6 @@ interface UseReviewActionsReturn {
     id: string,
     reason: ModerationReason,
     notes: string | undefined,
-    onSuccess: (updated: Review) => void
-  ) => Promise<void>;
-  respond: (
-    id: string,
-    text: string,
     onSuccess: (updated: Review) => void
   ) => Promise<void>;
   loadingId: string | null;
@@ -58,22 +49,5 @@ export function useReviewActions(): UseReviewActionsReturn {
     []
   );
 
-  const respond = useCallback(
-    async (
-      id: string,
-      text: string,
-      onSuccess: (updated: Review) => void
-    ) => {
-      setLoadingId(id);
-      try {
-        const updated = await respondToReview(id, { text });
-        onSuccess(updated);
-      } finally {
-        setLoadingId(null);
-      }
-    },
-    []
-  );
-
-  return { approve, reject, respond, loadingId };
+  return { approve, reject, loadingId };
 }
