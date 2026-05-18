@@ -83,20 +83,6 @@ enum CustomOrderStatus {
   rejected
 }
 
-enum ModerationReason {
-  offensive_content
-  spam
-  false_information
-  off_topic
-  other
-}
-
-enum ReviewStatus {
-  pending
-  approved
-  rejected
-}
-
 enum NotificationType {
   internal
   email
@@ -180,8 +166,6 @@ model Admin {
   sales              Sale[]
   stockMovements     StockMovement[]
   customOrders       CustomOrder[]
-  adminResponses     AdminResponse[]
-  moderationRecords  ModerationRecord[]
   notifications      AdminNotification[]
 
   @@index([roleId])
@@ -328,56 +312,6 @@ model CustomOrder {
   @@index([productId])
   @@index([adminId])
   @@map("custom_orders")
-}
-
-model Review {
-  id               BigInt            @id @default(autoincrement())
-  externalId       String            @map("external_id") @db.VarChar(100)
-  productId        String            @map("product_id") @db.VarChar(100)
-  productName      String            @map("product_name") @db.VarChar(100)
-  clientId         String?           @map("client_id") @db.VarChar(100)
-  clientName       String            @map("client_name") @db.VarChar(100)
-  clientEmail      String?           @map("client_email") @db.VarChar(150)
-  rating           Int
-  reviewText       String            @map("review_text") @db.Text
-  isPriority       Boolean           @default(false) @map("is_priority")
-  status           ReviewStatus      @default(pending)
-  createdAt        DateTime          @default(now()) @map("created_at")
-  updatedAt        DateTime          @updatedAt @map("updated_at")
-  adminResponse    AdminResponse?
-  moderationRecord ModerationRecord?
-
-  @@index([status])
-  @@index([externalId])
-  @@map("reviews")
-}
-
-model AdminResponse {
-  id          BigInt   @id @default(autoincrement())
-  reviewId    BigInt   @unique @map("review_id")
-  adminId     BigInt   @map("admin_id")
-  text        String   @db.VarChar(500)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  admin       Admin    @relation(fields: [adminId], references: [adminUserId])
-  review      Review   @relation(fields: [reviewId], references: [id])
-
-  @@index([adminId])
-  @@map("admin_responses")
-}
-
-model ModerationRecord {
-  id          BigInt           @id @default(autoincrement())
-  reviewId    BigInt           @unique @map("review_id")
-  adminId     BigInt           @map("admin_id")
-  reason      ModerationReason
-  notes       String?
-  createdAt   DateTime         @default(now()) @map("created_at")
-  admin       Admin            @relation(fields: [adminId], references: [adminUserId])
-  review      Review           @relation(fields: [reviewId], references: [id])
-
-  @@index([adminId])
-  @@map("moderation_records")
 }
 
 model AdminNotification {
