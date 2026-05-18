@@ -35,7 +35,6 @@ app.use(cookieParser());
 // Notification GET routes (including SSE /stream) are safe methods and would
 // pass the CSRF check regardless, but they are grouped with this block for clarity.
 app.use('/api/orders', ordersWebhookRouter);
-app.use('/api/reviews', reviewsRoutes);
 
 app.use(requireFetchHeader);
 
@@ -46,6 +45,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/password-recovery', passwordRecoveryRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/reviews', reviewsRoutes);
 
 app.use(errorHandler);
 
