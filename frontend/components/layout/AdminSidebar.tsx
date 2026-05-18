@@ -32,7 +32,7 @@ const navSections = [
   {
     label: 'COMERCIO',
     items: [
-      { href: '/sales', label: 'Ventas', icon: Receipt },
+      { href: '/sales', label: 'Pedidos', icon: Receipt },
       { href: '/custom-orders', label: 'Pedidos personalizados', icon: ClipboardList },
     ],
   },

@@ -8,6 +8,7 @@ export const HTTP_STATUS = {
   CONFLICT: 409,
   UNPROCESSABLE_ENTITY: 422,
   INTERNAL_ERROR: 500,
+  BAD_GATEWAY: 502,
 };
 
 export const HTTP_MESSAGES = {
