@@ -2,6 +2,17 @@ import prisma from '../../shared/db/prisma.js';
 import { broadcast } from '../../shared/sse/sseManager.js';
 import { createOrderNotification as persistOrderNotifications } from '../notifications/notifications.service.js';
 import { NOTIFICATION_EVENTS } from '../notifications/notifications.constants.js';
+import {
+  listOrders as listOrdersClient,
+  getOrder as getOrderClient,
+  updateOrderStatus as updateOrderStatusClient,
+  cancelOrder as cancelOrderClient,
+} from '../../shared/clientApi/orders.client.js';
+import { ClientApiError } from '../../shared/clientApi/client-api.errors.js';
+import { CLIENT_API_ERROR_CODES } from '../../shared/clientApi/client-api.constants.js';
+import { crearError } from '../../shared/middleware/errorHandler.js';
+import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
+import { ORDER_BAD_RESPONSE_FIELDS, ORDER_MESSAGES } from './orders.constants.js';
 
 /**
  * Create notifications for all admins that have order notifications enabled
@@ -12,10 +23,6 @@ import { NOTIFICATION_EVENTS } from '../notifications/notifications.constants.js
  * @returns {{ notifiedCount: number }}
  */
 export const createOrderNotification = async (orderData) => {
-  // Fetch AdminUsers that have receiveOrderNotifications = true
-  // OR have no preference row at all (default = true).
-  // Only target AdminUsers that have an Admin row (linked to a role)
-  // AND have order notifications enabled (or no preference row = default true).
   const adminUsers = await prisma.adminUser.findMany({
     where: {
       accountStatus: 'active',
@@ -36,7 +43,6 @@ export const createOrderNotification = async (orderData) => {
 
   const notifications = await persistOrderNotifications(orderData, targetAdminIds);
 
-  // Broadcast real-time SSE to each notified admin
   for (let i = 0; i < targetAdminIds.length; i++) {
     const adminId = String(targetAdminIds[i]);
     const notification = notifications[i];
@@ -44,4 +50,77 @@ export const createOrderNotification = async (orderData) => {
   }
 
   return { notifiedCount: notifications.length };
+};
+
+const extractBadResponseMessage = (body, fallback) => {
+  if (body && typeof body === 'object' && typeof body[ORDER_BAD_RESPONSE_FIELDS.ERROR] === 'string') {
+    return body[ORDER_BAD_RESPONSE_FIELDS.ERROR];
+  }
+  return fallback;
+};
+
+/**
+ * Maps a ClientApiError raised by the client backend wrapper into an HTTP error
+ * suitable for the admin error handler. Non-ClientApiError errors are re-thrown
+ * untouched so they bubble up as 500s through the default handler.
+ */
+const mapClientApiError = (error, { notFoundMessage } = {}) => {
+  if (!(error instanceof ClientApiError)) return error;
+
+  if (error.code === CLIENT_API_ERROR_CODES.BAD_RESPONSE) {
+    const status = error.status ?? HTTP_STATUS.INTERNAL_ERROR;
+    if (status === HTTP_STATUS.NOT_FOUND) {
+      return crearError(
+        notFoundMessage ?? extractBadResponseMessage(error.body, ORDER_MESSAGES.NO_ENCONTRADO),
+        HTTP_STATUS.NOT_FOUND,
+      );
+    }
+    const message = extractBadResponseMessage(error.body, ORDER_MESSAGES.ERROR_DESCONOCIDO);
+    return crearError(message, status);
+  }
+
+  if (
+    error.code === CLIENT_API_ERROR_CODES.UNREACHABLE ||
+    error.code === CLIENT_API_ERROR_CODES.TIMEOUT
+  ) {
+    return crearError(ORDER_MESSAGES.SERVICIO_EXTERNO_NO_DISPONIBLE, HTTP_STATUS.BAD_GATEWAY);
+  }
+
+  if (error.code === CLIENT_API_ERROR_CODES.MISSING_CONFIG) {
+    return crearError(ORDER_MESSAGES.CONFIGURACION_CLIENTE_FALTANTE, HTTP_STATUS.INTERNAL_ERROR);
+  }
+
+  return crearError(ORDER_MESSAGES.ERROR_DESCONOCIDO, HTTP_STATUS.INTERNAL_ERROR);
+};
+
+export const listarPedidos = async (filtros) => {
+  try {
+    return await listOrdersClient(filtros);
+  } catch (error) {
+    throw mapClientApiError(error);
+  }
+};
+
+export const obtenerPedidoPorId = async (id) => {
+  try {
+    return await getOrderClient(id);
+  } catch (error) {
+    throw mapClientApiError(error, { notFoundMessage: ORDER_MESSAGES.NO_ENCONTRADO });
+  }
+};
+
+export const actualizarEstadoPedido = async (id, status) => {
+  try {
+    return await updateOrderStatusClient(id, { status });
+  } catch (error) {
+    throw mapClientApiError(error, { notFoundMessage: ORDER_MESSAGES.NO_ENCONTRADO });
+  }
+};
+
+export const cancelarPedido = async (id) => {
+  try {
+    return await cancelOrderClient(id);
+  } catch (error) {
+    throw mapClientApiError(error, { notFoundMessage: ORDER_MESSAGES.NO_ENCONTRADO });
+  }
 };
