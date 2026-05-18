@@ -1,13 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { MessageSquare, ThumbsUp, XCircle } from 'lucide-react';
+import { ThumbsUp, XCircle } from 'lucide-react';
 import type { Review, ModerationReason } from '../types/reviews.types';
-import { REVIEWS_STRINGS, MODERATION_REASON_LABELS } from '../constants/reviews.constants';
+import { REVIEWS_STRINGS } from '../constants/reviews.constants';
 import { StarRating } from './StarRating';
 import { ReviewStatusBadge } from './ReviewStatusBadge';
 import { RejectReviewModal } from './RejectReviewModal';
-import { RespondReviewModal } from './RespondReviewModal';
 
 const strings = REVIEWS_STRINGS.card;
 const timeStrings = REVIEWS_STRINGS.time;
@@ -28,7 +27,6 @@ interface ReviewModerationCardProps {
   review: Review;
   onApprove: (id: string) => void;
   onReject: (id: string, reason: ModerationReason, notes?: string) => void;
-  onRespond: (id: string, text: string) => void;
   loadingId: string | null;
 }
 
@@ -36,16 +34,12 @@ export function ReviewModerationCard({
   review,
   onApprove,
   onReject,
-  onRespond,
   loadingId,
 }: ReviewModerationCardProps) {
   const [rejectOpen, setRejectOpen] = useState(false);
-  const [respondOpen, setRespondOpen] = useState(false);
 
   const isThisLoading = loadingId === review.id;
   const isPending = review.status === 'pending';
-  const canRespond =
-    review.status === 'approved' && !review.adminResponse;
 
   const productName = review.product?.name ?? '';
   const clientName = review.clientUser?.fullName ?? '';
@@ -76,81 +70,32 @@ export function ReviewModerationCard({
         {/* Review text */}
         <p className="mt-3 text-sm text-foreground">{review.comment}</p>
 
-        {/* Admin response */}
-        {review.adminResponse && (
-          <div
-            className="mt-3 rounded-md border border-border bg-muted p-3"
-            aria-label={strings.responseSectionLabel}
-          >
-            <p className="mb-1 text-xs font-medium text-muted-foreground">
-              {strings.responseSectionLabel} — {strings.byAdmin(review.adminResponse.adminName)}
-            </p>
-            <p className="text-sm text-foreground">{review.adminResponse.text}</p>
-          </div>
-        )}
-
-        {/* Moderation record */}
-        {review.moderationRecord && (
-          <div
-            className="mt-3 rounded-md p-3"
-            style={{ backgroundColor: '#fee2e2' }}
-            aria-label={strings.moderationSectionLabel}
-          >
-            <p className="mb-1 text-xs font-medium" style={{ color: '#991b1b' }}>
-              {strings.moderationSectionLabel}:{' '}
-              {MODERATION_REASON_LABELS[review.moderationRecord.reason]}
-            </p>
-            {review.moderationRecord.notes && (
-              <p className="text-xs" style={{ color: '#7f1d1d' }}>
-                {review.moderationRecord.notes}
-              </p>
-            )}
-          </div>
-        )}
-
         {/* Action buttons */}
-        {(isPending || canRespond) && (
+        {isPending && (
           <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Acciones de moderación">
-            {isPending && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => onApprove(review.id)}
-                  disabled={isThisLoading}
-                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors disabled:opacity-50"
-                  style={{ backgroundColor: '#22c55e' }}
-                  aria-label={`${strings.approve} reseña de ${clientName}`}
-                >
-                  <ThumbsUp className="h-3.5 w-3.5" aria-hidden="true" />
-                  {strings.approve}
-                </button>
+            <button
+              type="button"
+              onClick={() => onApprove(review.id)}
+              disabled={isThisLoading}
+              className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors disabled:opacity-50"
+              style={{ backgroundColor: '#22c55e' }}
+              aria-label={`${strings.approve} reseña de ${clientName}`}
+            >
+              <ThumbsUp className="h-3.5 w-3.5" aria-hidden="true" />
+              {strings.approve}
+            </button>
 
-                <button
-                  type="button"
-                  onClick={() => setRejectOpen(true)}
-                  disabled={isThisLoading}
-                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors disabled:opacity-50"
-                  style={{ backgroundColor: '#ef4444' }}
-                  aria-label={`${strings.reject} reseña de ${clientName}`}
-                >
-                  <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                  {strings.reject}
-                </button>
-              </>
-            )}
-
-            {(isPending || canRespond) && (
-              <button
-                type="button"
-                onClick={() => setRespondOpen(true)}
-                disabled={isThisLoading}
-                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-50"
-                aria-label={`${strings.respond} a reseña de ${clientName}`}
-              >
-                <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
-                {strings.respond}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setRejectOpen(true)}
+              disabled={isThisLoading}
+              className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors disabled:opacity-50"
+              style={{ backgroundColor: '#ef4444' }}
+              aria-label={`${strings.reject} reseña de ${clientName}`}
+            >
+              <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
+              {strings.reject}
+            </button>
           </div>
         )}
       </article>
@@ -164,18 +109,6 @@ export function ReviewModerationCard({
             setRejectOpen(false);
           }}
           onClose={() => setRejectOpen(false)}
-        />
-      )}
-
-      {respondOpen && (
-        <RespondReviewModal
-          reviewId={review.id}
-          isLoading={isThisLoading}
-          onConfirm={(text) => {
-            onRespond(review.id, text);
-            setRespondOpen(false);
-          }}
-          onClose={() => setRespondOpen(false)}
         />
       )}
     </>
