@@ -6,6 +6,7 @@ import {
   approveReview as approveReviewService,
   rejectReview as rejectReviewService,
   respondToReview as respondToReviewService,
+  stats as statsService,
 } from './reviews.service.js';
 
 export const notifyNewReview = async (req, res, next) => {
@@ -19,9 +20,25 @@ export const notifyNewReview = async (req, res, next) => {
 
 export const getReviews = async (req, res, next) => {
   try {
-    const { status } = req.query;
-    const reviews = await getReviewsService({ status });
-    return res.status(HTTP_STATUS.OK).json({ data: reviews, error: null, meta: null });
+    const { status, productId, clientUserId, rating, limit, offset } = req.query;
+    const result = await getReviewsService({
+      status,
+      productId,
+      clientUserId,
+      rating: rating !== undefined ? Number(rating) : undefined,
+      limit: limit !== undefined ? Number(limit) : undefined,
+      offset: offset !== undefined ? Number(offset) : undefined,
+    });
+    return res.status(HTTP_STATUS.OK).json({ data: result, error: null, meta: null });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getStats = async (_req, res, next) => {
+  try {
+    const result = await statsService();
+    return res.status(HTTP_STATUS.OK).json({ data: result, error: null, meta: null });
   } catch (error) {
     next(error);
   }
