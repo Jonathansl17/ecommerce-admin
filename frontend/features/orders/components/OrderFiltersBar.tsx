@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ORDER_STATUSES, ORDER_STATUS_LABELS, ORDERS_STRINGS } from '../constants/orders.constants';
 import type { OrderFilters, OrderStatus } from '../types/orders.types';
 
 const { filters: s } = ORDERS_STRINGS;
+const DEBOUNCE_MS = 500;
 
 interface OrderFiltersBarProps {
   onChange: (filters: Omit<OrderFilters, 'limit' | 'offset'>) => void;
@@ -14,20 +15,27 @@ export function OrderFiltersBar({ onChange }: OrderFiltersBarProps) {
   const [status, setStatus] = useState<OrderStatus | ''>('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
+  const isFirstRunRef = useRef(true);
 
-  const handleApply = () => {
-    onChange({
-      ...(status ? { status } : {}),
-      ...(from ? { from } : {}),
-      ...(to ? { to } : {}),
-    });
-  };
+  useEffect(() => {
+    if (isFirstRunRef.current) {
+      isFirstRunRef.current = false;
+      return;
+    }
+    const timeoutId = window.setTimeout(() => {
+      onChange({
+        ...(status ? { status } : {}),
+        ...(from ? { from } : {}),
+        ...(to ? { to } : {}),
+      });
+    }, DEBOUNCE_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [status, from, to, onChange]);
 
   const handleClear = () => {
     setStatus('');
     setFrom('');
     setTo('');
-    onChange({});
   };
 
   return (
@@ -82,13 +90,6 @@ export function OrderFiltersBar({ onChange }: OrderFiltersBarProps) {
 
       {/* Actions */}
       <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={handleApply}
-          className="rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
-        >
-          {s.applyButton}
-        </button>
         <button
           type="button"
           onClick={handleClear}
