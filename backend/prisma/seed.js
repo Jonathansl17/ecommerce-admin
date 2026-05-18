@@ -113,9 +113,6 @@ const daysAgo = (n) => new Date(Date.now() - n * 86_400_000);
 
 async function limpiarBaseDeDatos() {
   await prisma.adminNotification.deleteMany();
-  await prisma.moderationRecord.deleteMany();
-  await prisma.adminResponse.deleteMany();
-  await prisma.review.deleteMany();
   await prisma.productStockMovement.deleteMany();
   await prisma.stockMovement.deleteMany();
   await prisma.invoice.deleteMany();
@@ -415,50 +412,6 @@ async function sembrarPedidosPersonalizados(admins, productos) {
   }
 }
 
-async function sembrarReviewsYResponses(admins) {
-  const reviewsCreadas = [];
-  for (let i = 0; i < RECORDS_PER_TABLE; i++) {
-    const review = await prisma.review.create({
-      data: {
-        externalId: `EXT-REV-${1000 + i}`,
-        productId: String(i + 1),
-        productName: PRODUCT_NAMES[i % PRODUCT_NAMES.length],
-        clientId: String(1000 + i),
-        clientName: `${FIRST_NAMES[i]} ${LAST_NAMES[i]}`,
-        clientEmail: `cliente${i + 1}@example.com`,
-        rating: 1 + (i % 5),
-        reviewText: REVIEW_COMMENTS[i % REVIEW_COMMENTS.length],
-        isPriority: i % 5 === 0,
-        status: REVIEW_STATUSES[i % REVIEW_STATUSES.length],
-      },
-    });
-    reviewsCreadas.push(review);
-  }
-
-  for (let i = 0; i < RECORDS_PER_TABLE; i += 2) {
-    const admin = admins[i % admins.length];
-    await prisma.adminResponse.create({
-      data: {
-        reviewId: reviewsCreadas[i].id,
-        adminId: admin.id,
-        text: `Gracias por tu reseña #${i + 1}. Tomaremos en cuenta tus comentarios para seguir mejorando.`,
-      },
-    });
-  }
-
-  for (let i = 1; i < RECORDS_PER_TABLE; i += 3) {
-    const admin = admins[i % admins.length];
-    await prisma.moderationRecord.create({
-      data: {
-        reviewId: reviewsCreadas[i].id,
-        adminId: admin.id,
-        reason: MODERATION_REASONS[i % MODERATION_REASONS.length],
-        notes: `Reseña ${i + 1} marcada para revisión por contenido inapropiado.`,
-      },
-    });
-  }
-}
-
 async function sembrarAdminNotifications(admins) {
   for (let i = 0; i < RECORDS_PER_TABLE; i++) {
     const admin = admins[i % admins.length];
@@ -535,9 +488,6 @@ async function main() {
 
   await sembrarPedidosPersonalizados(admins, productos);
   console.log('- Pedidos personalizados');
-
-  await sembrarReviewsYResponses(admins);
-  console.log('- Resenas + respuestas + moderacion');
 
   await sembrarAdminNotifications(admins);
   console.log('- Notificaciones administrativas');

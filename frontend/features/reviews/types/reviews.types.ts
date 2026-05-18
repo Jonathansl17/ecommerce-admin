@@ -7,43 +7,47 @@ export type ModerationReason =
   | 'off_topic'
   | 'other';
 
-export interface AdminResponseData {
+export interface ReviewClientUser {
   id: string;
-  text: string;
-  adminName: string | null;
-  createdAt: string;
+  fullName: string;
+  email: string;
 }
 
-export interface ModerationRecordData {
-  id: string;
-  reason: ModerationReason;
-  notes: string | null;
-  createdAt: string;
+export interface ReviewProduct {
+  itemId: string;
+  name: string;
+  imageUrl: string | null;
 }
 
 export interface Review {
   id: string;
-  externalId: string;
   productId: string;
-  productName: string;
-  clientId: string | null;
-  clientName: string;
-  clientEmail: string | null;
+  clientUserId: string;
   rating: number;
-  reviewText: string;
-  isPriority: boolean;
+  comment: string;
   status: ReviewStatus;
+  edited: boolean;
+  helpfulVotes: number;
+  unhelpfulVotes: number;
   createdAt: string;
   updatedAt: string;
-  adminResponse: AdminResponseData | null;
-  moderationRecord: ModerationRecordData | null;
+  clientUser: ReviewClientUser;
+  product: ReviewProduct;
+}
+
+export interface ReviewListResponse {
+  total: number;
+  items: Review[];
+}
+
+export interface ReviewStats {
+  pending: number;
+  approved: number;
+  rejected: number;
+  total: number;
 }
 
 export interface RejectReviewPayload {
   reason: ModerationReason;
   notes?: string;
-}
-
-export interface RespondReviewPayload {
-  text: string;
 }
