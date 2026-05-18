@@ -34,8 +34,11 @@ const buildUrl = (path, query) => {
   return `${base}${normalizedPath}${buildQueryString(query)}`;
 };
 
+const CSRF_HEADER = 'X-Requested-With';
+const CSRF_VALUE = 'fetch';
+
 const buildHeaders = (apiKey, hasBody) => {
-  const headers = { [API_KEY_HEADER]: apiKey };
+  const headers = { [API_KEY_HEADER]: apiKey, [CSRF_HEADER]: CSRF_VALUE };
   if (hasBody) headers[CONTENT_TYPE_HEADER] = JSON_CONTENT_TYPE;
   return headers;
 };
