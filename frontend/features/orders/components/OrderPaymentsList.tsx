@@ -7,11 +7,12 @@ import type { AdminOrderPayment } from '../types/orders.types';
 const { detail: s } = ORDERS_STRINGS;
 
 interface OrderPaymentsListProps {
-  payments: AdminOrderPayment[];
+  payments: AdminOrderPayment[] | undefined;
 }
 
 export function OrderPaymentsList({ payments }: OrderPaymentsListProps) {
-  if (payments.length === 0) {
+  const list = payments ?? [];
+  if (list.length === 0) {
     return <p className="text-sm text-muted-foreground">{s.noPayments}</p>;
   }
 
@@ -38,7 +39,7 @@ export function OrderPaymentsList({ payments }: OrderPaymentsListProps) {
           </tr>
         </thead>
         <tbody>
-          {payments.map((payment) => (
+          {list.map((payment) => (
             <tr key={payment.id} className="border-b border-border last:border-0">
               <td className="py-3 pr-4 text-foreground">{payment.method}</td>
               <td className="py-3 pr-4 text-right font-medium text-foreground">
