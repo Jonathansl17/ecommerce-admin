@@ -22,17 +22,17 @@ interface PageProps {
 
 export default function OrderDetailPage({ params }: PageProps) {
   const { id } = use(params);
-  const { pedido, cargando, error, setPedido } = useOrderDetail(id);
+  const { pedido, cargando, error, recargar } = useOrderDetail(id);
   const { ejecutando, error: mutationError, actualizarEstado, cancelar } = useOrderMutations();
 
   const handleStatusChange = async (status: OrderStatus) => {
     const updated = await actualizarEstado(id, status);
-    if (updated) setPedido(updated);
+    if (updated) await recargar();
   };
 
   const handleCancel = async () => {
     const cancelled = await cancelar(id);
-    if (cancelled) setPedido(cancelled);
+    if (cancelled) await recargar();
   };
 
   if (cargando) {
