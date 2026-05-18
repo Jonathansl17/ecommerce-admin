@@ -7,6 +7,7 @@ import {
   approveReview,
   rejectReview,
   respondToReview,
+  getStats,
 } from './reviews.controller.js';
 import {
   validateNotifyNewReview,
@@ -21,6 +22,7 @@ router.post('/notify', validateNotifyNewReview, notifyNewReview);
 
 // Admin-authenticated routes.
 router.get('/', requireAuth, getReviews);
+router.get('/stats', requireAuth, getStats);
 router.get('/:id', requireAuth, getReview);
 router.patch('/:id/approve', requireAuth, approveReview);
 router.post('/:id/reject', requireAuth, validateRejectReview, rejectReview);

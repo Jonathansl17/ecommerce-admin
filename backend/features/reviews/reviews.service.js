@@ -3,8 +3,17 @@ import prisma from '../../shared/db/prisma.js';
 import { broadcast } from '../../shared/sse/sseManager.js';
 import { createReviewNotification as persistReviewNotifications } from '../notifications/notifications.service.js';
 import { NOTIFICATION_EVENTS, NOTIFICATION_CONFIG } from '../notifications/notifications.constants.js';
+import {
+  listReviews as listReviewsClient,
+  getReview as getReviewClient,
+  updateReviewStatus as updateReviewStatusClient,
+  getReviewStats as getReviewStatsClient,
+} from '../../shared/clientApi/reviews.client.js';
+import { ClientApiError } from '../../shared/clientApi/client-api.errors.js';
+import { CLIENT_API_ERROR_CODES } from '../../shared/clientApi/client-api.constants.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
+import { REVIEW_BAD_RESPONSE_FIELDS, REVIEW_MESSAGES } from './reviews.constants.js';
 
 /**
  * Create notifications for all admins that have review notifications enabled
@@ -70,104 +79,133 @@ export const createReviewNotification = async (reviewData) => {
   return { notifiedCount: notifications.length };
 };
 
-/**
- * Get a list of reviews, optionally filtered by status.
- * Ordered by priority (desc) then creation date (desc).
- *
- * @param {{ status?: string }} options
- * @returns {object[]}
- */
-export const getReviews = async ({ status } = {}) => {
-  const reviews = await prisma.review.findMany({
-    where: status ? { status } : undefined,
-    include: {
-      adminResponse: { include: { admin: { include: { adminUser: true } } } },
-      moderationRecord: true,
-    },
-    orderBy: [{ isPriority: 'desc' }, { createdAt: 'desc' }],
-  });
-  return reviews.map(serializeReview);
+const extractBadResponseMessage = (body, fallback) => {
+  if (body && typeof body === 'object' && typeof body[REVIEW_BAD_RESPONSE_FIELDS.ERROR] === 'string') {
+    return body[REVIEW_BAD_RESPONSE_FIELDS.ERROR];
+  }
+  return fallback;
 };
 
 /**
- * Get a single review by its internal ID.
+ * Maps a ClientApiError raised by the client backend wrapper into an HTTP error
+ * suitable for the admin error handler. Non-ClientApiError errors are re-thrown
+ * untouched so they bubble up as 500s through the default handler.
+ */
+const mapClientApiError = (error, { notFoundMessage } = {}) => {
+  if (!(error instanceof ClientApiError)) return error;
+
+  if (error.code === CLIENT_API_ERROR_CODES.BAD_RESPONSE) {
+    const status = error.status ?? HTTP_STATUS.INTERNAL_ERROR;
+    if (status === HTTP_STATUS.NOT_FOUND) {
+      return crearError(
+        notFoundMessage ?? extractBadResponseMessage(error.body, REVIEW_MESSAGES.NO_ENCONTRADA),
+        HTTP_STATUS.NOT_FOUND,
+      );
+    }
+    const message = extractBadResponseMessage(error.body, REVIEW_MESSAGES.ERROR_DESCONOCIDO);
+    return crearError(message, status);
+  }
+
+  if (
+    error.code === CLIENT_API_ERROR_CODES.UNREACHABLE ||
+    error.code === CLIENT_API_ERROR_CODES.TIMEOUT
+  ) {
+    return crearError(REVIEW_MESSAGES.SERVICIO_EXTERNO_NO_DISPONIBLE, HTTP_STATUS.BAD_GATEWAY);
+  }
+
+  if (error.code === CLIENT_API_ERROR_CODES.MISSING_CONFIG) {
+    return crearError(REVIEW_MESSAGES.CONFIGURACION_CLIENTE_FALTANTE, HTTP_STATUS.INTERNAL_ERROR);
+  }
+
+  return crearError(REVIEW_MESSAGES.ERROR_DESCONOCIDO, HTTP_STATUS.INTERNAL_ERROR);
+};
+
+/**
+ * List reviews via the client backend. Returns the raw `{ total, items }` shape
+ * from the client API.
+ *
+ * @param {{ status?: string, productId?: string, clientUserId?: string, rating?: number, limit?: number, offset?: number }} filters
+ */
+export const getReviews = async (filters = {}) => {
+  try {
+    return await listReviewsClient(filters);
+  } catch (error) {
+    throw mapClientApiError(error);
+  }
+};
+
+/**
+ * Fetch a single review by its id from the client backend.
  *
  * @param {string} id
- * @returns {object}
  */
 export const getReview = async (id) => {
-  const review = await prisma.review.findUnique({
-    where: { id: BigInt(id) },
-    include: {
-      adminResponse: { include: { admin: { include: { adminUser: true } } } },
-      moderationRecord: true,
-    },
-  });
-  if (!review) throw crearError('Reseña no encontrada', HTTP_STATUS.NOT_FOUND);
-  return serializeReview(review);
+  try {
+    return await getReviewClient(id);
+  } catch (error) {
+    throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
+  }
 };
 
 /**
- * Approve a pending review.
+ * Approve a review via the client backend.
  *
- * @param {string} reviewId
- * @returns {object}
+ * @param {string} id
  */
-export const approveReview = async (reviewId) => {
-  const review = await prisma.review.findUnique({ where: { id: BigInt(reviewId) } });
-  if (!review) throw crearError('Reseña no encontrada', HTTP_STATUS.NOT_FOUND);
-  if (review.status !== 'pending') throw crearError('La reseña ya fue procesada', HTTP_STATUS.CONFLICT);
-
-  const updated = await prisma.review.update({
-    where: { id: BigInt(reviewId) },
-    data: { status: 'approved' },
-    include: { adminResponse: true, moderationRecord: true },
-  });
-  return serializeReview(updated);
+export const approveReview = async (id) => {
+  try {
+    return await updateReviewStatusClient(id, { status: 'approved' });
+  } catch (error) {
+    throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
+  }
 };
 
 /**
- * Reject a pending review and create a moderation record.
- * If the review has a clientEmail, a rejection email is sent fire-and-forget.
+ * Reject a review via the client backend. Reason/notes from the admin are
+ * accepted but not forwarded — the client backend only stores status.
+ * If the review carries a client email, a rejection email is fired off.
  *
- * @param {string} reviewId
- * @param {string} adminId
- * @param {{ reason: string, notes?: string }} body
- * @returns {object}
+ * @param {string} id
+ * @param {string} _adminId
+ * @param {{ reason: string, notes?: string }} _body
  */
-export const rejectReview = async (reviewId, adminId, { reason, notes }) => {
-  const review = await prisma.review.findUnique({ where: { id: BigInt(reviewId) } });
-  if (!review) throw crearError('Reseña no encontrada', HTTP_STATUS.NOT_FOUND);
-  if (review.status !== 'pending') throw crearError('La reseña ya fue procesada', HTTP_STATUS.CONFLICT);
+export const rejectReview = async (id, _adminId, _body = {}) => {
+  let updated;
+  try {
+    updated = await updateReviewStatusClient(id, { status: 'rejected' });
+  } catch (error) {
+    throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
+  }
 
-  const [updated] = await prisma.$transaction([
-    prisma.review.update({
-      where: { id: BigInt(reviewId) },
-      data: { status: 'rejected' },
-      include: { adminResponse: true, moderationRecord: true },
-    }),
-    prisma.moderationRecord.create({
-      data: {
-        reviewId: BigInt(reviewId),
-        adminId: BigInt(adminId),
-        reason,
-        notes: notes ?? null,
-      },
-    }),
-  ]);
-
-  if (review.clientEmail) {
-    sendRejectionEmail(review).catch((err) =>
+  const clientEmail = updated?.clientUser?.email;
+  const clientName = updated?.clientUser?.fullName;
+  const productName = updated?.product?.name;
+  if (clientEmail) {
+    sendRejectionEmail({ clientEmail, clientName, productName }).catch((err) =>
       console.error('[Reviews] Error sending rejection email:', err.message)
     );
   }
 
-  return serializeReview(updated);
+  return updated;
+};
+
+/**
+ * Fetch aggregated review stats from the client backend.
+ */
+export const stats = async () => {
+  try {
+    return await getReviewStatsClient();
+  } catch (error) {
+    throw mapClientApiError(error);
+  }
 };
 
 /**
  * Add an admin response to a review that has not yet been responded to.
  * Cannot respond to rejected reviews.
+ *
+ * Note: this still operates against the LOCAL Review table while the
+ * AdminResponse/ModerationRecord migration is pending.
  *
  * @param {string} reviewId
  * @param {string} adminId
@@ -196,7 +234,7 @@ export const respondToReview = async (reviewId, adminId, { text }) => {
       moderationRecord: true,
     },
   });
-  return serializeReview(updated);
+  return serializeLocalReview(updated);
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -205,7 +243,7 @@ export const respondToReview = async (reviewId, adminId, { text }) => {
  * Send a rejection email to the client whose review was not approved.
  * Uses the same SMTP transporter configuration as the rest of the application.
  *
- * @param {{ clientEmail: string, clientName: string, productName: string }} review
+ * @param {{ clientEmail: string, clientName?: string|null, productName?: string|null }} review
  */
 async function sendRejectionEmail(review) {
   const transporter = nodemailer.createTransport({
@@ -220,9 +258,11 @@ async function sendRejectionEmail(review) {
 
   const from = process.env.SMTP_FROM || process.env.SMTP_USER;
   const subject = 'Tu reseña no fue aprobada';
+  const clientName = review.clientName ?? 'cliente';
+  const productName = review.productName ?? 'el producto';
   const html = `
-    <h2>Hola, ${review.clientName}</h2>
-    <p>Gracias por tomarte el tiempo de dejar una reseña sobre <strong>${review.productName}</strong>.</p>
+    <h2>Hola, ${clientName}</h2>
+    <p>Gracias por tomarte el tiempo de dejar una reseña sobre <strong>${productName}</strong>.</p>
     <p>Lamentablemente, tu reseña no pudo ser publicada porque no cumplió con nuestras pautas comunitarias.</p>
     <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
     <p>Saludos,<br>El equipo de atención al cliente</p>
@@ -232,13 +272,13 @@ async function sendRejectionEmail(review) {
 }
 
 /**
- * Serialize a Review Prisma record to a safe JSON-serializable object.
- * Converts BigInt fields to strings.
+ * Serialize a local Review Prisma record. Used only by respondToReview while
+ * the AdminResponse/ModerationRecord migration is pending.
  *
  * @param {object} r
  * @returns {object}
  */
-function serializeReview(r) {
+function serializeLocalReview(r) {
   return {
     id: r.id.toString(),
     externalId: r.externalId,
