@@ -109,9 +109,17 @@ export const obtenerPedidoPorId = async (id) => {
   }
 };
 
+function unwrapOrder(response) {
+  if (response != null && typeof response === 'object' && 'order' in response) {
+    return response.order;
+  }
+  return response;
+}
+
 export const actualizarEstadoPedido = async (id, status) => {
   try {
-    return await updateOrderStatusClient(id, { status });
+    const response = await updateOrderStatusClient(id, { status });
+    return unwrapOrder(response);
   } catch (error) {
     throw mapClientApiError(error, { notFoundMessage: ORDER_MESSAGES.NO_ENCONTRADO });
   }
@@ -119,7 +127,8 @@ export const actualizarEstadoPedido = async (id, status) => {
 
 export const cancelarPedido = async (id) => {
   try {
-    return await cancelOrderClient(id);
+    const response = await cancelOrderClient(id);
+    return unwrapOrder(response);
   } catch (error) {
     throw mapClientApiError(error, { notFoundMessage: ORDER_MESSAGES.NO_ENCONTRADO });
   }
