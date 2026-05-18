@@ -23,12 +23,21 @@ export function formatCurrency(amount: number): string {
   return CURRENCY_FORMATTER.format(amount);
 }
 
-export function formatDate(isoString: string): string {
-  return DATE_FORMATTER.format(new Date(isoString));
+const INVALID_DATE_FALLBACK = '—';
+
+function safeFormat(formatter: Intl.DateTimeFormat, isoString: string | null | undefined): string {
+  if (isoString == null || isoString === '') return INVALID_DATE_FALLBACK;
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return INVALID_DATE_FALLBACK;
+  return formatter.format(date);
 }
 
-export function formatDateOnly(isoString: string): string {
-  return DATE_ONLY_FORMATTER.format(new Date(isoString));
+export function formatDate(isoString: string | null | undefined): string {
+  return safeFormat(DATE_FORMATTER, isoString);
+}
+
+export function formatDateOnly(isoString: string | null | undefined): string {
+  return safeFormat(DATE_ONLY_FORMATTER, isoString);
 }
 
 export function shortId(id: string): string {
