@@ -18,6 +18,7 @@ const serializeProduct = (product) => ({
   status: product.status,
   currentStock: product.currentStock,
   minThreshold: product.minThreshold ?? null,
+  isCustomizable: product.isCustomizable,
   createdAt: product.createdAt.toISOString(),
   updatedAt: product.updatedAt.toISOString(),
   variants: (product.variants ?? []).map(serializeVariant),
