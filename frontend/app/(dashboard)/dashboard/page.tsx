@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/features/auth/hooks/AuthContext';
 import { QUICK_LINKS } from '@/lib/constants/dashboard.constants';
+import { ProductStockSummary } from '@/features/product-stock-summary/components/ProductStockSummary';
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
@@ -11,6 +12,8 @@ export default function AdminDashboardPage() {
       <p className="text-muted-foreground">
         Hola, <span className="font-medium text-foreground">{user?.fullName}</span>. Gestiona productos, pedidos y usuarios.
       </p>
+
+      <ProductStockSummary />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {QUICK_LINKS.map((link) => (
