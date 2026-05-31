@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback } from 'react';
-import { AlertCircle } from 'lucide-react';
 import type { Review, ModerationReason } from '@/features/reviews/types/reviews.types';
 import { useReviews } from '@/features/reviews/hooks/useReviews';
 import { useReviewActions } from '@/features/reviews/hooks/useReviewActions';
@@ -43,14 +42,11 @@ export default function ReviewsPage() {
       {/* Error state */}
       {error && (
         <div
-          className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3"
+          className="rounded-md p-3 text-sm font-medium"
+          style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}
           role="alert"
         >
-          <AlertCircle className="h-5 w-5 shrink-0 text-red-500" aria-hidden="true" />
-          <div>
-            <p className="text-sm font-semibold text-red-800">{strings.errors.fetchErrorTitle}</p>
-            <p className="text-xs text-red-600">{strings.errors.fetchError}</p>
-          </div>
+          {strings.errors.fetchError}
         </div>
       )}
 
