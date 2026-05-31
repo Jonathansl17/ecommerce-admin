@@ -9,7 +9,6 @@ import {
   respondToReview as respondToReviewClient,
   getReviewStats as getReviewStatsClient,
 } from '../../shared/clientApi/reviews.client.js';
-import { sendReviewRejectedEmail } from '../../shared/services/email.service.js';
 import { ClientApiError } from '../../shared/clientApi/client-api.errors.js';
 import { CLIENT_API_ERROR_CODES } from '../../shared/clientApi/client-api.constants.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
@@ -138,23 +137,11 @@ export const approveReview = async (id) => {
  * @param {{ reason?: string, notes?: string }} options
  */
 export const rejectReview = async (id, { reason, notes } = {}) => {
-  let result;
   try {
-    result = await updateReviewStatusClient(id, { status: 'rejected', reason, notes });
+    return await updateReviewStatusClient(id, { status: 'rejected', reason, notes });
   } catch (error) {
     throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
   }
-
-  const review = result?.review ?? result;
-  const customerEmail = review?.clientUser?.email ?? null;
-  const customerName = review?.clientUser?.fullName ?? null;
-  const productName = review?.product?.name ?? '';
-
-  sendReviewRejectedEmail({ customerEmail, customerName, productName }).catch((err) =>
-    console.error('[Reviews] Error al enviar email de rechazo al cliente:', err)
-  );
-
-  return result;
 };
 
 /**
