@@ -16,5 +16,16 @@ export const NOTIFICATION_CONFIG = {
   DEFAULT_ORDER_TITLE: 'Nuevo pedido recibido',
   DEFAULT_ORDER_ENTITY_TYPE: 'order',
   DEFAULT_REVIEW_ENTITY_TYPE: 'review',
+  DEFAULT_REVIEW_PRIORITY_TITLE: 'Reseña negativa recibida',
+  DEFAULT_REVIEW_TITLE: 'Nueva reseña de producto',
   LOW_RATING_THRESHOLD: 2,
+};
+
+export const NOTIFICATION_TYPE = {
+  INTERNAL: 'internal',
+};
+
+export const NOTIFICATION_REVIEW_TITLES = {
+  PRIORITY: 'Reseña negativa recibida',
+  STANDARD: 'Nueva reseña de producto',
 };
