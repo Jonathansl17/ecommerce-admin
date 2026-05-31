@@ -16,20 +16,33 @@ interface AlertRowProps {
 
 function AlertRow({ supply, variant, onQuickEntry }: AlertRowProps) {
   const isOut = variant === 'out_of_stock';
+  const unit = UNIT_OF_MEASURE_LABELS[supply.unitOfMeasure];
+  const avgLabel =
+    supply.avgDailySales != null
+      ? `${supply.avgDailySales.toFixed(2)} ${unit}/día`
+      : strings.daysRemainingUnknown;
+  const daysLabel =
+    supply.daysRemaining != null
+      ? `${supply.daysRemaining} días`
+      : strings.daysRemainingUnknown;
 
   return (
     <li className="flex items-center justify-between gap-4">
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className={`truncate text-sm font-medium ${isOut ? 'text-red-800' : 'text-yellow-900'}`}>
           {supply.name}
         </p>
         <p className={`text-xs ${isOut ? 'text-red-500' : 'text-yellow-600'}`}>
           {strings.stockLabel}: {Number(supply.currentStock)}{' '}
-          {UNIT_OF_MEASURE_LABELS[supply.unitOfMeasure]} · {strings.thresholdLabel}:{' '}
+          {unit} · {strings.thresholdLabel}:{' '}
           {Number(supply.minThreshold)}
+        </p>
+        <p className={`text-xs mt-0.5 ${isOut ? 'text-red-400' : 'text-yellow-500'}`}>
+          {strings.avgDailySalesLabel}: {avgLabel} · {strings.daysRemainingLabel}: {daysLabel}
         </p>
       </div>
       <button
+        type="button"
         onClick={() => onQuickEntry(supply.id)}
         className={`shrink-0 rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
           isOut
@@ -64,7 +77,7 @@ export function InventoryAlerts({ supplies, onQuickEntry }: InventoryAlertsProps
         {outOfStock.length > 0 && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
             <div className="mb-3 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-red-500" />
+              <span className="h-2 w-2 rounded-full bg-red-500" aria-hidden="true" />
               <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
                 {strings.outOfStock} ({outOfStock.length})
               </p>
@@ -80,7 +93,7 @@ export function InventoryAlerts({ supplies, onQuickEntry }: InventoryAlertsProps
         {lowStock.length > 0 && (
           <div className="rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3">
             <div className="mb-3 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-yellow-500" />
+              <span className="h-2 w-2 rounded-full bg-yellow-500" aria-hidden="true" />
               <p className="text-xs font-semibold uppercase tracking-wide text-yellow-700">
                 {strings.lowStock} ({lowStock.length})
               </p>

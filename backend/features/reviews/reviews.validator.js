@@ -7,7 +7,8 @@ const MODERATION_REASONS = ['offensive_content', 'spam', 'false_information', 'o
 const notifyNewReviewSchema = z.object({
   reviewId: z
     .string({ required_error: 'El ID de la reseña es requerido' })
-    .min(REVIEW_VALIDATION.REVIEW_ID_MIN, 'El ID de la reseña no puede estar vacío'),
+    .min(REVIEW_VALIDATION.REVIEW_ID_MIN, 'El ID de la reseña no puede estar vacío')
+    .max(100, 'El ID de la reseña no puede superar 100 caracteres'),
   productName: z
     .string({ required_error: 'El nombre del producto es requerido' })
     .min(REVIEW_VALIDATION.PRODUCT_NAME_MIN, 'El nombre del producto no puede estar vacío')
