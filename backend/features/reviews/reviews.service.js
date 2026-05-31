@@ -1,12 +1,13 @@
 import prisma from '../../shared/db/prisma.js';
 import { broadcast } from '../../shared/sse/sseManager.js';
-import { createReviewNotification as persistReviewNotifications } from '../notifications/notifications.service.js';
+import { createReviewNotification as persistReviewNotifications } from '../notifications/notifications.factory.service.js';
 import { NOTIFICATION_EVENTS, NOTIFICATION_CONFIG } from '../notifications/notifications.constants.js';
 import {
   listReviews as listReviewsClient,
   getReview as getReviewClient,
   updateReviewStatus as updateReviewStatusClient,
   getReviewStats as getReviewStatsClient,
+  respondToReview as respondToReviewClient,
 } from '../../shared/clientApi/reviews.client.js';
 import { ClientApiError } from '../../shared/clientApi/client-api.errors.js';
 import { CLIENT_API_ERROR_CODES } from '../../shared/clientApi/client-api.constants.js';
@@ -14,6 +15,7 @@ import { crearError } from '../../shared/middleware/errorHandler.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 import { REVIEW_BAD_RESPONSE_FIELDS, REVIEW_MESSAGES } from './reviews.constants.js';
 import { ACCOUNT_STATUS } from '../../shared/constants/app.constants.js';
+import { sendReviewRejectedEmail } from '../../shared/services/email.service.js';
 
 export const createReviewNotification = async (reviewData) => {
   const adminUsers = await prisma.adminUser.findMany({
@@ -33,16 +35,12 @@ export const createReviewNotification = async (reviewData) => {
   }
 
   const targetAdminIds = adminUsers.map((u) => u.id);
-
   const isPriority = reviewData.rating <= NOTIFICATION_CONFIG.LOW_RATING_THRESHOLD;
   const payload = { ...reviewData, isPriority };
-
   const notifications = await persistReviewNotifications(payload, targetAdminIds);
 
   for (let i = 0; i < targetAdminIds.length; i++) {
-    const adminId = String(targetAdminIds[i]);
-    const notification = notifications[i];
-    broadcast([adminId], NOTIFICATION_EVENTS.NEW_REVIEW, { notification });
+    broadcast([String(targetAdminIds[i])], NOTIFICATION_EVENTS.NEW_REVIEW, { notification: notifications[i] });
   }
 
   return { notifiedCount: notifications.length };
@@ -55,11 +53,6 @@ const extractBadResponseMessage = (body, fallback) => {
   return fallback;
 };
 
-/**
- * Maps a ClientApiError raised by the client backend wrapper into an HTTP error
- * suitable for the admin error handler. Non-ClientApiError errors are re-thrown
- * untouched so they bubble up as 500s through the default handler.
- */
 const mapClientApiError = (error, { notFoundMessage } = {}) => {
   if (!(error instanceof ClientApiError)) return error;
 
@@ -71,14 +64,10 @@ const mapClientApiError = (error, { notFoundMessage } = {}) => {
         HTTP_STATUS.NOT_FOUND,
       );
     }
-    const message = extractBadResponseMessage(error.body, REVIEW_MESSAGES.ERROR_DESCONOCIDO);
-    return crearError(message, status);
+    return crearError(extractBadResponseMessage(error.body, REVIEW_MESSAGES.ERROR_DESCONOCIDO), status);
   }
 
-  if (
-    error.code === CLIENT_API_ERROR_CODES.UNREACHABLE ||
-    error.code === CLIENT_API_ERROR_CODES.TIMEOUT
-  ) {
+  if (error.code === CLIENT_API_ERROR_CODES.UNREACHABLE || error.code === CLIENT_API_ERROR_CODES.TIMEOUT) {
     return crearError(REVIEW_MESSAGES.SERVICIO_EXTERNO_NO_DISPONIBLE, HTTP_STATUS.BAD_GATEWAY);
   }
 
@@ -89,12 +78,6 @@ const mapClientApiError = (error, { notFoundMessage } = {}) => {
   return crearError(REVIEW_MESSAGES.ERROR_DESCONOCIDO, HTTP_STATUS.INTERNAL_ERROR);
 };
 
-/**
- * List reviews via the client backend. Returns the raw `{ total, items }` shape
- * from the client API.
- *
- * @param {{ status?: string, productId?: string, clientUserId?: string, rating?: number, limit?: number, offset?: number }} filters
- */
 export const getReviews = async (filters = {}) => {
   try {
     return await listReviewsClient(filters);
@@ -103,11 +86,6 @@ export const getReviews = async (filters = {}) => {
   }
 };
 
-/**
- * Fetch a single review by its id from the client backend.
- *
- * @param {string} id
- */
 export const getReview = async (id) => {
   try {
     return await getReviewClient(id);
@@ -116,11 +94,6 @@ export const getReview = async (id) => {
   }
 };
 
-/**
- * Approve a review via the client backend.
- *
- * @param {string} id
- */
 export const approveReview = async (id) => {
   try {
     return await updateReviewStatusClient(id, { status: 'approved' });
@@ -129,22 +102,35 @@ export const approveReview = async (id) => {
   }
 };
 
-/**
- * Reject a review via the client backend.
- *
- * @param {string} id
- */
 export const rejectReview = async (id) => {
+  let result;
   try {
-    return await updateReviewStatusClient(id, { status: 'rejected' });
+    result = await updateReviewStatusClient(id, { status: 'rejected' });
+  } catch (error) {
+    throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
+  }
+
+  const customerEmail = result?.clientUser?.email;
+  const productName = result?.product?.name;
+  const reviewText = result?.comment ?? '';
+
+  if (customerEmail && productName) {
+    sendReviewRejectedEmail({ customerEmail, productName, reviewText }).catch(
+      (err) => console.error('[reviews] Error al enviar email de rechazo:', err.message),
+    );
+  }
+
+  return result;
+};
+
+export const respondToReview = async (id, responseText) => {
+  try {
+    return await respondToReviewClient(id, responseText);
   } catch (error) {
     throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
   }
 };
 
-/**
- * Fetch aggregated review stats from the client backend.
- */
 export const stats = async () => {
   try {
     return await getReviewStatsClient();

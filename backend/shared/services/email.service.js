@@ -83,3 +83,29 @@ export const sendLowStockAlert = async ({
     )
   );
 };
+
+const escapeHtml = (str) =>
+  String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+export const sendReviewRejectedEmail = async ({ customerEmail, productName, reviewText }) => {
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const safeName = escapeHtml(productName);
+  const safeText = escapeHtml(reviewText);
+  const subject = `Tu reseña sobre "${safeName}" no fue aprobada`;
+
+  const html = `
+    <h2 style="color:#dc2626">Tu reseña no fue aprobada</h2>
+    <p>Lamentamos informarte que tu reseña sobre el producto <strong>${safeName}</strong> no cumplió con nuestras políticas de contenido y no podrá ser publicada.</p>
+    <blockquote style="border-left:4px solid #e5e7eb;margin:12px 0;padding:8px 16px;color:#6b7280">
+      ${safeText}
+    </blockquote>
+    <p>Si tienes alguna duda, puedes ponerte en contacto con nuestro equipo de soporte.</p>
+  `;
+
+  await transporter.sendMail({ from, to: customerEmail, subject, html });
+};

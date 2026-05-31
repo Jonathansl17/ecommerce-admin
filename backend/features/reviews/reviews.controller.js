@@ -5,6 +5,7 @@ import {
   getReview as getReviewService,
   approveReview as approveReviewService,
   rejectReview as rejectReviewService,
+  respondToReview as respondToReviewService,
   stats as statsService,
 } from './reviews.service.js';
 
@@ -20,14 +21,7 @@ export const notifyNewReview = async (req, res, next) => {
 export const getReviews = async (req, res, next) => {
   try {
     const { status, productId, clientUserId, rating, limit, offset } = req.query;
-    const result = await getReviewsService({
-      status,
-      productId,
-      clientUserId,
-      rating: rating !== undefined ? Number(rating) : undefined,
-      limit: limit !== undefined ? Number(limit) : undefined,
-      offset: offset !== undefined ? Number(offset) : undefined,
-    });
+    const result = await getReviewsService({ status, productId, clientUserId, rating, limit, offset });
     return res.status(HTTP_STATUS.OK).json({ data: result, error: null, meta: null });
   } catch (error) {
     next(error);
@@ -64,6 +58,15 @@ export const approveReview = async (req, res, next) => {
 export const rejectReview = async (req, res, next) => {
   try {
     const review = await rejectReviewService(req.params.id);
+    return res.status(HTTP_STATUS.OK).json({ data: review, error: null, meta: null });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const respondToReview = async (req, res, next) => {
+  try {
+    const review = await respondToReviewService(req.params.id, req.body.responseText);
     return res.status(HTTP_STATUS.OK).json({ data: review, error: null, meta: null });
   } catch (error) {
     next(error);

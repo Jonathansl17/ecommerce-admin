@@ -25,3 +25,10 @@ export const updateReviewStatus = (id, { status }, { signal } = {}) =>
 
 export const getReviewStats = ({ signal } = {}) =>
   clientApiFetch(REVIEWS_STATS_PATH, { method: HTTP_METHODS.GET, signal });
+
+export const respondToReview = (id, responseText, { signal } = {}) =>
+  clientApiFetch(`${reviewPath(id)}/respond`, {
+    method: HTTP_METHODS.POST,
+    body: { responseText },
+    signal,
+  });
