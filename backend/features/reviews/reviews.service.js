@@ -1,3 +1,7 @@
+import prisma from '../../shared/db/prisma.js';
+import { broadcast } from '../../shared/sse/sseManager.js';
+import { createReviewNotification as persistReviewNotifications } from '../notifications/notifications.service.js';
+import { NOTIFICATION_EVENTS, NOTIFICATION_CONFIG } from '../notifications/notifications.constants.js';
 import {
   listReviews as listReviewsClient,
   getReview as getReviewClient,
@@ -9,6 +13,40 @@ import { CLIENT_API_ERROR_CODES } from '../../shared/clientApi/client-api.consta
 import { crearError } from '../../shared/middleware/errorHandler.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 import { REVIEW_BAD_RESPONSE_FIELDS, REVIEW_MESSAGES } from './reviews.constants.js';
+import { ACCOUNT_STATUS } from '../../shared/constants/app.constants.js';
+
+export const createReviewNotification = async (reviewData) => {
+  const adminUsers = await prisma.adminUser.findMany({
+    where: {
+      accountStatus: ACCOUNT_STATUS.ACTIVE,
+      admin: { isNot: null },
+      OR: [
+        { notificationPreference: { receiveReviewNotifications: true } },
+        { notificationPreference: null },
+      ],
+    },
+    select: { id: true },
+  });
+
+  if (adminUsers.length === 0) {
+    return { notifiedCount: 0 };
+  }
+
+  const targetAdminIds = adminUsers.map((u) => u.id);
+
+  const isPriority = reviewData.rating <= NOTIFICATION_CONFIG.LOW_RATING_THRESHOLD;
+  const payload = { ...reviewData, isPriority };
+
+  const notifications = await persistReviewNotifications(payload, targetAdminIds);
+
+  for (let i = 0; i < targetAdminIds.length; i++) {
+    const adminId = String(targetAdminIds[i]);
+    const notification = notifications[i];
+    broadcast([adminId], NOTIFICATION_EVENTS.NEW_REVIEW, { notification });
+  }
+
+  return { notifiedCount: notifications.length };
+};
 
 const extractBadResponseMessage = (body, fallback) => {
   if (body && typeof body === 'object' && typeof body[REVIEW_BAD_RESPONSE_FIELDS.ERROR] === 'string') {
