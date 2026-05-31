@@ -10,7 +10,9 @@ const serializeVariant = (variant) => ({
   priceOverride: variant.priceOverride !== null ? Number(variant.priceOverride) : null,
 });
 
-const serializeProduct = (product) => ({
+const DAILY_SALES_WINDOW_DAYS = 30;
+
+const serializeProduct = (product, avgDailySales = null, daysRemaining = null) => ({
   id: product.id.toString(),
   name: product.name,
   description: product.description ?? null,
@@ -21,14 +23,51 @@ const serializeProduct = (product) => ({
   createdAt: product.createdAt.toISOString(),
   updatedAt: product.updatedAt.toISOString(),
   variants: (product.variants ?? []).map(serializeVariant),
+  avgDailySales,
+  daysRemaining,
 });
+
+async function calcProductAvgDailySales(productId) {
+  const since = new Date();
+  since.setDate(since.getDate() - DAILY_SALES_WINDOW_DAYS);
+  since.setHours(0, 0, 0, 0);
+
+  const movements = await prisma.productStockMovement.findMany({
+    where: { productId, type: 'sale', createdAt: { gte: since } },
+    select: { previousQuantity: true, newQuantity: true },
+  });
+
+  if (movements.length === 0) return 0;
+
+  const totalSold = movements.reduce(
+    (sum, m) => sum + (m.previousQuantity - m.newQuantity),
+    0,
+  );
+  return totalSold / DAILY_SALES_WINDOW_DAYS;
+}
 
 export const getAll = async () => {
   const products = await prisma.product.findMany({
     include: { variants: true },
     orderBy: { name: 'asc' },
   });
-  return products.map(serializeProduct);
+
+  return Promise.all(
+    products.map(async (product) => {
+      const threshold = product.minThreshold;
+      const isLowStock =
+        threshold !== null && threshold > 0 && product.currentStock <= threshold;
+
+      if (!isLowStock) return serializeProduct(product);
+
+      const avg = await calcProductAvgDailySales(product.id);
+      const avgRounded = Math.round(avg * 100) / 100;
+      const daysRemaining =
+        avg > 0 ? Math.floor(product.currentStock / avg) : null;
+
+      return serializeProduct(product, avgRounded, daysRemaining);
+    }),
+  );
 };
 
 export const getById = async (id) => {

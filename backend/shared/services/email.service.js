@@ -83,3 +83,18 @@ export const sendLowStockAlert = async ({
     )
   );
 };
+
+export const sendReviewRejectedEmail = async ({ customerEmail, customerName, productName }) => {
+  if (!customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) return;
+
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const subject = 'Tu reseña no pudo ser publicada';
+  const html = `
+    <p>Hola${customerName ? ` ${customerName}` : ''},</p>
+    <p>Gracias por tomarte el tiempo de escribir una reseña sobre <strong>${productName}</strong>.</p>
+    <p>Lamentablemente, tu reseña no cumple con nuestras normas de la comunidad y no pudo ser publicada.</p>
+    <p>Si tienes preguntas, puedes contactarnos respondiendo a este correo.</p>
+  `;
+
+  await transporter.sendMail({ from, to: customerEmail, subject, html });
+};
