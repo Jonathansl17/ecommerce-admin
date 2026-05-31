@@ -29,7 +29,7 @@ export default function NotificationsPage() {
     [refetch]
   );
 
-  useSSENotifications({
+  const { isConnected } = useSSENotifications({
     onNewNotification: handleNewNotification,
     onNewReview: handleNewReview,
   });
@@ -38,6 +38,16 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
+      {!isConnected && (
+        <div
+          role="alert"
+          className="flex items-center gap-2 rounded-md border border-yellow-300 bg-yellow-50 px-4 py-2 text-sm text-yellow-800"
+        >
+          <span aria-hidden="true">⚠</span>
+          {strings.disconnectedWarning}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">{strings.title}</h1>

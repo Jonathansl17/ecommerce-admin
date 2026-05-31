@@ -1,13 +1,15 @@
 import prisma from '../../shared/db/prisma.js';
 import { broadcast } from '../../shared/sse/sseManager.js';
-import { createReviewNotification as persistReviewNotifications } from '../notifications/notifications.service.js';
+import { createReviewNotification as persistReviewNotifications } from '../notifications/notifications.factory.service.js';
 import { NOTIFICATION_EVENTS, NOTIFICATION_CONFIG } from '../notifications/notifications.constants.js';
 import {
   listReviews as listReviewsClient,
   getReview as getReviewClient,
   updateReviewStatus as updateReviewStatusClient,
+  respondToReview as respondToReviewClient,
   getReviewStats as getReviewStatsClient,
 } from '../../shared/clientApi/reviews.client.js';
+import { sendReviewRejectedEmail } from '../../shared/services/email.service.js';
 import { ClientApiError } from '../../shared/clientApi/client-api.errors.js';
 import { CLIENT_API_ERROR_CODES } from '../../shared/clientApi/client-api.constants.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
@@ -130,13 +132,40 @@ export const approveReview = async (id) => {
 };
 
 /**
- * Reject a review via the client backend.
+ * Reject a review via the client backend, then notify the customer by email.
  *
  * @param {string} id
+ * @param {{ reason?: string, notes?: string }} options
  */
-export const rejectReview = async (id) => {
+export const rejectReview = async (id, { reason, notes } = {}) => {
+  let result;
   try {
-    return await updateReviewStatusClient(id, { status: 'rejected' });
+    result = await updateReviewStatusClient(id, { status: 'rejected', reason, notes });
+  } catch (error) {
+    throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
+  }
+
+  const review = result?.review ?? result;
+  const customerEmail = review?.clientUser?.email ?? null;
+  const customerName = review?.clientUser?.fullName ?? null;
+  const productName = review?.product?.name ?? '';
+
+  sendReviewRejectedEmail({ customerEmail, customerName, productName }).catch((err) =>
+    console.error('[Reviews] Error al enviar email de rechazo al cliente:', err)
+  );
+
+  return result;
+};
+
+/**
+ * Post an admin response to a review via the client backend.
+ *
+ * @param {string} id
+ * @param {{ responseText: string }} data
+ */
+export const respondToReview = async (id, { responseText }) => {
+  try {
+    return await respondToReviewClient(id, { responseText });
   } catch (error) {
     throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
   }

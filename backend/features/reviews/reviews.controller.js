@@ -5,6 +5,7 @@ import {
   getReview as getReviewService,
   approveReview as approveReviewService,
   rejectReview as rejectReviewService,
+  respondToReview as respondToReviewService,
   stats as statsService,
 } from './reviews.service.js';
 
@@ -63,8 +64,19 @@ export const approveReview = async (req, res, next) => {
 
 export const rejectReview = async (req, res, next) => {
   try {
-    const review = await rejectReviewService(req.params.id);
+    const { reason, notes } = req.body ?? {};
+    const review = await rejectReviewService(req.params.id, { reason, notes });
     return res.status(HTTP_STATUS.OK).json({ data: review, error: null, meta: null });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const respondToReview = async (req, res, next) => {
+  try {
+    const { responseText } = req.body;
+    const result = await respondToReviewService(req.params.id, { responseText });
+    return res.status(HTTP_STATUS.OK).json({ data: result, error: null, meta: null });
   } catch (error) {
     next(error);
   }

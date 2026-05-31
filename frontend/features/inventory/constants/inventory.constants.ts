@@ -75,6 +75,9 @@ export const INVENTORY_STRINGS = {
     lowStock: 'Stock bajo',
     stockLabel: 'Stock',
     thresholdLabel: 'Umbral',
+    avgDailySalesLabel: 'Consumo diario',
+    daysRemainingLabel: 'Días restantes',
+    daysRemainingUnknown: 'N/D',
     registerEntryButton: 'Registrar entrada',
   },
   history: {

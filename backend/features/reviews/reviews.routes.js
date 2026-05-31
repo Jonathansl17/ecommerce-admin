@@ -5,6 +5,7 @@ import {
   getReview,
   approveReview,
   rejectReview,
+  respondToReview,
   getStats,
 } from './reviews.controller.js';
 import { validateNotifyNewReview } from './reviews.validator.js';
@@ -20,3 +21,4 @@ reviewsAdminRouter.get('/stats', requireAuth, getStats);
 reviewsAdminRouter.get('/:id', requireAuth, getReview);
 reviewsAdminRouter.patch('/:id/approve', requireAuth, approveReview);
 reviewsAdminRouter.patch('/:id/reject', requireAuth, rejectReview);
+reviewsAdminRouter.post('/:id/respond', requireAuth, respondToReview);
