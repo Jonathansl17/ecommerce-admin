@@ -3,12 +3,12 @@ import { SUPPLY_ALERT_TYPES, INVENTORY_MOVEMENT_TYPES } from './supplyAlert.cons
 
 const DAILY_SALES_WINDOW_DAYS = 30;
 
-async function calcAvgDailyConsumption(tx, supplyId) {
+export async function calcAvgDailyConsumption(db, supplyId) {
   const since = new Date();
   since.setDate(since.getDate() - DAILY_SALES_WINDOW_DAYS);
   since.setHours(0, 0, 0, 0);
 
-  const movements = await tx.inventoryMovement.findMany({
+  const movements = await db.inventoryMovement.findMany({
     where: {
       supplyId,
       type: INVENTORY_MOVEMENT_TYPES.CONSUMPTION,

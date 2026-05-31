@@ -9,6 +9,8 @@ export interface Supply {
   unitOfMeasure: UnitOfMeasure;
   currentStock: number;
   minThreshold: number;
+  avgDailySales?: number | null;
+  daysRemaining?: number | null;
 }
 
 export interface CreateSupplyForm {
