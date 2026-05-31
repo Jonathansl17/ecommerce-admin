@@ -12,35 +12,13 @@ const strings = REVIEWS_STRINGS;
 interface Tab {
   key: StatusFilter;
   label: string;
-  badgeActive: string;
-  badgeInactive: string;
 }
 
 const TABS: Tab[] = [
-  {
-    key: 'pending',
-    label: strings.tabs.pending,
-    badgeActive: 'bg-amber-500 text-white',
-    badgeInactive: 'bg-amber-100 text-amber-700',
-  },
-  {
-    key: 'approved',
-    label: strings.tabs.approved,
-    badgeActive: 'bg-green-500 text-white',
-    badgeInactive: 'bg-green-100 text-green-700',
-  },
-  {
-    key: 'rejected',
-    label: strings.tabs.rejected,
-    badgeActive: 'bg-red-500 text-white',
-    badgeInactive: 'bg-red-100 text-red-700',
-  },
-  {
-    key: 'all',
-    label: strings.tabs.all,
-    badgeActive: 'bg-primary text-primary-foreground',
-    badgeInactive: 'bg-muted-foreground/20 text-muted-foreground',
-  },
+  { key: 'pending', label: strings.tabs.pending },
+  { key: 'approved', label: strings.tabs.approved },
+  { key: 'rejected', label: strings.tabs.rejected },
+  { key: 'all', label: strings.tabs.all },
 ];
 
 interface ReviewModerationPanelProps {
@@ -57,20 +35,6 @@ function countForStatus(reviews: Review[], status: StatusFilter): number {
   return reviews.filter((r) => r.status === status).length;
 }
 
-const emptyTitles: Record<StatusFilter, string> = {
-  all: strings.empty.all,
-  pending: strings.empty.pending,
-  approved: strings.empty.approved,
-  rejected: strings.empty.rejected,
-};
-
-const emptySubtitles: Record<StatusFilter, string> = {
-  all: strings.empty.allSubtitle,
-  pending: strings.empty.pendingSubtitle,
-  approved: strings.empty.approvedSubtitle,
-  rejected: strings.empty.rejectedSubtitle,
-};
-
 export function ReviewModerationPanel({
   reviews,
   statusFilter,
@@ -79,6 +43,13 @@ export function ReviewModerationPanel({
   onReject,
   loadingId,
 }: ReviewModerationPanelProps) {
+  const emptyMessages: Record<StatusFilter, string> = {
+    all: strings.empty.all,
+    pending: strings.empty.pending,
+    approved: strings.empty.approved,
+    rejected: strings.empty.rejected,
+  };
+
   return (
     <div className="space-y-4">
       {/* Filter tabs */}
@@ -87,7 +58,7 @@ export function ReviewModerationPanel({
         role="tablist"
         aria-label="Filtrar reseñas por estado"
       >
-        {TABS.map(({ key, label, badgeActive, badgeInactive }) => {
+        {TABS.map(({ key, label }) => {
           const count = countForStatus(reviews, key);
           const isActive = statusFilter === key;
 
@@ -108,8 +79,8 @@ export function ReviewModerationPanel({
               {label}
               <span
                 className={[
-                  'rounded-full px-1.5 py-0.5 text-xs font-semibold transition-colors',
-                  isActive ? badgeActive : badgeInactive,
+                  'rounded-full px-1.5 py-0.5 text-xs font-medium',
+                  isActive ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground',
                 ].join(' ')}
                 aria-label={`${count} reseñas`}
               >
@@ -120,19 +91,14 @@ export function ReviewModerationPanel({
         })}
       </div>
 
-      {/* Review list / empty state */}
+      {/* Review list */}
       {reviews.length === 0 ? (
         <div
           className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-16 text-center"
           role="status"
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-            <MessageSquare className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-foreground">{emptyTitles[statusFilter]}</p>
-            <p className="text-xs text-muted-foreground max-w-xs">{emptySubtitles[statusFilter]}</p>
-          </div>
+          <MessageSquare className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
+          <p className="text-sm font-medium text-foreground">{emptyMessages[statusFilter]}</p>
         </div>
       ) : (
         <ul className="space-y-3" aria-label="Lista de reseñas">
