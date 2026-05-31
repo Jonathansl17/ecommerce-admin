@@ -3,14 +3,14 @@ import { PRODUCTS_MESSAGES, PRODUCTS_CONFIG } from './products.constants.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 
+const { DAILY_SALES_WINDOW_DAYS, AVG_ROUNDING_FACTOR, STOCK_MOVEMENT_TYPE_SALE } = PRODUCTS_CONFIG;
+
 const serializeVariant = (variant) => ({
   id: variant.id.toString(),
   productId: variant.productId.toString(),
   name: variant.name,
   priceOverride: variant.priceOverride !== null ? Number(variant.priceOverride) : null,
 });
-
-const DAILY_SALES_WINDOW_DAYS = 30;
 
 const serializeProduct = (product, avgDailySales = null, daysRemaining = null) => ({
   id: product.id.toString(),
@@ -27,13 +27,27 @@ const serializeProduct = (product, avgDailySales = null, daysRemaining = null) =
   daysRemaining,
 });
 
+function roundAvg(value) {
+  return Math.round(value * AVG_ROUNDING_FACTOR) / AVG_ROUNDING_FACTOR;
+}
+
+function calcDaysRemaining(currentStock, avgDailySales) {
+  if (avgDailySales <= 0) return null;
+  return Math.floor(currentStock / avgDailySales);
+}
+
+function isProductLowStock(product) {
+  const { minThreshold, currentStock } = product;
+  return minThreshold !== null && minThreshold > 0 && currentStock <= minThreshold;
+}
+
 async function calcProductAvgDailySales(productId) {
   const since = new Date();
   since.setDate(since.getDate() - DAILY_SALES_WINDOW_DAYS);
   since.setHours(0, 0, 0, 0);
 
   const movements = await prisma.productStockMovement.findMany({
-    where: { productId, type: 'sale', createdAt: { gte: since } },
+    where: { productId, type: STOCK_MOVEMENT_TYPE_SALE, createdAt: { gte: since } },
     select: { previousQuantity: true, newQuantity: true },
   });
 
@@ -46,6 +60,14 @@ async function calcProductAvgDailySales(productId) {
   return totalSold / DAILY_SALES_WINDOW_DAYS;
 }
 
+async function buildProductStockMetrics(product) {
+  const avg = await calcProductAvgDailySales(product.id);
+  return {
+    avgDailySales: roundAvg(avg),
+    daysRemaining: calcDaysRemaining(product.currentStock, avg),
+  };
+}
+
 export const getAll = async () => {
   const products = await prisma.product.findMany({
     include: { variants: true },
@@ -54,18 +76,9 @@ export const getAll = async () => {
 
   return Promise.all(
     products.map(async (product) => {
-      const threshold = product.minThreshold;
-      const isLowStock =
-        threshold !== null && threshold > 0 && product.currentStock <= threshold;
-
-      if (!isLowStock) return serializeProduct(product);
-
-      const avg = await calcProductAvgDailySales(product.id);
-      const avgRounded = Math.round(avg * 100) / 100;
-      const daysRemaining =
-        avg > 0 ? Math.floor(product.currentStock / avg) : null;
-
-      return serializeProduct(product, avgRounded, daysRemaining);
+      if (!isProductLowStock(product)) return serializeProduct(product);
+      const metrics = await buildProductStockMetrics(product);
+      return serializeProduct(product, metrics.avgDailySales, metrics.daysRemaining);
     }),
   );
 };

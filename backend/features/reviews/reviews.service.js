@@ -40,11 +40,9 @@ export const createReviewNotification = async (reviewData) => {
 
   const notifications = await persistReviewNotifications(payload, targetAdminIds);
 
-  for (let i = 0; i < targetAdminIds.length; i++) {
-    const adminId = String(targetAdminIds[i]);
-    const notification = notifications[i];
-    broadcast([adminId], NOTIFICATION_EVENTS.NEW_REVIEW, { notification });
-  }
+  notifications.forEach((notification, i) => {
+    broadcast([String(targetAdminIds[i])], NOTIFICATION_EVENTS.NEW_REVIEW, { notification });
+  });
 
   return { notifiedCount: notifications.length };
 };

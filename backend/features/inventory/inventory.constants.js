@@ -11,6 +11,8 @@ export const INVENTORY_MESSAGES = {
 export const INVENTORY_CONFIG = {
   ITEM_TYPE: 'supply',
   ESTADO_POR_DEFECTO: 'active',
+  DAILY_SALES_WINDOW_DAYS: 30,
+  AVG_ROUNDING_FACTOR: 100,
 };
 
 export const INVENTORY_VALIDATION = {
