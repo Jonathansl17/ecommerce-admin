@@ -1,6 +1,6 @@
 import prisma from '../../shared/db/prisma.js';
 import { broadcast } from '../../shared/sse/sseManager.js';
-import { createReviewNotification as persistReviewNotifications } from '../notifications/notifications.service.js';
+import { createReviewNotification as persistReviewNotifications } from '../notifications/notifications.factory.service.js';
 import { NOTIFICATION_EVENTS, NOTIFICATION_CONFIG } from '../notifications/notifications.constants.js';
 import {
   listReviews as listReviewsClient,

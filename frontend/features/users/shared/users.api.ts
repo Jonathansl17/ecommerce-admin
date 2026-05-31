@@ -1,10 +1,17 @@
 import { apiFetch } from '@/lib/http/apiFetch';
 import { REQUEST_TIMEOUT_MS } from '@/lib/constants/api.constants';
 import { USERS_API } from '@/features/users/constants/api';
-import type { AdminUser, AccountStatus } from '@/features/users/types/users.types';
+import type { AdminUser, AccountStatus, UsersResponse } from '@/features/users/types/users.types';
 
-export async function fetchUsers(search?: string): Promise<AdminUser[]> {
-  return apiFetch<AdminUser[]>(USERS_API.GET_ALL(search), {
+export async function fetchUsers(params: {
+  search?: string;
+  field?: string;
+  limit?: number;
+  offset?: number;
+  sortBy?: string;
+  sortOrder?: string;
+}): Promise<UsersResponse> {
+  return apiFetch<UsersResponse>(USERS_API.GET_ALL(params), {
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 }
