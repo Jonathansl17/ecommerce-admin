@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronRight, Menu } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/AuthContext';
-import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -64,8 +63,6 @@ export function AdminHeader({ onMenuOpen }: AdminHeaderProps) {
 
       {/* Derecha — acciones */}
       <div className="flex items-center gap-2">
-        <NotificationBell />
-
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
           <span className="text-sm font-semibold">{initials}</span>
         </div>
