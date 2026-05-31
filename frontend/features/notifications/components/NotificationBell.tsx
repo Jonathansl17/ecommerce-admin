@@ -159,6 +159,8 @@ export function NotificationBell() {
     setToasts((prev) => prev.filter((t) => t.id !== toastId));
   }, []);
 
+  const MAX_TOASTS = 3;
+
   const handleNewNotification = useCallback(
     (notification: Notification) => {
       setUnreadCount((prev) => prev + 1);
@@ -166,10 +168,10 @@ export function NotificationBell() {
       const toastId = `${notification.id}-${Date.now()}`;
       const orderContent = parseOrderContent(notification.content);
 
-      setToasts((prev) => [
-        ...prev,
-        { id: toastId, notification, orderContent, reviewContent: null },
-      ]);
+      setToasts((prev) => {
+        const next = [...prev, { id: toastId, notification, orderContent, reviewContent: null }];
+        return next.slice(-MAX_TOASTS);
+      });
 
       setTimeout(() => {
         dismissToast(toastId);
@@ -184,20 +186,21 @@ export function NotificationBell() {
 
       const toastId = `${notification.id}-${Date.now()}`;
       const reviewContent = parseReviewContent(notification.content);
+      const isPriority = reviewContent?.isPriority ?? false;
 
-      setToasts((prev) => [
-        ...prev,
-        { id: toastId, notification, orderContent: null, reviewContent },
-      ]);
+      setToasts((prev) => {
+        const next = [...prev, { id: toastId, notification, orderContent: null, reviewContent }];
+        return next.slice(-MAX_TOASTS);
+      });
 
       setTimeout(() => {
         dismissToast(toastId);
-      }, 5000);
+      }, isPriority ? 10000 : 5000);
     },
     [dismissToast]
   );
 
-  useSSENotifications({
+  const { isConnected } = useSSENotifications({
     onNewNotification: handleNewNotification,
     onNewReview: handleNewReview,
   });
@@ -212,9 +215,16 @@ export function NotificationBell() {
             ? `Notificaciones, ${unreadCount} sin leer`
             : 'Notificaciones'
         }
+        title={!isConnected ? 'Sin conexión en tiempo real — recarga la página' : undefined}
       >
         <Bell className="h-5 w-5" aria-hidden="true" />
         {unreadCount > 0 && <BadgeCount count={unreadCount} />}
+        {!isConnected && (
+          <span
+            className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-yellow-400"
+            aria-label="Sin conexión en tiempo real"
+          />
+        )}
       </Link>
 
       {/* Toast portal — fixed bottom-right */}

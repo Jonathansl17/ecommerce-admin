@@ -9,10 +9,25 @@ import { serializeNotification } from './notifications.serializers.js';
 export const createOrderNotification = async (orderData, targetAdminIds) => {
   if (targetAdminIds.length === 0) return [];
 
+  // Idempotency: skip admins that already have a notification for this orderId
+  const alreadyNotified = await prisma.adminNotification.findMany({
+    where: {
+      adminId: { in: targetAdminIds },
+      entityType: NOTIFICATION_CONFIG.DEFAULT_ORDER_ENTITY_TYPE,
+      content: { contains: `"orderId":"${orderData.orderId}"` },
+    },
+    select: { adminId: true },
+  });
+
+  const alreadyNotifiedSet = new Set(alreadyNotified.map((n) => n.adminId));
+  const pendingAdminIds = targetAdminIds.filter((id) => !alreadyNotifiedSet.has(id));
+
+  if (pendingAdminIds.length === 0) return [];
+
   const now = new Date();
 
   const created = await prisma.$transaction(
-    targetAdminIds.map((adminId) =>
+    pendingAdminIds.map((adminId) =>
       prisma.adminNotification.create({
         data: {
           adminId,
@@ -41,6 +56,21 @@ export const createOrderNotification = async (orderData, targetAdminIds) => {
 export const createReviewNotification = async (reviewData, targetAdminIds) => {
   if (targetAdminIds.length === 0) return [];
 
+  // Idempotency: skip admins already notified for this reviewId
+  const alreadyNotified = await prisma.adminNotification.findMany({
+    where: {
+      adminId: { in: targetAdminIds },
+      entityType: NOTIFICATION_CONFIG.DEFAULT_REVIEW_ENTITY_TYPE,
+      content: { contains: `"reviewId":"${reviewData.reviewId}"` },
+    },
+    select: { adminId: true },
+  });
+
+  const alreadyNotifiedSet = new Set(alreadyNotified.map((n) => n.adminId));
+  const pendingAdminIds = targetAdminIds.filter((id) => !alreadyNotifiedSet.has(id));
+
+  if (pendingAdminIds.length === 0) return [];
+
   const now = new Date();
   const title = reviewData.isPriority
     ? NOTIFICATION_REVIEW_TITLES.PRIORITY
@@ -53,13 +83,14 @@ export const createReviewNotification = async (reviewData, targetAdminIds) => {
       : null;
 
   const created = await prisma.$transaction(
-    targetAdminIds.map((adminId) =>
+    pendingAdminIds.map((adminId) =>
       prisma.adminNotification.create({
         data: {
           adminId,
           type: NOTIFICATION_TYPE.INTERNAL,
           title,
           content: JSON.stringify({
+            reviewId: reviewData.reviewId,
             productName: reviewData.productName,
             productId: reviewData.productId,
             clientName: reviewData.clientName,

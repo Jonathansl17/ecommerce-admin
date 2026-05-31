@@ -5,6 +5,8 @@ export const NOTIFICATION_STRINGS = {
     empty: 'No tienes notificaciones',
     emptySubtitle: 'Aquí aparecerán las notificaciones de nuevos pedidos y reseñas.',
     settingsTitle: 'Preferencias de notificaciones',
+    disconnectedWarning:
+      'Sin conexión en tiempo real. Es posible que no recibas notificaciones nuevas hasta que recargues la página.',
   },
   card: {
     markRead: 'Marcar como leída',

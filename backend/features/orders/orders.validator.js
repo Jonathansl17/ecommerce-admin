@@ -20,7 +20,8 @@ const orderProductSchema = z.object({
 const notifyNewOrderSchema = z.object({
   orderId: z
     .string({ required_error: 'El ID del pedido es requerido' })
-    .min(ORDER_VALIDATION.ORDER_ID_MIN, 'El ID del pedido no puede estar vacío'),
+    .min(ORDER_VALIDATION.ORDER_ID_MIN, 'El ID del pedido no puede estar vacío')
+    .max(100, 'El ID del pedido no puede superar 100 caracteres'),
   clientName: z
     .string({ required_error: 'El nombre del cliente es requerido' })
     .min(ORDER_VALIDATION.CLIENT_NAME_MIN, 'El nombre del cliente no puede estar vacío')
