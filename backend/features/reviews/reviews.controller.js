@@ -8,6 +8,8 @@ import {
   respondToReview as respondToReviewService,
   stats as statsService,
 } from './reviews.service.js';
+import { sendReviewRejectedEmail } from '../../shared/services/email.service.js';
+import { REVIEW_MESSAGES } from './reviews.constants.js';
 
 export const notifyNewReview = async (req, res, next) => {
   try {
@@ -65,8 +67,16 @@ export const approveReview = async (req, res, next) => {
 export const rejectReview = async (req, res, next) => {
   try {
     const { reason, notes } = req.body ?? {};
-    const review = await rejectReviewService(req.params.id, { reason, notes });
-    return res.status(HTTP_STATUS.OK).json({ data: review, error: null, meta: null });
+    const result = await rejectReviewService(req.params.id, { reason, notes });
+
+    const review = result?.review ?? result;
+    sendReviewRejectedEmail({
+      customerEmail: review?.clientUser?.email ?? null,
+      customerName: review?.clientUser?.fullName ?? null,
+      productName: review?.product?.name ?? '',
+    }).catch((err) => console.error(REVIEW_MESSAGES.ERROR_EMAIL_RECHAZO, err));
+
+    return res.status(HTTP_STATUS.OK).json({ data: result, error: null, meta: null });
   } catch (error) {
     next(error);
   }
