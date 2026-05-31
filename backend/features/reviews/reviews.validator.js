@@ -28,9 +28,49 @@ const notifyNewReviewSchema = z.object({
     .max(REVIEW_VALIDATION.REVIEW_TEXT_MAX, `El texto de la reseña no puede superar ${REVIEW_VALIDATION.REVIEW_TEXT_MAX} caracteres`),
 });
 
+const reviewIdSchema = z.object({
+  id: z
+    .string({ required_error: 'El ID de la reseña es requerido' })
+    .regex(/^\d+$/, 'El ID de la reseña debe ser numérico')
+    .max(REVIEW_VALIDATION.ID_MAX, `El ID de la reseña no puede superar ${REVIEW_VALIDATION.ID_MAX} caracteres`),
+});
+
+const respondToReviewSchema = z.object({
+  responseText: z
+    .string({ required_error: 'El campo responseText es requerido' })
+    .min(REVIEW_VALIDATION.RESPONSE_TEXT_MIN, `La respuesta debe tener al menos ${REVIEW_VALIDATION.RESPONSE_TEXT_MIN} caracteres`)
+    .max(REVIEW_VALIDATION.RESPONSE_TEXT_MAX, `La respuesta no puede superar ${REVIEW_VALIDATION.RESPONSE_TEXT_MAX} caracteres`),
+});
+
+const getReviewsSchema = z.object({
+  rating: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(1).max(5)).optional(),
+  limit: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(1).max(100)).optional().default('20'),
+  offset: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(0)).optional().default('0'),
+});
+
 export const validateNotifyNewReview = (req, res, next) => {
   const result = notifyNewReviewSchema.safeParse(req.body);
   if (!result.success) return responderErrores(res, result.error);
   req.body = result.data;
+  next();
+};
+
+export const validateReviewId = (req, res, next) => {
+  const result = reviewIdSchema.safeParse(req.params);
+  if (!result.success) return responderErrores(res, result.error);
+  next();
+};
+
+export const validateRespondToReview = (req, res, next) => {
+  const result = respondToReviewSchema.safeParse(req.body);
+  if (!result.success) return responderErrores(res, result.error);
+  req.body = result.data;
+  next();
+};
+
+export const validateGetReviews = (req, res, next) => {
+  const result = getReviewsSchema.safeParse(req.query);
+  if (!result.success) return responderErrores(res, result.error);
+  req.query = result.data;
   next();
 };
