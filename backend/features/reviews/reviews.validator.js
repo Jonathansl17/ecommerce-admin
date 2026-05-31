@@ -1,6 +1,8 @@
 import { z } from 'zod/v4';
-import { REVIEW_VALIDATION } from './reviews.constants.js';
+import { REVIEW_VALIDATION, REVIEW_VALIDATION_MESSAGES } from './reviews.constants.js';
 import { responderErrores } from '../../shared/middleware/validatorUtils.js';
+
+const MODERATION_REASONS = ['offensive_content', 'spam', 'false_information', 'off_topic', 'other'];
 
 const notifyNewReviewSchema = z.object({
   reviewId: z
@@ -28,26 +30,6 @@ const notifyNewReviewSchema = z.object({
     .max(REVIEW_VALIDATION.REVIEW_TEXT_MAX, `El texto de la reseña no puede superar ${REVIEW_VALIDATION.REVIEW_TEXT_MAX} caracteres`),
 });
 
-const reviewIdSchema = z.object({
-  id: z
-    .string({ required_error: 'El ID de la reseña es requerido' })
-    .regex(/^\d+$/, 'El ID de la reseña debe ser numérico')
-    .max(REVIEW_VALIDATION.ID_MAX, `El ID de la reseña no puede superar ${REVIEW_VALIDATION.ID_MAX} caracteres`),
-});
-
-const respondToReviewSchema = z.object({
-  responseText: z
-    .string({ required_error: 'El campo responseText es requerido' })
-    .min(REVIEW_VALIDATION.RESPONSE_TEXT_MIN, `La respuesta debe tener al menos ${REVIEW_VALIDATION.RESPONSE_TEXT_MIN} caracteres`)
-    .max(REVIEW_VALIDATION.RESPONSE_TEXT_MAX, `La respuesta no puede superar ${REVIEW_VALIDATION.RESPONSE_TEXT_MAX} caracteres`),
-});
-
-const getReviewsSchema = z.object({
-  rating: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(1).max(5)).optional(),
-  limit: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(1).max(100)).optional().default('20'),
-  offset: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(0)).optional().default('0'),
-});
-
 export const validateNotifyNewReview = (req, res, next) => {
   const result = notifyNewReviewSchema.safeParse(req.body);
   if (!result.success) return responderErrores(res, result.error);
@@ -55,11 +37,12 @@ export const validateNotifyNewReview = (req, res, next) => {
   next();
 };
 
-export const validateReviewId = (req, res, next) => {
-  const result = reviewIdSchema.safeParse(req.params);
-  if (!result.success) return responderErrores(res, result.error);
-  next();
-};
+const respondToReviewSchema = z.object({
+  responseText: z
+    .string({ required_error: REVIEW_VALIDATION_MESSAGES.RESPONSE_REQUIRED })
+    .min(REVIEW_VALIDATION.RESPONSE_TEXT_MIN, REVIEW_VALIDATION_MESSAGES.RESPONSE_MIN)
+    .max(REVIEW_VALIDATION.RESPONSE_TEXT_MAX, REVIEW_VALIDATION_MESSAGES.RESPONSE_MAX),
+});
 
 export const validateRespondToReview = (req, res, next) => {
   const result = respondToReviewSchema.safeParse(req.body);
@@ -68,9 +51,14 @@ export const validateRespondToReview = (req, res, next) => {
   next();
 };
 
-export const validateGetReviews = (req, res, next) => {
-  const result = getReviewsSchema.safeParse(req.query);
+const rejectReviewSchema = z.object({
+  reason: z.enum(MODERATION_REASONS, { error: REVIEW_VALIDATION_MESSAGES.REASON_INVALID }).optional(),
+  notes: z.string().max(REVIEW_VALIDATION.NOTES_MAX, REVIEW_VALIDATION_MESSAGES.NOTES_MAX).optional(),
+});
+
+export const validateRejectReview = (req, res, next) => {
+  const result = rejectReviewSchema.safeParse(req.body ?? {});
   if (!result.success) return responderErrores(res, result.error);
-  req.query = result.data;
+  req.body = result.data;
   next();
 };

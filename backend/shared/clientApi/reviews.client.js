@@ -16,19 +16,19 @@ export const listReviews = ({ status, productId, clientUserId, rating, limit, of
 export const getReview = (id, { signal } = {}) =>
   clientApiFetch(reviewPath(id), { method: HTTP_METHODS.GET, signal });
 
-export const updateReviewStatus = (id, { status }, { signal } = {}) =>
+export const updateReviewStatus = (id, { status, reason, notes }, { signal } = {}) =>
   clientApiFetch(`${reviewPath(id)}/status`, {
     method: HTTP_METHODS.PATCH,
-    body: { status },
+    body: { status, ...(reason && { reason }), ...(notes && { notes }) },
     signal,
   });
 
-export const getReviewStats = ({ signal } = {}) =>
-  clientApiFetch(REVIEWS_STATS_PATH, { method: HTTP_METHODS.GET, signal });
-
-export const respondToReview = (id, responseText, { signal } = {}) =>
+export const respondToReview = (id, { responseText }, { signal } = {}) =>
   clientApiFetch(`${reviewPath(id)}/respond`, {
     method: HTTP_METHODS.POST,
     body: { responseText },
     signal,
   });
+
+export const getReviewStats = ({ signal } = {}) =>
+  clientApiFetch(REVIEWS_STATS_PATH, { method: HTTP_METHODS.GET, signal });
