@@ -7,15 +7,9 @@ import {
   getUnreadCount as getUnreadCountService,
   getPreferences as getPreferencesService,
   updatePreferences as updatePreferencesService,
-} from './notifications.service.js';
+} from './notifications.crud.service.js';
 import { NOTIFICATION_CONFIG } from './notifications.constants.js';
 
-/**
- * SSE stream endpoint.
- * Keeps the connection open and pushes events via sseManager.
- * EventSource (browser API) sends GET requests without custom headers,
- * so this endpoint is excluded from CSRF middleware in server.js.
- */
 export const stream = (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -25,7 +19,6 @@ export const stream = (req, res) => {
   const adminId = String(req.user.id);
   addClient(adminId, res);
 
-  // Send an initial comment to confirm the connection is live
   res.write(': connected\n\n');
 
   const keepaliveTimer = setInterval(() => {

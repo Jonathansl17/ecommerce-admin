@@ -2,6 +2,7 @@ import prisma from '../../shared/db/prisma.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
 import { INVENTORY_MESSAGES, INVENTORY_CONFIG } from './inventory.constants.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
+import { sincronizarAlertaTrasCambioUmbral } from '../../shared/services/supplyAlert.service.js';
 
 export const getAll = async () => {
   const items = await prisma.item.findMany({
@@ -93,22 +94,7 @@ export const update = async (id, { name, unitOfMeasure, minThreshold = 0 }) => {
       data: { unitOfMeasure, minThreshold },
     });
 
-    // Sync alert state after threshold change
-    const currentStock = Number(updatedSupply.currentStock);
-    const threshold = Number(minThreshold);
-    const shouldAlert = threshold > 0 && currentStock <= threshold;
-
-    if (shouldAlert) {
-      const alertType = currentStock <= 0 ? 'out_of_stock' : 'low_stock';
-      const existing = await tx.supplyAlert.findFirst({ where: { supplyId: itemId } });
-      if (existing) {
-        await tx.supplyAlert.update({ where: { id: existing.id }, data: { type: alertType, threshold: minThreshold, active: true } });
-      } else {
-        await tx.supplyAlert.create({ data: { supplyId: itemId, type: alertType, threshold: minThreshold, active: true } });
-      }
-    } else {
-      await tx.supplyAlert.updateMany({ where: { supplyId: itemId, active: true }, data: { active: false } });
-    }
+    await sincronizarAlertaTrasCambioUmbral(tx, itemId, Number(updatedSupply.currentStock), Number(minThreshold));
 
     return {
       id: updatedItem.id.toString(),

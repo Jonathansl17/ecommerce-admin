@@ -1,20 +1,22 @@
 import { Router } from 'express';
-import { requireAuth } from '../../shared/middleware/authMiddleware.js';
 import {
+  notifyNewReview,
   getReviews,
   getReview,
   approveReview,
   rejectReview,
   getStats,
 } from './reviews.controller.js';
+import { validateNotifyNewReview } from './reviews.validator.js';
+import { requireAuth } from '../../shared/middleware/authMiddleware.js';
+import { requireApiKey } from '../../shared/middleware/apiKeyMiddleware.js';
 
-const router = Router();
+export const reviewsWebhookRouter = Router();
+reviewsWebhookRouter.post('/notify', requireApiKey, validateNotifyNewReview, notifyNewReview);
 
-// Admin-authenticated routes. All review data is proxied through the client backend.
-router.get('/', requireAuth, getReviews);
-router.get('/stats', requireAuth, getStats);
-router.get('/:id', requireAuth, getReview);
-router.patch('/:id/approve', requireAuth, approveReview);
-router.patch('/:id/reject', requireAuth, rejectReview);
-
-export default router;
+export const reviewsAdminRouter = Router();
+reviewsAdminRouter.get('/', requireAuth, getReviews);
+reviewsAdminRouter.get('/stats', requireAuth, getStats);
+reviewsAdminRouter.get('/:id', requireAuth, getReview);
+reviewsAdminRouter.patch('/:id/approve', requireAuth, approveReview);
+reviewsAdminRouter.patch('/:id/reject', requireAuth, rejectReview);

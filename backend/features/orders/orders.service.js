@@ -1,6 +1,6 @@
 import prisma from '../../shared/db/prisma.js';
 import { broadcast } from '../../shared/sse/sseManager.js';
-import { createOrderNotification as persistOrderNotifications } from '../notifications/notifications.service.js';
+import { createOrderNotification as persistOrderNotifications } from '../notifications/notifications.factory.service.js';
 import { NOTIFICATION_EVENTS } from '../notifications/notifications.constants.js';
 import {
   listOrders as listOrdersClient,
@@ -13,6 +13,7 @@ import { CLIENT_API_ERROR_CODES } from '../../shared/clientApi/client-api.consta
 import { crearError } from '../../shared/middleware/errorHandler.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 import { ORDER_BAD_RESPONSE_FIELDS, ORDER_MESSAGES } from './orders.constants.js';
+import { ACCOUNT_STATUS } from '../../shared/constants/app.constants.js';
 
 /**
  * Create notifications for all admins that have order notifications enabled
@@ -25,7 +26,7 @@ import { ORDER_BAD_RESPONSE_FIELDS, ORDER_MESSAGES } from './orders.constants.js
 export const createOrderNotification = async (orderData) => {
   const adminUsers = await prisma.adminUser.findMany({
     where: {
-      accountStatus: 'active',
+      accountStatus: ACCOUNT_STATUS.ACTIVE,
       admin: { isNot: null },
       OR: [
         { notificationPreference: { receiveOrderNotifications: true } },
