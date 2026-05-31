@@ -3,6 +3,7 @@ export const REVIEW_MESSAGES = {
   SERVICIO_EXTERNO_NO_DISPONIBLE: 'Servicio externo no disponible',
   CONFIGURACION_CLIENTE_FALTANTE: 'Configuracion del cliente faltante',
   ERROR_DESCONOCIDO: 'Error inesperado al comunicarse con el servicio del cliente',
+  ERROR_EMAIL_RECHAZO: '[Reviews] Error al enviar email de rechazo al cliente:',
 };
 
 export const REVIEW_BAD_RESPONSE_FIELDS = {
@@ -20,4 +21,15 @@ export const REVIEW_VALIDATION = {
   RATING_MAX: 5,
   REVIEW_TEXT_MIN: 1,
   REVIEW_TEXT_MAX: 2000,
+  RESPONSE_TEXT_MIN: 10,
+  RESPONSE_TEXT_MAX: 500,
+  NOTES_MAX: 500,
+};
+
+export const REVIEW_VALIDATION_MESSAGES = {
+  RESPONSE_REQUIRED: 'La respuesta es obligatoria',
+  RESPONSE_MIN: `La respuesta debe tener al menos ${REVIEW_VALIDATION.RESPONSE_TEXT_MIN} caracteres`,
+  RESPONSE_MAX: `La respuesta no puede superar ${REVIEW_VALIDATION.RESPONSE_TEXT_MAX} caracteres`,
+  REASON_INVALID: 'Motivo de rechazo inválido',
+  NOTES_MAX: `Las notas no pueden superar ${REVIEW_VALIDATION.NOTES_MAX} caracteres`,
 };

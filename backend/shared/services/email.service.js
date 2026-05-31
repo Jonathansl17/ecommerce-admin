@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import prisma from '../db/prisma.js';
 import { SUPPLY_ALERT_TYPES } from './supplyAlert.constants.js';
+import { EMAIL_SUBJECTS, EMAIL_BODY } from './email.constants.js';
 
 const escHtml = (s) =>
   String(s)
@@ -28,6 +29,12 @@ const UNIT_LABELS = {
   units: 'unidades',
 };
 
+const EMAIL_COLOR = {
+  OUT_OF_STOCK: '#dc2626',
+  LOW_STOCK: '#b45309',
+  TABLE_LABEL: '#6b7280',
+};
+
 export const sendLowStockAlert = async ({
   supplyName,
   currentStock,
@@ -46,42 +53,46 @@ export const sendLowStockAlert = async ({
 
   const unit = UNIT_LABELS[unitOfMeasure] ?? unitOfMeasure;
   const isOutOfStock = alertType === SUPPLY_ALERT_TYPES.OUT_OF_STOCK;
-
   const safeSupplyName = escHtml(supplyName);
+
   const subject = isOutOfStock
-    ? `[ALERTA] Insumo agotado: ${safeSupplyName}`
-    : `[ALERTA] Stock bajo: ${safeSupplyName}`;
+    ? EMAIL_SUBJECTS.OUT_OF_STOCK_ALERT(safeSupplyName)
+    : EMAIL_SUBJECTS.LOW_STOCK_ALERT(safeSupplyName);
 
   const diasRestantesText =
-    diasRestantes !== null ? `${diasRestantes} día${diasRestantes === 1 ? '' : 's'}` : 'Indeterminado';
+    diasRestantes !== null
+      ? EMAIL_BODY.LOW_STOCK.DAYS_REMAINING(diasRestantes)
+      : EMAIL_BODY.LOW_STOCK.INDETERMINATE;
 
   const avgDailySalesText =
     avgDailySales > 0
-      ? `${avgDailySales.toFixed(2)} ${unit}/día`
-      : 'Sin datos de consumo';
+      ? EMAIL_BODY.LOW_STOCK.UNIT_PER_DAY(avgDailySales.toFixed(2), unit)
+      : EMAIL_BODY.LOW_STOCK.NO_DATA;
+
+  const color = isOutOfStock ? EMAIL_COLOR.OUT_OF_STOCK : EMAIL_COLOR.LOW_STOCK;
 
   const html = `
-    <h2 style="color:${isOutOfStock ? '#dc2626' : '#b45309'}">${safeSupplyName}</h2>
-    <p>El insumo <strong>${safeSupplyName}</strong> requiere atención en el módulo de inventario.</p>
+    <h2 style="color:${color}">${safeSupplyName}</h2>
+    <p>${EMAIL_BODY.LOW_STOCK.INTRO(safeSupplyName)}</p>
     <table style="border-collapse:collapse;margin-top:12px">
       <tr>
-        <td style="padding:4px 12px 4px 0;color:#6b7280">Stock actual:</td>
+        <td style="padding:4px 12px 4px 0;color:${EMAIL_COLOR.TABLE_LABEL}">${EMAIL_BODY.LOW_STOCK.LABEL_STOCK}</td>
         <td style="padding:4px 0;font-weight:600">${currentStock} ${unit}</td>
       </tr>
       <tr>
-        <td style="padding:4px 12px 4px 0;color:#6b7280">Umbral mínimo:</td>
+        <td style="padding:4px 12px 4px 0;color:${EMAIL_COLOR.TABLE_LABEL}">${EMAIL_BODY.LOW_STOCK.LABEL_THRESHOLD}</td>
         <td style="padding:4px 0;font-weight:600">${minThreshold} ${unit}</td>
       </tr>
       <tr>
-        <td style="padding:4px 12px 4px 0;color:#6b7280">Consumo promedio (últimos 30 días):</td>
+        <td style="padding:4px 12px 4px 0;color:${EMAIL_COLOR.TABLE_LABEL}">${EMAIL_BODY.LOW_STOCK.LABEL_AVG}</td>
         <td style="padding:4px 0;font-weight:600">${avgDailySalesText}</td>
       </tr>
       <tr>
-        <td style="padding:4px 12px 4px 0;color:#6b7280">Días de stock estimados:</td>
+        <td style="padding:4px 12px 4px 0;color:${EMAIL_COLOR.TABLE_LABEL}">${EMAIL_BODY.LOW_STOCK.LABEL_DAYS}</td>
         <td style="padding:4px 0;font-weight:600">${diasRestantesText}</td>
       </tr>
     </table>
-    <p style="margin-top:16px">Por favor, registre una entrada de insumo a la brevedad.</p>
+    <p style="margin-top:16px">${EMAIL_BODY.LOW_STOCK.FOOTER}</p>
   `;
 
   const from = process.env.SMTP_FROM || process.env.SMTP_USER;
@@ -97,15 +108,21 @@ export const sendReviewRejectedEmail = async ({ customerEmail, customerName, pro
   if (!customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) return;
 
   const from = process.env.SMTP_FROM || process.env.SMTP_USER;
-  const subject = 'Tu reseña no pudo ser publicada';
-  const safeName = customerName ? ` ${escHtml(customerName)}` : '';
+  const safeName = customerName ? escHtml(customerName) : null;
   const safeProduct = escHtml(productName);
+  const body = EMAIL_BODY.REVIEW_REJECTED;
+
   const html = `
-    <p>Hola${safeName},</p>
-    <p>Gracias por tomarte el tiempo de escribir una reseña sobre <strong>${safeProduct}</strong>.</p>
-    <p>Lamentablemente, tu reseña no cumple con nuestras normas de la comunidad y no pudo ser publicada.</p>
-    <p>Si tienes preguntas, puedes contactarnos respondiendo a este correo.</p>
+    <p>${body.GREETING(safeName)}</p>
+    <p>${body.PRODUCT_LINE(safeProduct)}</p>
+    <p>${body.REJECTION_REASON}</p>
+    <p>${body.CONTACT_LINE}</p>
   `;
 
-  await transporter.sendMail({ from, to: customerEmail, subject, html });
+  await transporter.sendMail({
+    from,
+    to: customerEmail,
+    subject: EMAIL_SUBJECTS.REVIEW_REJECTED,
+    html,
+  });
 };

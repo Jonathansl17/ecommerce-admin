@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { REVIEW_VALIDATION } from './reviews.constants.js';
+import { REVIEW_VALIDATION, REVIEW_VALIDATION_MESSAGES } from './reviews.constants.js';
 import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
 const MODERATION_REASONS = ['offensive_content', 'spam', 'false_information', 'off_topic', 'other'];
@@ -40,9 +40,9 @@ export const validateNotifyNewReview = (req, res, next) => {
 
 const respondToReviewSchema = z.object({
   responseText: z
-    .string({ required_error: 'La respuesta es obligatoria' })
-    .min(10, 'La respuesta debe tener al menos 10 caracteres')
-    .max(500, 'La respuesta no puede superar 500 caracteres'),
+    .string({ required_error: REVIEW_VALIDATION_MESSAGES.RESPONSE_REQUIRED })
+    .min(REVIEW_VALIDATION.RESPONSE_TEXT_MIN, REVIEW_VALIDATION_MESSAGES.RESPONSE_MIN)
+    .max(REVIEW_VALIDATION.RESPONSE_TEXT_MAX, REVIEW_VALIDATION_MESSAGES.RESPONSE_MAX),
 });
 
 export const validateRespondToReview = (req, res, next) => {
@@ -53,8 +53,8 @@ export const validateRespondToReview = (req, res, next) => {
 };
 
 const rejectReviewSchema = z.object({
-  reason: z.enum(MODERATION_REASONS, { error: 'Motivo de rechazo inválido' }).optional(),
-  notes: z.string().max(500, 'Las notas no pueden superar 500 caracteres').optional(),
+  reason: z.enum(MODERATION_REASONS, { error: REVIEW_VALIDATION_MESSAGES.REASON_INVALID }).optional(),
+  notes: z.string().max(REVIEW_VALIDATION.NOTES_MAX, REVIEW_VALIDATION_MESSAGES.NOTES_MAX).optional(),
 });
 
 export const validateRejectReview = (req, res, next) => {

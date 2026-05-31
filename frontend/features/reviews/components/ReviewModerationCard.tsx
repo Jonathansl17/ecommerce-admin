@@ -2,37 +2,16 @@
 
 import { useState } from 'react';
 import { ThumbsUp, XCircle, MessageSquare } from 'lucide-react';
-import type { Review, ModerationReason } from '../types/reviews.types';
+import type { ReviewModerationCardProps } from '../types/reviews.types';
 import { REVIEWS_STRINGS } from '../constants/reviews.constants';
+import { timeAgo } from '@/lib/utils/timeAgo';
 import { StarRating } from './StarRating';
 import { ReviewStatusBadge } from './ReviewStatusBadge';
 import { RejectReviewModal } from './RejectReviewModal';
 import { RespondReviewModal } from './RespondReviewModal';
 
 const strings = REVIEWS_STRINGS.card;
-const timeStrings = REVIEWS_STRINGS.time;
 const errorStrings = REVIEWS_STRINGS.errors;
-
-function timeAgo(isoString: string): string {
-  const diffMs = Date.now() - new Date(isoString).getTime();
-  const diffMinutes = Math.floor(diffMs / 60_000);
-  const diffHours = Math.floor(diffMs / 3_600_000);
-  const diffDays = Math.floor(diffMs / 86_400_000);
-
-  if (diffMinutes < 1) return timeStrings.justNow;
-  if (diffHours < 1) return timeStrings.minutesAgo(diffMinutes);
-  if (diffDays < 1) return timeStrings.hoursAgo(diffHours);
-  return timeStrings.daysAgo(diffDays);
-}
-
-interface ReviewModerationCardProps {
-  review: Review;
-  onApprove: (id: string) => void;
-  onReject: (id: string, reason: ModerationReason, notes?: string) => void;
-  onRespond: (id: string, responseText: string) => void;
-  loadingId: string | null;
-  errorId: string | null;
-}
 
 export function ReviewModerationCard({
   review,
@@ -71,7 +50,7 @@ export function ReviewModerationCard({
               <span className="text-xs text-muted-foreground">·</span>
               <span className="text-xs text-muted-foreground">{clientName}</span>
               <span className="text-xs text-muted-foreground">·</span>
-              <span className="text-xs text-muted-foreground">{timeAgo(review.createdAt)}</span>
+              <span className="text-xs text-muted-foreground">{timeAgo(review.createdAt, REVIEWS_STRINGS.time)}</span>
             </div>
           </div>
         </div>
