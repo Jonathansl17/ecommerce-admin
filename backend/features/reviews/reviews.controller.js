@@ -1,11 +1,21 @@
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 import {
+  createReviewNotification as createReviewNotificationService,
   getReviews as getReviewsService,
   getReview as getReviewService,
   approveReview as approveReviewService,
   rejectReview as rejectReviewService,
   stats as statsService,
 } from './reviews.service.js';
+
+export const notifyNewReview = async (req, res, next) => {
+  try {
+    const result = await createReviewNotificationService(req.body);
+    return res.status(HTTP_STATUS.OK).json({ data: result, error: null, meta: null });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const getReviews = async (req, res, next) => {
   try {
