@@ -1,6 +1,6 @@
 import prisma from '../../shared/db/prisma.js';
 import { broadcast } from '../../shared/sse/sseManager.js';
-import { createOrderNotification as persistOrderNotifications } from '../notifications/notifications.service.js';
+import { createOrderNotification as persistOrderNotifications } from '../notifications/notifications.factory.service.js';
 import { NOTIFICATION_EVENTS } from '../notifications/notifications.constants.js';
 import {
   listOrders as listOrdersClient,
