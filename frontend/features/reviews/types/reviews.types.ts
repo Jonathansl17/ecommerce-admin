@@ -29,6 +29,7 @@ export interface Review {
   edited: boolean;
   helpfulVotes: number;
   unhelpfulVotes: number;
+  adminResponse?: string | null;
   createdAt: string;
   updatedAt: string;
   clientUser: ReviewClientUser;

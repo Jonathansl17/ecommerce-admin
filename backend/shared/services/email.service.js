@@ -2,6 +2,14 @@ import nodemailer from 'nodemailer';
 import prisma from '../db/prisma.js';
 import { SUPPLY_ALERT_TYPES } from './supplyAlert.constants.js';
 
+const escHtml = (s) =>
+  String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT) || 587,
@@ -39,9 +47,10 @@ export const sendLowStockAlert = async ({
   const unit = UNIT_LABELS[unitOfMeasure] ?? unitOfMeasure;
   const isOutOfStock = alertType === SUPPLY_ALERT_TYPES.OUT_OF_STOCK;
 
+  const safeSupplyName = escHtml(supplyName);
   const subject = isOutOfStock
-    ? `[ALERTA] Insumo agotado: ${supplyName}`
-    : `[ALERTA] Stock bajo: ${supplyName}`;
+    ? `[ALERTA] Insumo agotado: ${safeSupplyName}`
+    : `[ALERTA] Stock bajo: ${safeSupplyName}`;
 
   const diasRestantesText =
     diasRestantes !== null ? `${diasRestantes} día${diasRestantes === 1 ? '' : 's'}` : 'Indeterminado';
@@ -52,8 +61,8 @@ export const sendLowStockAlert = async ({
       : 'Sin datos de consumo';
 
   const html = `
-    <h2 style="color:${isOutOfStock ? '#dc2626' : '#b45309'}">${subject}</h2>
-    <p>El insumo <strong>${supplyName}</strong> requiere atención en el módulo de inventario.</p>
+    <h2 style="color:${isOutOfStock ? '#dc2626' : '#b45309'}">${safeSupplyName}</h2>
+    <p>El insumo <strong>${safeSupplyName}</strong> requiere atención en el módulo de inventario.</p>
     <table style="border-collapse:collapse;margin-top:12px">
       <tr>
         <td style="padding:4px 12px 4px 0;color:#6b7280">Stock actual:</td>
@@ -82,4 +91,21 @@ export const sendLowStockAlert = async ({
       transporter.sendMail({ from, to: admin.email, subject, html })
     )
   );
+};
+
+export const sendReviewRejectedEmail = async ({ customerEmail, customerName, productName }) => {
+  if (!customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) return;
+
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const subject = 'Tu reseña no pudo ser publicada';
+  const safeName = customerName ? ` ${escHtml(customerName)}` : '';
+  const safeProduct = escHtml(productName);
+  const html = `
+    <p>Hola${safeName},</p>
+    <p>Gracias por tomarte el tiempo de escribir una reseña sobre <strong>${safeProduct}</strong>.</p>
+    <p>Lamentablemente, tu reseña no cumple con nuestras normas de la comunidad y no pudo ser publicada.</p>
+    <p>Si tienes preguntas, puedes contactarnos respondiendo a este correo.</p>
+  `;
+
+  await transporter.sendMail({ from, to: customerEmail, subject, html });
 };

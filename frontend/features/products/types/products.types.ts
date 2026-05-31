@@ -17,6 +17,8 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
   variants: ProductVariant[];
+  avgDailySales?: number | null;
+  daysRemaining?: number | null;
 }
 
 export interface ProductVariant {

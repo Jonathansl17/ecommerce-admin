@@ -27,7 +27,9 @@ interface ReviewModerationPanelProps {
   onFilterChange: (filter: StatusFilter) => void;
   onApprove: (id: string) => void;
   onReject: (id: string, reason: ModerationReason, notes?: string) => void;
+  onRespond: (id: string, responseText: string) => void;
   loadingId: string | null;
+  errorId: string | null;
 }
 
 function countForStatus(reviews: Review[], status: StatusFilter): number {
@@ -41,7 +43,9 @@ export function ReviewModerationPanel({
   onFilterChange,
   onApprove,
   onReject,
+  onRespond,
   loadingId,
+  errorId,
 }: ReviewModerationPanelProps) {
   const emptyMessages: Record<StatusFilter, string> = {
     all: strings.empty.all,
@@ -108,7 +112,9 @@ export function ReviewModerationPanel({
                 review={review}
                 onApprove={onApprove}
                 onReject={onReject}
+                onRespond={onRespond}
                 loadingId={loadingId}
+                errorId={errorId}
               />
             </li>
           ))}
