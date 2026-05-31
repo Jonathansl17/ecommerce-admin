@@ -4,7 +4,11 @@ export const USERS_MESSAGES = {
     subtitle: 'Gestiona las cuentas de acceso al panel de administración.',
   },
   search: {
-    placeholder: 'Buscar por nombre o correo...',
+    fieldName: 'Nombre',
+    fieldEmail: 'Correo',
+    placeholderName: 'Buscar por nombre...',
+    placeholderEmail: 'Buscar por correo...',
+    button: 'Buscar',
   },
   table: {
     colName: 'Nombre',
@@ -18,6 +22,22 @@ export const USERS_MESSAGES = {
     activateButton: 'Activar',
     deactivateButton: 'Desactivar',
     emptyMessage: 'No se encontraron usuarios.',
+  },
+  sort: {
+    label: 'Ordenar por',
+    options: {
+      createdAtDesc: 'Más recientes',
+      createdAtAsc: 'Más antiguos',
+      fullNameAsc: 'Nombre A→Z',
+      fullNameDesc: 'Nombre Z→A',
+    },
+  },
+  pagination: {
+    showing: 'Mostrando',
+    of: 'de',
+    results: 'usuarios',
+    prev: 'Anterior',
+    next: 'Siguiente',
   },
   errors: {
     fetchError: 'No se pudo cargar la lista de usuarios.',
