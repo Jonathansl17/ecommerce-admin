@@ -7,7 +7,42 @@ import {
   calcAvgDailyConsumption,
 } from '../../shared/services/supplyAlert.service.js';
 
-const DAILY_WINDOW = 30;
+const { AVG_ROUNDING_FACTOR } = INVENTORY_CONFIG;
+
+function roundAvg(value) {
+  return Math.round(value * AVG_ROUNDING_FACTOR) / AVG_ROUNDING_FACTOR;
+}
+
+function calcDaysRemaining(currentStock, avgDailySales) {
+  if (avgDailySales <= 0) return null;
+  return Math.floor(Number(currentStock) / avgDailySales);
+}
+
+async function buildStockAlertMetrics(itemId, currentStock) {
+  const avgDailySales = await calcAvgDailyConsumption(prisma, itemId);
+  return {
+    avgDailySales: roundAvg(avgDailySales),
+    daysRemaining: calcDaysRemaining(currentStock, avgDailySales),
+  };
+}
+
+function serializeSupply(item, metrics = {}) {
+  const { supply } = item;
+  return {
+    id: item.id.toString(),
+    name: item.name,
+    status: item.status,
+    unitOfMeasure: supply?.unitOfMeasure ?? null,
+    currentStock: supply?.currentStock ?? null,
+    minThreshold: supply?.minThreshold ?? null,
+    avgDailySales: metrics.avgDailySales ?? null,
+    daysRemaining: metrics.daysRemaining ?? null,
+  };
+}
+
+function hasActiveAlert(item) {
+  return (item.supply?.alerts?.length ?? 0) > 0;
+}
 
 export const getAll = async () => {
   const items = await prisma.item.findMany({
@@ -16,35 +51,13 @@ export const getAll = async () => {
     orderBy: { name: 'asc' },
   });
 
-  const results = await Promise.all(
+  return Promise.all(
     items.map(async (item) => {
-      const supply = item.supply;
-      const hasActiveAlert = supply?.alerts?.length > 0;
-      let avgDailySales = null;
-      let daysRemaining = null;
-
-      if (hasActiveAlert && supply) {
-        avgDailySales = await calcAvgDailyConsumption(prisma, item.id);
-        daysRemaining =
-          avgDailySales > 0
-            ? Math.floor(Number(supply.currentStock) / avgDailySales)
-            : null;
-      }
-
-      return {
-        id: item.id.toString(),
-        name: item.name,
-        status: item.status,
-        unitOfMeasure: supply?.unitOfMeasure ?? null,
-        currentStock: supply?.currentStock ?? null,
-        minThreshold: supply?.minThreshold ?? null,
-        avgDailySales: avgDailySales !== null ? Math.round(avgDailySales * 100) / 100 : null,
-        daysRemaining,
-      };
+      if (!hasActiveAlert(item) || !item.supply) return serializeSupply(item);
+      const metrics = await buildStockAlertMetrics(item.id, item.supply.currentStock);
+      return serializeSupply(item, metrics);
     }),
   );
-
-  return results;
 };
 
 export const create = async ({ name, unitOfMeasure, initialStock }) => {
