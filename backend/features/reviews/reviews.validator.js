@@ -1,6 +1,8 @@
 import { z } from 'zod/v4';
-import { REVIEW_VALIDATION } from './reviews.constants.js';
+import { REVIEW_VALIDATION, REVIEW_VALIDATION_MESSAGES } from './reviews.constants.js';
 import { responderErrores } from '../../shared/middleware/validatorUtils.js';
+
+const MODERATION_REASONS = ['offensive_content', 'spam', 'false_information', 'off_topic', 'other'];
 
 const notifyNewReviewSchema = z.object({
   reviewId: z
@@ -30,6 +32,32 @@ const notifyNewReviewSchema = z.object({
 
 export const validateNotifyNewReview = (req, res, next) => {
   const result = notifyNewReviewSchema.safeParse(req.body);
+  if (!result.success) return responderErrores(res, result.error);
+  req.body = result.data;
+  next();
+};
+
+const respondToReviewSchema = z.object({
+  responseText: z
+    .string({ required_error: REVIEW_VALIDATION_MESSAGES.RESPONSE_REQUIRED })
+    .min(REVIEW_VALIDATION.RESPONSE_TEXT_MIN, REVIEW_VALIDATION_MESSAGES.RESPONSE_MIN)
+    .max(REVIEW_VALIDATION.RESPONSE_TEXT_MAX, REVIEW_VALIDATION_MESSAGES.RESPONSE_MAX),
+});
+
+export const validateRespondToReview = (req, res, next) => {
+  const result = respondToReviewSchema.safeParse(req.body);
+  if (!result.success) return responderErrores(res, result.error);
+  req.body = result.data;
+  next();
+};
+
+const rejectReviewSchema = z.object({
+  reason: z.enum(MODERATION_REASONS, { error: REVIEW_VALIDATION_MESSAGES.REASON_INVALID }).optional(),
+  notes: z.string().max(REVIEW_VALIDATION.NOTES_MAX, REVIEW_VALIDATION_MESSAGES.NOTES_MAX).optional(),
+});
+
+export const validateRejectReview = (req, res, next) => {
+  const result = rejectReviewSchema.safeParse(req.body ?? {});
   if (!result.success) return responderErrores(res, result.error);
   req.body = result.data;
   next();

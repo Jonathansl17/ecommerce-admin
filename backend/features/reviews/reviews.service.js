@@ -1,11 +1,12 @@
 import prisma from '../../shared/db/prisma.js';
 import { broadcast } from '../../shared/sse/sseManager.js';
-import { createReviewNotification as persistReviewNotifications } from '../notifications/notifications.service.js';
+import { createReviewNotification as persistReviewNotifications } from '../notifications/notifications.factory.service.js';
 import { NOTIFICATION_EVENTS, NOTIFICATION_CONFIG } from '../notifications/notifications.constants.js';
 import {
   listReviews as listReviewsClient,
   getReview as getReviewClient,
   updateReviewStatus as updateReviewStatusClient,
+  respondToReview as respondToReviewClient,
   getReviewStats as getReviewStatsClient,
 } from '../../shared/clientApi/reviews.client.js';
 import { ClientApiError } from '../../shared/clientApi/client-api.errors.js';
@@ -39,11 +40,9 @@ export const createReviewNotification = async (reviewData) => {
 
   const notifications = await persistReviewNotifications(payload, targetAdminIds);
 
-  for (let i = 0; i < targetAdminIds.length; i++) {
-    const adminId = String(targetAdminIds[i]);
-    const notification = notifications[i];
-    broadcast([adminId], NOTIFICATION_EVENTS.NEW_REVIEW, { notification });
-  }
+  notifications.forEach((notification, i) => {
+    broadcast([String(targetAdminIds[i])], NOTIFICATION_EVENTS.NEW_REVIEW, { notification });
+  });
 
   return { notifiedCount: notifications.length };
 };
@@ -130,13 +129,28 @@ export const approveReview = async (id) => {
 };
 
 /**
- * Reject a review via the client backend.
+ * Reject a review via the client backend, then notify the customer by email.
  *
  * @param {string} id
+ * @param {{ reason?: string, notes?: string }} options
  */
-export const rejectReview = async (id) => {
+export const rejectReview = async (id, { reason, notes } = {}) => {
   try {
-    return await updateReviewStatusClient(id, { status: 'rejected' });
+    return await updateReviewStatusClient(id, { status: 'rejected', reason, notes });
+  } catch (error) {
+    throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
+  }
+};
+
+/**
+ * Post an admin response to a review via the client backend.
+ *
+ * @param {string} id
+ * @param {{ responseText: string }} data
+ */
+export const respondToReview = async (id, { responseText }) => {
+  try {
+    return await respondToReviewClient(id, { responseText });
   } catch (error) {
     throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
   }
