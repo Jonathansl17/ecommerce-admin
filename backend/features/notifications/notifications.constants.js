@@ -18,3 +18,12 @@ export const NOTIFICATION_CONFIG = {
   DEFAULT_REVIEW_ENTITY_TYPE: 'review',
   LOW_RATING_THRESHOLD: 2,
 };
+
+export const NOTIFICATION_TYPE = {
+  INTERNAL: 'internal',
+};
+
+export const NOTIFICATION_REVIEW_TITLES = {
+  PRIORITY: 'Reseña negativa recibida',
+  STANDARD: 'Nueva reseña de producto',
+};
