@@ -12,12 +12,10 @@ import {
   validateUpdateOrderStatus,
 } from './orders.validator.js';
 import { requireAuth } from '../../shared/middleware/authMiddleware.js';
+import { requireApiKey } from '../../shared/middleware/apiKeyMiddleware.js';
 
-// Webhook-style endpoint called by the external client app.
-// No admin auth required; validation via Zod schema is still enforced.
-// Mounted under /api/orders before the CSRF header check.
 export const ordersWebhookRouter = Router();
-ordersWebhookRouter.post('/notify', validateNotifyNewOrder, notifyNewOrder);
+ordersWebhookRouter.post('/notify', requireApiKey, validateNotifyNewOrder, notifyNewOrder);
 
 // Admin-facing proxy routes over the client backend's /api/internal/orders.
 // All require an authenticated admin (existing JWT cookie auth) and are mounted

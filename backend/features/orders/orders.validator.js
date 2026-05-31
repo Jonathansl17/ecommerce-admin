@@ -1,14 +1,6 @@
 import { z } from 'zod/v4';
-import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 import { ORDER_LIST_LIMITS, ORDER_VALIDATION } from './orders.constants.js';
-
-const responderErrores = (res, error) => {
-  const errores = error.errors.map((err) => ({
-    field: err.path.join('.'),
-    message: err.message,
-  }));
-  return res.status(HTTP_STATUS.BAD_REQUEST).json({ errors: errores });
-};
+import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
 const orderProductSchema = z.object({
   name: z

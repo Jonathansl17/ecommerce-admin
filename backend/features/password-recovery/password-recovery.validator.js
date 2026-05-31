@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
+import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
 const requestSchema = z.object({
   email: z
@@ -30,19 +30,10 @@ const resetSchema = tokenSchema
     path: ['confirmPassword'],
   });
 
-function responderErrores(res, resultado) {
-  const errores = resultado.error.errors.map((err) => ({
-    field: err.path.join('.'),
-    message: err.message,
-  }));
-
-  return res.status(HTTP_STATUS.BAD_REQUEST).json({ errors: errores });
-}
-
 export const validatePasswordRecoveryRequest = (req, res, next) => {
   const resultado = requestSchema.safeParse(req.body);
   if (!resultado.success) {
-    return responderErrores(res, resultado);
+    return responderErrores(res, resultado.error);
   }
 
   req.body = resultado.data;
@@ -52,7 +43,7 @@ export const validatePasswordRecoveryRequest = (req, res, next) => {
 export const validatePasswordRecoveryToken = (req, res, next) => {
   const resultado = tokenSchema.safeParse(req.body);
   if (!resultado.success) {
-    return responderErrores(res, resultado);
+    return responderErrores(res, resultado.error);
   }
 
   req.body = resultado.data;
@@ -62,7 +53,7 @@ export const validatePasswordRecoveryToken = (req, res, next) => {
 export const validatePasswordReset = (req, res, next) => {
   const resultado = resetSchema.safeParse(req.body);
   if (!resultado.success) {
-    return responderErrores(res, resultado);
+    return responderErrores(res, resultado.error);
   }
 
   req.body = resultado.data;
