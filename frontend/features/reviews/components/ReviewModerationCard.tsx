@@ -48,7 +48,7 @@ export function ReviewModerationCard({
   const isThisLoading = loadingId === review.id;
   const hasError = errorId === review.id;
   const isPending = review.status === 'pending';
-  const canRespond = review.status === 'approved' || review.status === 'pending';
+  const canRespond = review.status === 'approved';
 
   const productName = review.product?.name ?? '';
   const clientName = review.clientUser?.fullName ?? '';
