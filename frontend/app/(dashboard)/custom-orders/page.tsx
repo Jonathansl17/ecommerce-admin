@@ -4,22 +4,79 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ClipboardList, AlertCircle } from 'lucide-react';
 import { useCustomOrders } from '@/features/custom-orders/hooks/useCustomOrders';
+import type { CustomOrder, UpdateStatusFn, OrderListProps } from '@/features/custom-orders/types/customOrders.types';
 import { CustomOrderCard } from '@/features/custom-orders/components/CustomOrderCard';
-import { CUSTOM_ORDERS_STRINGS } from '@/features/custom-orders/constants/customOrders.constants';
+import {
+  CUSTOM_ORDERS_STRINGS as strings,
+  ORDER_STATUS,
+  SKELETON_COUNT,
+  STATUS_FILTERS,
+  type StatusFilter,
+} from '@/features/custom-orders/constants/customOrders.constants';
 
-const strings = CUSTOM_ORDERS_STRINGS;
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-3" aria-busy="true" aria-label={strings.page.ariaLoading}>
+      {Array.from({ length: SKELETON_COUNT }, (_, i) => (
+        <div
+          key={i}
+          className="h-40 animate-pulse rounded-lg border border-border border-l-4 border-l-amber-300 bg-muted"
+          aria-hidden="true"
+        />
+      ))}
+    </div>
+  );
+}
 
-const SKELETON_COUNT = 3;
+function ErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-16 text-center">
+      <AlertCircle className="h-10 w-10 text-destructive" aria-hidden="true" />
+      <p className="text-sm font-medium text-foreground">{strings.errors.fetchError}</p>
+      <p className="text-xs text-muted-foreground">{strings.errors.fetchErrorSubtitle}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-1 rounded-md border border-border px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+      >
+        {strings.errors.retryLabel}
+      </button>
+    </div>
+  );
+}
 
-const STATUS = { ACCEPTED: 'accepted', REJECTED: 'rejected' } as const;
+function EmptyState({ filter }: { filter: StatusFilter }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-16 text-center">
+      <ClipboardList className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
+      <p className="text-sm font-medium text-foreground">
+        {filter === 'pending' ? strings.empty.pending : strings.empty.all}
+      </p>
+      <p className="text-xs text-muted-foreground">
+        {filter === 'pending' ? strings.empty.pendingSubtitle : strings.empty.allSubtitle}
+      </p>
+    </div>
+  );
+}
 
-type StatusFilter = 'pending' | 'accepted' | 'all';
-
-const FILTERS: { key: StatusFilter; label: string }[] = [
-  { key: 'pending', label: strings.page.filterPending },
-  { key: 'accepted', label: strings.page.filterAccepted },
-  { key: 'all', label: strings.page.filterAll },
-];
+function OrderList({ orders, highlightOrderId, highlightRef, onStatusUpdate }: OrderListProps) {
+  return (
+    <ul className="space-y-3" aria-label={strings.page.ariaOrderList}>
+      {orders.map((order) => {
+        const isHighlighted = order.content.orderId === highlightOrderId;
+        return (
+          <li
+            key={order.notification.id}
+            ref={isHighlighted ? highlightRef : null}
+            className={isHighlighted ? 'ring-2 ring-amber-400 ring-offset-2 rounded-lg' : ''}
+          >
+            <CustomOrderCard order={order} onStatusUpdate={onStatusUpdate} />
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
 export default function CustomOrdersPage() {
   const searchParams = useSearchParams();
@@ -31,20 +88,14 @@ export default function CustomOrdersPage() {
 
   const acceptedCount = orders.filter((o) => o.content.customizationStatus === 'accepted').length;
 
-  // When arriving from a notification link, switch to the right tab and scroll
   useEffect(() => {
     if (!highlightOrderId || orders.length === 0) return;
     const target = orders.find((o) => o.content.orderId === highlightOrderId);
     if (!target) return;
     const status = target.content.customizationStatus;
-    setFilter(status === STATUS.ACCEPTED ? 'accepted' : status === STATUS.REJECTED ? 'all' : 'pending');
+    setFilter(status === ORDER_STATUS.ACCEPTED ? 'accepted' : status === ORDER_STATUS.REJECTED ? 'all' : 'pending');
+    highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [highlightOrderId, orders]);
-
-  useEffect(() => {
-    if (highlightRef.current) {
-      highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [highlightOrderId]); // only scroll when the target changes
 
   const filtered =
     filter === 'pending'
@@ -68,7 +119,7 @@ export default function CustomOrdersPage() {
         role="tablist"
         aria-label={strings.page.ariaTabList}
       >
-        {FILTERS.map(({ key, label }) => {
+        {STATUS_FILTERS.map(({ key, label }) => {
           const count = countFor(key);
           const isActive = filter === key;
           return (
@@ -110,53 +161,18 @@ export default function CustomOrdersPage() {
 
       <div className="max-w-2xl">
         {isLoading ? (
-          <div className="space-y-3" aria-busy="true" aria-label="Cargando pedidos personalizados">
-            {Array.from({ length: SKELETON_COUNT }, (_, i) => (
-              <div
-                key={i}
-                className="h-40 animate-pulse rounded-lg border border-border border-l-4 border-l-amber-300 bg-muted"
-                aria-hidden="true"
-              />
-            ))}
-          </div>
+          <LoadingSkeleton />
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-16 text-center">
-            <AlertCircle className="h-10 w-10 text-destructive" aria-hidden="true" />
-            <p className="text-sm font-medium text-foreground">{strings.errors.fetchError}</p>
-            <p className="text-xs text-muted-foreground">{strings.errors.fetchErrorSubtitle}</p>
-            <button
-              type="button"
-              onClick={refetch}
-              className="mt-1 rounded-md border border-border px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-            >
-              {strings.errors.retryLabel}
-            </button>
-          </div>
+          <ErrorState onRetry={refetch} />
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-16 text-center">
-            <ClipboardList className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
-            <p className="text-sm font-medium text-foreground">
-              {filter === 'pending' ? strings.empty.pending : strings.empty.all}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {filter === 'pending' ? strings.empty.pendingSubtitle : strings.empty.allSubtitle}
-            </p>
-          </div>
+          <EmptyState filter={filter} />
         ) : (
-          <ul className="space-y-3" aria-label={strings.page.ariaOrderList}>
-            {filtered.map((order) => {
-              const isHighlighted = order.content.orderId === highlightOrderId;
-              return (
-                <li
-                  key={order.notification.id}
-                  ref={isHighlighted ? highlightRef : null}
-                  className={isHighlighted ? 'ring-2 ring-amber-400 ring-offset-2 rounded-lg' : ''}
-                >
-                  <CustomOrderCard order={order} onStatusUpdate={updateStatus} />
-                </li>
-              );
-            })}
-          </ul>
+          <OrderList
+            orders={filtered}
+            highlightOrderId={highlightOrderId}
+            highlightRef={highlightRef}
+            onStatusUpdate={updateStatus}
+          />
         )}
       </div>
     </div>

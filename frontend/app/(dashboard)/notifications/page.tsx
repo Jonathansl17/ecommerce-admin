@@ -6,24 +6,13 @@ import { useNotifications } from '@/features/notifications/hooks/useNotification
 import { useSSENotifications } from '@/features/notifications/hooks/useSSENotifications';
 import { NotificationCard } from '@/features/notifications/components/NotificationCard';
 
-import { NOTIFICATION_STRINGS } from '@/features/notifications/constants/notifications.constants';
+import {
+  NOTIFICATION_PAGE_STRINGS as strings,
+  NOTIFICATION_EMPTY_STATE,
+  READ_FILTERS,
+  type ReadFilter,
+} from '@/features/notifications/constants/notifications.constants';
 import type { Notification } from '@/features/notifications/types/notifications.types';
-
-const strings = NOTIFICATION_STRINGS.page;
-
-type ReadFilter = 'all' | 'unread' | 'read';
-
-const FILTERS: { key: ReadFilter; label: string }[] = [
-  { key: 'all', label: strings.filterAll },
-  { key: 'unread', label: strings.filterUnread },
-  { key: 'read', label: strings.filterRead },
-];
-
-const EMPTY_STATE: Record<ReadFilter, { title: string; subtitle: string }> = {
-  all: { title: strings.empty, subtitle: strings.emptySubtitle },
-  unread: { title: strings.emptyUnread, subtitle: strings.emptyUnreadSubtitle },
-  read: { title: strings.emptyRead, subtitle: strings.emptyReadSubtitle },
-};
 
 export default function NotificationsPage() {
   const { notifications, unreadCount, isLoading, markRead, refetch } = useNotifications();
@@ -50,7 +39,7 @@ export default function NotificationsPage() {
     return true;
   });
 
-  const empty = EMPTY_STATE[readFilter];
+  const empty = NOTIFICATION_EMPTY_STATE[readFilter];
 
   return (
     <div className="space-y-6">
@@ -71,9 +60,9 @@ export default function NotificationsPage() {
       <div
         className="flex flex-wrap gap-1 rounded-lg border border-border bg-muted p-1"
         role="tablist"
-        aria-label="Filtrar notificaciones"
+        aria-label={strings.ariaTabList}
       >
-        {FILTERS.map(({ key, label }) => {
+        {READ_FILTERS.map(({ key, label }) => {
           const count = key === 'unread' ? unreadCount
             : key === 'read' ? notifications.filter((n) => n.read).length
             : notifications.length;
@@ -95,7 +84,7 @@ export default function NotificationsPage() {
                 'rounded-full px-1.5 py-0.5 text-xs font-semibold',
                 isActive ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground',
               ].join(' ')}
-                aria-label={`${count} notificaciones`}
+                aria-label={strings.ariaCount(count)}
               >
                 {count}
               </span>
@@ -118,7 +107,7 @@ export default function NotificationsPage() {
           <p className="text-xs text-muted-foreground">{empty.subtitle}</p>
         </div>
       ) : (
-        <ul className="space-y-3" aria-label="Lista de notificaciones">
+        <ul className="space-y-3" aria-label={strings.ariaList}>
           {filtered.map((notification) => (
             <li key={notification.id}>
               <NotificationCard

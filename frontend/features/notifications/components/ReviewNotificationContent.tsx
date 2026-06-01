@@ -1,15 +1,7 @@
 import Link from 'next/link';
 import { Tag, User, MessageSquare } from 'lucide-react';
-import type { ReviewNotificationContent as ReviewContent } from '../types/notifications.types';
-import { NOTIFICATION_STRINGS } from '../constants/notifications.constants';
-
-const strings = NOTIFICATION_STRINGS.review;
-
-const REVIEWS_ROUTE = '/reviews';
-
-interface ReviewNotificationContentProps {
-  content: ReviewContent;
-}
+import type { ReviewNotificationContentProps } from '../types/notifications.types';
+import { NOTIFICATION_REVIEW_STRINGS as strings, ROUTES } from '../constants/notifications.constants';
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -71,7 +63,7 @@ export function ReviewNotificationContent({ content }: ReviewNotificationContent
       {/* Action: grouped with its content, not orphaned at card bottom */}
       <div className="pt-1">
         <Link
-          href={REVIEWS_ROUTE}
+          href={ROUTES.REVIEWS}
           className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />

@@ -15,7 +15,12 @@ const orderProductSchema = z.object({
     .number({ required_error: ORDER_VALIDATION_MESSAGES.UNIT_PRICE_REQUIRED })
     .nonnegative(ORDER_VALIDATION_MESSAGES.UNIT_PRICE_NONNEGATIVE),
   isCustomizable: z.boolean().optional().default(false),
-  customizationDetails: z.record(z.string(), z.string()).optional(),
+  customizationDetails: z
+    .record(z.string().max(100), z.string().max(500))
+    .refine((val) => Object.keys(val).length <= 50, {
+      message: 'customizationDetails no puede tener más de 50 entradas',
+    })
+    .optional(),
 });
 
 const notifyNewOrderSchema = z.object({

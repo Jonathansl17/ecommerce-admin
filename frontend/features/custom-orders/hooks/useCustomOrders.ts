@@ -5,31 +5,11 @@ import {
   getNotifications,
   updateCustomizationStatus as apiUpdateCustomizationStatus,
 } from '@/features/notifications/shared/notifications.api';
-import type {
-  Notification,
-  OrderNotificationContent,
-} from '@/features/notifications/types/notifications.types';
-import { parseNotificationContent } from '@/lib/utils/notifications';
+import type { Notification, OrderNotificationContent } from '@/features/notifications/types/notifications.types';
+import { parseNotificationContent, isCustomizableOrder } from '@/lib/utils/notifications';
+import type { CustomOrder, UseCustomOrdersResult } from '../types/customOrders.types';
 
-export interface CustomOrder {
-  notification: Notification;
-  content: OrderNotificationContent;
-}
-
-interface UseCustomOrdersResult {
-  orders: CustomOrder[];
-  isLoading: boolean;
-  isError: boolean;
-  pendingCount: number;
-  updateStatus: (id: string, status: 'accepted' | 'rejected', reason?: string) => Promise<void>;
-  refetch: () => Promise<void>;
-}
-
-function isCustomizableOrder(n: Notification): boolean {
-  if (n.entityType !== 'order') return false;
-  const content = parseNotificationContent<OrderNotificationContent>(n.content);
-  return content?.hasCustomization === true;
-}
+export type { CustomOrder } from '../types/customOrders.types';
 
 export function useCustomOrders(): UseCustomOrdersResult {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -60,7 +40,6 @@ export function useCustomOrders(): UseCustomOrdersResult {
     async (id: string, status: 'accepted' | 'rejected', reason?: string) => {
       const previous = notificationsRef.current;
 
-      // Optimistic update: patch the serialised content in local state
       setNotifications((prev) =>
         prev.map((n) => {
           if (n.id !== id) return n;
@@ -78,11 +57,10 @@ export function useCustomOrders(): UseCustomOrdersResult {
       try {
         await apiUpdateCustomizationStatus(id, status, reason);
       } catch {
-        // Rollback on failure
         setNotifications(previous);
       }
     },
-    [], // no deps needed — uses ref for snapshot
+    [],
   );
 
   const orders: CustomOrder[] = notifications.reduce<CustomOrder[]>((acc, n) => {

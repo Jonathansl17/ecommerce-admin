@@ -1,28 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { NotificationPreference } from '../types/notifications.types';
+import type { NotificationPreference, SaveState, ToggleRowProps } from '../types/notifications.types';
 import { getPreferences, updatePreferences } from '../shared/notifications.api';
-import { NOTIFICATION_STRINGS } from '../constants/notifications.constants';
-import { Toast, ToastContainer, type ToastVariant } from '@/components/ui/Toast';
-
-const strings = NOTIFICATION_STRINGS.preferences;
-
-type SaveState = 'idle' | 'saving';
-
-interface ToastItem {
-  id: string;
-  message: string;
-  variant: ToastVariant;
-}
-
-interface ToggleRowProps {
-  id: string;
-  label: string;
-  checked: boolean;
-  disabled: boolean;
-  onToggle: () => void;
-}
+import { NOTIFICATION_PREFERENCES_STRINGS as strings } from '../constants/notifications.constants';
+import { Toast, ToastContainer, type ToastItem, type ToastVariant } from '@/components/ui/Toast';
 
 function ToggleRow({ id, label, checked, disabled, onToggle }: ToggleRowProps) {
   return (

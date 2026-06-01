@@ -1,16 +1,11 @@
 import Link from 'next/link';
 import { MapPin, Check, X } from 'lucide-react';
-import type { OrderNotificationContent as OrderContent } from '../types/notifications.types';
-import { NOTIFICATION_STRINGS } from '../constants/notifications.constants';
+import type {
+  OrderNotificationContent as OrderContent,
+  OrderNotificationContentProps,
+} from '../types/notifications.types';
+import { NOTIFICATION_ORDER_STRINGS as strings, ROUTES } from '../constants/notifications.constants';
 import { formatCurrency } from '@/lib/utils/format';
-
-const strings = NOTIFICATION_STRINGS.order;
-
-const CUSTOM_ORDERS_ROUTE = '/custom-orders';
-
-interface OrderNotificationContentProps {
-  content: OrderContent;
-}
 
 export function OrderNotificationContent({ content }: OrderNotificationContentProps) {
   const {
@@ -68,7 +63,7 @@ export function OrderNotificationContent({ content }: OrderNotificationContentPr
         {!customizationStatus && (
           <div className="border-t border-border pt-2" onClick={(e) => e.stopPropagation()}>
             <Link
-              href={`${CUSTOM_ORDERS_ROUTE}${orderId ? `?order=${orderId}` : ''}`}
+              href={`${ROUTES.CUSTOM_ORDERS}${orderId ? `?order=${orderId}` : ''}`}
               className="inline-flex items-center justify-center rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {strings.viewDetailsText}
