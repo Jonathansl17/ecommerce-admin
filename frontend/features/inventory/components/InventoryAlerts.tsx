@@ -58,7 +58,7 @@ function AlertRow({ supply, variant, onQuickEntry }: AlertRowProps) {
 
 export function InventoryAlerts({ supplies, onQuickEntry }: InventoryAlertsProps) {
   const outOfStock = supplies.filter(
-    (s) => Number(s.minThreshold) > 0 && Number(s.currentStock) <= 0
+    (s) => Number(s.currentStock) <= 0
   );
   const lowStock = supplies.filter(
     (s) =>
