@@ -1,12 +1,8 @@
 import { INVENTORY_REPORT_MESSAGES } from '../constants/messages';
 import { InventoryReportTable } from './InventoryReportTable';
-import type { InventoryReportRow } from '../models/product-inventory-report.models';
+import type { CustomProductsSectionProps } from '../models/product-inventory-report.models';
 
 const strings = INVENTORY_REPORT_MESSAGES.sections;
-
-interface CustomProductsSectionProps {
-  rows: InventoryReportRow[];
-}
 
 export function CustomProductsSection({ rows }: CustomProductsSectionProps) {
   return (

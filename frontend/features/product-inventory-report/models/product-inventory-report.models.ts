@@ -51,3 +51,18 @@ export interface UseProductInventoryReportResult extends PartitionedRows {
   setStockStatus: (status: StockStatus) => void;
   refetch: () => void;
 }
+
+export interface CustomProductsSectionProps {
+  rows: InventoryReportRow[];
+}
+
+export interface InventoryReportTableProps {
+  rows: InventoryReportRow[];
+  emptyMessage?: string;
+}
+
+export interface InventoryReportFiltersProps {
+  filters: InventoryReportFilters;
+  onSearchChange: (search: string) => void;
+  onStockStatusChange: (status: StockStatus) => void;
+}
