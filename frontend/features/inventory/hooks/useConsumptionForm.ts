@@ -73,5 +73,6 @@ export function useConsumptionForm(
     availableSupplies,
     errors,
     isSubmitting,
+    suppliesCount: supplies.length,
   };
 }
