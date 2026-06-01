@@ -28,6 +28,7 @@ export interface SupplyEntryModalProps {
 }
 
 export interface ConsumptionModalProps {
+  isOpen: boolean;
   supplies: Supply[];
   onClose: () => void;
   onSubmit: (data: CreateConsumptionForm) => Promise<void>;
