@@ -4,6 +4,9 @@ export const STOCK_ALERTS_MESSAGES = {
   outOfStock: 'Agotado',
   stockLabel: 'Stock actual',
   thresholdLabel: 'Umbral mínimo',
+  avgDailySalesLabel: 'Venta diaria',
+  daysRemainingLabel: 'Días restantes',
+  daysRemainingUnknown: 'N/D',
   adjustButton: 'Ajustar stock',
   unitsLabel: 'unidades',
 } as const;

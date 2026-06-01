@@ -39,7 +39,10 @@ export default function NotificationsPage() {
     [refetch]
   );
 
-  useSSENotifications({ onNewNotification: handleNewNotification, onNewReview: handleNewReview });
+  const { isConnected } = useSSENotifications({
+    onNewNotification: handleNewNotification,
+    onNewReview: handleNewReview,
+  });
 
   const filtered = notifications.filter((n) => {
     if (readFilter === 'unread') return !n.read;
@@ -51,6 +54,16 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
+      {!isConnected && (
+        <div
+          role="alert"
+          className="flex items-center gap-2 rounded-md border border-yellow-300 bg-yellow-50 px-4 py-2 text-sm text-yellow-800"
+        >
+          <span aria-hidden="true">⚠</span>
+          {strings.disconnectedWarning}
+        </div>
+      )}
+
       {/* Header */}
       <h1 className="text-2xl font-bold text-foreground">{strings.title}</h1>
 

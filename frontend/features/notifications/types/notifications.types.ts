@@ -32,7 +32,7 @@ export interface OrderNotificationContent {
 }
 
 export interface ReviewNotificationContent {
-  reviewId: string;
+  reviewId?: string;
   productName: string;
   productId: string;
   clientName: string;

@@ -21,7 +21,7 @@ interface ToastItem {
 
 export default function ReviewsPage() {
   const { reviews, isLoading, error, statusFilter, setStatusFilter, refetch } = useReviews();
-  const { approve, reject, loadingId } = useReviewActions();
+  const { approve, reject, respond, loadingId, actionError } = useReviewActions();
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const showToast = useCallback((message: string, variant: ToastVariant) => {
@@ -63,6 +63,15 @@ export default function ReviewsPage() {
     [reject, refetch, showToast]
   );
 
+  const handleRespond = useCallback(
+    (id: string, responseText: string) => {
+      void respond(id, responseText, (_updated: Review) => {
+        refetch();
+      });
+    },
+    [respond, refetch]
+  );
+
   return (
     <>
       <div className="space-y-6">
@@ -100,7 +109,9 @@ export default function ReviewsPage() {
             onFilterChange={setStatusFilter}
             onApprove={handleApprove}
             onReject={handleReject}
+            onRespond={handleRespond}
             loadingId={loadingId}
+            errorId={actionError}
           />
         )}
       </div>
