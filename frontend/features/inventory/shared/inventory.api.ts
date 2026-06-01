@@ -4,7 +4,6 @@ import type {
   Supply,
   CreateSupplyForm,
   UpdateSupplyForm,
-  CreateSupplyEntryForm,
   CreateSupplyEntriesForm,
   CreateConsumptionForm,
   SupplyHistory,
@@ -83,20 +82,6 @@ export async function getSupplyMovements(
     );
   } catch {
     throw new Error('fetch_error');
-  }
-}
-
-export async function createSupplyEntry(data: CreateSupplyEntryForm): Promise<Supply> {
-  try {
-    return await unwrap(
-      apiFetch<{ data: Supply }>(`/inventory/supplies/${data.supplyId}/entries`, {
-        method: 'POST',
-        body: { quantity: data.quantity, date: data.date },
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      })
-    );
-  } catch (err) {
-    return rethrowErrorBody(err);
   }
 }
 
