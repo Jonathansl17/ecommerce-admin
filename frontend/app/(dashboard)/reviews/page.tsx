@@ -12,7 +12,8 @@ const strings = REVIEWS_STRINGS;
 export default function ReviewsPage() {
   const { reviews, isLoading, error, statusFilter, setStatusFilter, refetch } =
     useReviews();
-  const { approve, reject, respond, loadingId, actionError } = useReviewActions();
+  const { approve, reject, respond, remove, loadingId, actionError } =
+    useReviewActions();
 
   const handleApprove = useCallback(
     (id: string) => {
@@ -39,6 +40,15 @@ export default function ReviewsPage() {
       });
     },
     [respond, refetch]
+  );
+
+  const handleDelete = useCallback(
+    (id: string, reason: ModerationReason, detail?: string) => {
+      void remove(id, reason, detail, () => {
+        refetch();
+      });
+    },
+    [remove, refetch]
   );
 
   return (
@@ -78,6 +88,7 @@ export default function ReviewsPage() {
           onApprove={handleApprove}
           onReject={handleReject}
           onRespond={handleRespond}
+          onDelete={handleDelete}
           loadingId={loadingId}
           errorId={actionError}
         />

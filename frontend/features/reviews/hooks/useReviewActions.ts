@@ -2,7 +2,12 @@
 
 import { useState, useCallback } from 'react';
 import type { Review, ModerationReason } from '../types/reviews.types';
-import { approveReview, rejectReview, respondToReview } from '../shared/reviews.api';
+import {
+  approveReview,
+  rejectReview,
+  respondToReview,
+  deleteReview,
+} from '../shared/reviews.api';
 
 interface UseReviewActionsReturn {
   approve: (id: string, onSuccess: (updated: Review) => void) => Promise<void>;
@@ -16,6 +21,12 @@ interface UseReviewActionsReturn {
     id: string,
     responseText: string,
     onSuccess: (updated: Review) => void
+  ) => Promise<void>;
+  remove: (
+    id: string,
+    reason: ModerationReason,
+    detail: string | undefined,
+    onSuccess: () => void
   ) => Promise<void>;
   loadingId: string | null;
   actionError: string | null;
@@ -85,5 +96,26 @@ export function useReviewActions(): UseReviewActionsReturn {
     []
   );
 
-  return { approve, reject, respond, loadingId, actionError, clearError };
+  const remove = useCallback(
+    async (
+      id: string,
+      reason: ModerationReason,
+      detail: string | undefined,
+      onSuccess: () => void
+    ) => {
+      setLoadingId(id);
+      setActionError(null);
+      try {
+        await deleteReview(id, { reason, detail });
+        onSuccess();
+      } catch {
+        setActionError(id);
+      } finally {
+        setLoadingId(null);
+      }
+    },
+    []
+  );
+
+  return { approve, reject, respond, remove, loadingId, actionError, clearError };
 }

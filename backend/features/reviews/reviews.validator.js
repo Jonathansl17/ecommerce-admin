@@ -1,8 +1,12 @@
 import { z } from 'zod/v4';
-import { REVIEW_VALIDATION, REVIEW_VALIDATION_MESSAGES } from './reviews.constants.js';
+import {
+  MODERATION_REASON_CODES,
+  REVIEW_VALIDATION,
+  REVIEW_VALIDATION_MESSAGES,
+} from './reviews.constants.js';
 import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
-const MODERATION_REASONS = ['offensive_content', 'spam', 'false_information', 'off_topic', 'other'];
+const MODERATION_REASONS = MODERATION_REASON_CODES;
 
 const notifyNewReviewSchema = z.object({
   reviewId: z
@@ -59,6 +63,27 @@ const rejectReviewSchema = z.object({
 
 export const validateRejectReview = (req, res, next) => {
   const result = rejectReviewSchema.safeParse(req.body ?? {});
+  if (!result.success) return responderErrores(res, result.error);
+  req.body = result.data;
+  next();
+};
+
+const deleteReviewSchema = z.object({
+  reason: z.enum(MODERATION_REASONS, {
+    error: (issue) =>
+      issue.input === undefined
+        ? REVIEW_VALIDATION_MESSAGES.DELETE_REASON_REQUIRED
+        : REVIEW_VALIDATION_MESSAGES.DELETE_REASON_INVALID,
+  }),
+  detail: z
+    .string()
+    .trim()
+    .max(REVIEW_VALIDATION.DELETE_DETAIL_MAX, REVIEW_VALIDATION_MESSAGES.DELETE_DETAIL_MAX)
+    .optional(),
+});
+
+export const validateDeleteReview = (req, res, next) => {
+  const result = deleteReviewSchema.safeParse(req.body ?? {});
   if (!result.success) return responderErrores(res, result.error);
   req.body = result.data;
   next();

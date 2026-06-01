@@ -28,6 +28,7 @@ interface ReviewModerationPanelProps {
   onApprove: (id: string) => void;
   onReject: (id: string, reason: ModerationReason, notes?: string) => void;
   onRespond: (id: string, responseText: string) => void;
+  onDelete: (id: string, reason: ModerationReason, detail?: string) => void;
   loadingId: string | null;
   errorId: string | null;
 }
@@ -44,6 +45,7 @@ export function ReviewModerationPanel({
   onApprove,
   onReject,
   onRespond,
+  onDelete,
   loadingId,
   errorId,
 }: ReviewModerationPanelProps) {
@@ -113,6 +115,7 @@ export function ReviewModerationPanel({
                 onApprove={onApprove}
                 onReject={onReject}
                 onRespond={onRespond}
+                onDelete={onDelete}
                 loadingId={loadingId}
                 errorId={errorId}
               />

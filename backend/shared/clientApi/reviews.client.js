@@ -30,5 +30,12 @@ export const respondToReview = (id, { responseText }, { signal } = {}) =>
     signal,
   });
 
+export const deleteReview = (id, { reason }, { signal } = {}) =>
+  clientApiFetch(`${reviewPath(id)}/moderation`, {
+    method: HTTP_METHODS.DELETE,
+    body: { reason },
+    signal,
+  });
+
 export const getReviewStats = ({ signal } = {}) =>
   clientApiFetch(REVIEWS_STATS_PATH, { method: HTTP_METHODS.GET, signal });
