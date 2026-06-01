@@ -11,6 +11,7 @@ import inventoryRoutes from './features/inventory/inventory.routes.js';
 import notificationsRoutes from './features/notifications/notifications.routes.js';
 import { ordersWebhookRouter, ordersAdminRouter } from './features/orders/orders.routes.js';
 import { reviewsWebhookRouter, reviewsAdminRouter } from './features/reviews/reviews.routes.js';
+import customOrdersRoutes from './features/custom-orders/custom-orders.routes.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
 import { requireFetchHeader } from './shared/middleware/csrfMiddleware.js';
 import { APP_CONFIG } from './shared/constants/app.constants.js';
@@ -47,6 +48,7 @@ app.use('/api/password-recovery', passwordRecoveryRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/reviews', reviewsAdminRouter);
+app.use('/api/custom-orders', customOrdersRoutes);
 
 app.use(errorHandler);
 

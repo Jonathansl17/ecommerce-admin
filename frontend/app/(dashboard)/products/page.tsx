@@ -18,6 +18,7 @@ import { CreateProductModal } from '@/features/products/components/CreateProduct
 import { EditProductModal } from '@/features/products/components/EditProductModal';
 import { DeleteProductModal } from '@/features/products/components/DeleteProductModal';
 import { ProductAlerts } from '@/features/stock-alerts/components/ProductAlerts';
+import { ProductAreaTabNav } from '@/features/custom-orders/components/ProductAreaTabNav';
 import type {
   Product,
   AdjustStockForm,
@@ -142,6 +143,8 @@ export default function ProductsPage() {
   return (
     <>
       <div className="space-y-6">
+        <ProductAreaTabNav />
+
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">
