@@ -21,6 +21,7 @@ export interface EditSupplyModalProps {
 }
 
 export interface SupplyEntryModalProps {
+  isOpen: boolean;
   supplies: Supply[];
   onClose: () => void;
   onSubmit: (data: CreateSupplyEntriesForm) => Promise<void>;
