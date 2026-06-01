@@ -1,7 +1,12 @@
+import prisma from '../../shared/db/prisma.js';
+import { broadcast } from '../../shared/sse/sseManager.js';
+import { createReviewNotification as persistReviewNotifications } from '../notifications/notifications.factory.service.js';
+import { NOTIFICATION_EVENTS, NOTIFICATION_CONFIG } from '../notifications/notifications.constants.js';
 import {
   listReviews as listReviewsClient,
   getReview as getReviewClient,
   updateReviewStatus as updateReviewStatusClient,
+  respondToReview as respondToReviewClient,
   getReviewStats as getReviewStatsClient,
 } from '../../shared/clientApi/reviews.client.js';
 import { ClientApiError } from '../../shared/clientApi/client-api.errors.js';
@@ -9,6 +14,38 @@ import { CLIENT_API_ERROR_CODES } from '../../shared/clientApi/client-api.consta
 import { crearError } from '../../shared/middleware/errorHandler.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 import { REVIEW_BAD_RESPONSE_FIELDS, REVIEW_MESSAGES } from './reviews.constants.js';
+import { ACCOUNT_STATUS } from '../../shared/constants/app.constants.js';
+
+export const createReviewNotification = async (reviewData) => {
+  const adminUsers = await prisma.adminUser.findMany({
+    where: {
+      accountStatus: ACCOUNT_STATUS.ACTIVE,
+      admin: { isNot: null },
+      OR: [
+        { notificationPreference: { receiveReviewNotifications: true } },
+        { notificationPreference: null },
+      ],
+    },
+    select: { id: true },
+  });
+
+  if (adminUsers.length === 0) {
+    return { notifiedCount: 0 };
+  }
+
+  const targetAdminIds = adminUsers.map((u) => u.id);
+
+  const isPriority = reviewData.rating <= NOTIFICATION_CONFIG.LOW_RATING_THRESHOLD;
+  const payload = { ...reviewData, isPriority };
+
+  const notifications = await persistReviewNotifications(payload, targetAdminIds);
+
+  notifications.forEach((notification, i) => {
+    broadcast([String(targetAdminIds[i])], NOTIFICATION_EVENTS.NEW_REVIEW, { notification });
+  });
+
+  return { notifiedCount: notifications.length };
+};
 
 const extractBadResponseMessage = (body, fallback) => {
   if (body && typeof body === 'object' && typeof body[REVIEW_BAD_RESPONSE_FIELDS.ERROR] === 'string') {
@@ -92,13 +129,28 @@ export const approveReview = async (id) => {
 };
 
 /**
- * Reject a review via the client backend.
+ * Reject a review via the client backend, then notify the customer by email.
  *
  * @param {string} id
+ * @param {{ reason?: string, notes?: string }} options
  */
-export const rejectReview = async (id) => {
+export const rejectReview = async (id, { reason, notes } = {}) => {
   try {
-    return await updateReviewStatusClient(id, { status: 'rejected' });
+    return await updateReviewStatusClient(id, { status: 'rejected', reason, notes });
+  } catch (error) {
+    throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
+  }
+};
+
+/**
+ * Post an admin response to a review via the client backend.
+ *
+ * @param {string} id
+ * @param {{ responseText: string }} data
+ */
+export const respondToReview = async (id, { responseText }) => {
+  try {
+    return await respondToReviewClient(id, { responseText });
   } catch (error) {
     throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
   }

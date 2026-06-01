@@ -29,6 +29,7 @@ export interface Review {
   edited: boolean;
   helpfulVotes: number;
   unhelpfulVotes: number;
+  adminResponse?: string | null;
   createdAt: string;
   updatedAt: string;
   clientUser: ReviewClientUser;
@@ -50,4 +51,13 @@ export interface ReviewStats {
 export interface RejectReviewPayload {
   reason: ModerationReason;
   notes?: string;
+}
+
+export interface ReviewModerationCardProps {
+  review: Review;
+  onApprove: (id: string) => void;
+  onReject: (id: string, reason: ModerationReason, notes?: string) => void;
+  onRespond: (id: string, responseText: string) => void;
+  loadingId: string | null;
+  errorId: string | null;
 }

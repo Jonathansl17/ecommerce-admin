@@ -1,14 +1,6 @@
 import { z } from 'zod/v4';
-import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 import { ORDER_LIST_LIMITS, ORDER_VALIDATION } from './orders.constants.js';
-
-const responderErrores = (res, error) => {
-  const errores = error.errors.map((err) => ({
-    field: err.path.join('.'),
-    message: err.message,
-  }));
-  return res.status(HTTP_STATUS.BAD_REQUEST).json({ errors: errores });
-};
+import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
 const orderProductSchema = z.object({
   name: z
@@ -28,7 +20,8 @@ const orderProductSchema = z.object({
 const notifyNewOrderSchema = z.object({
   orderId: z
     .string({ required_error: 'El ID del pedido es requerido' })
-    .min(ORDER_VALIDATION.ORDER_ID_MIN, 'El ID del pedido no puede estar vacío'),
+    .min(ORDER_VALIDATION.ORDER_ID_MIN, 'El ID del pedido no puede estar vacío')
+    .max(100, 'El ID del pedido no puede superar 100 caracteres'),
   clientName: z
     .string({ required_error: 'El nombre del cliente es requerido' })
     .min(ORDER_VALIDATION.CLIENT_NAME_MIN, 'El nombre del cliente no puede estar vacío')
