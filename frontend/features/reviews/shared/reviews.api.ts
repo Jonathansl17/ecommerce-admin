@@ -6,6 +6,7 @@ import type {
   ReviewStatus,
   ReviewStats,
   RejectReviewPayload,
+  DeleteReviewPayload,
 } from '../types/reviews.types';
 
 const unwrap = async <T>(promise: Promise<{ data: T }>): Promise<T> => {
@@ -96,5 +97,17 @@ export async function respondToReview(id: string, responseText: string): Promise
     );
   } catch (err) {
     return rethrowErrorBody(err);
+  }
+}
+
+export async function deleteReview(id: string, data: DeleteReviewPayload): Promise<void> {
+  try {
+    await apiFetch<{ data: unknown }>(`/reviews/${id}/moderation`, {
+      method: 'DELETE',
+      body: data as unknown as Record<string, unknown>,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (err) {
+    rethrowErrorBody(err);
   }
 }

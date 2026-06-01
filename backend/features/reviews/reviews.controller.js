@@ -6,6 +6,7 @@ import {
   approveReview as approveReviewService,
   rejectReview as rejectReviewService,
   respondToReview as respondToReviewService,
+  deleteReview as deleteReviewService,
   stats as statsService,
 } from './reviews.service.js';
 import { sendReviewRejectedEmail } from '../../shared/services/email.service.js';
@@ -67,7 +68,7 @@ export const approveReview = async (req, res, next) => {
 export const rejectReview = async (req, res, next) => {
   try {
     const { reason, notes } = req.body ?? {};
-    const result = await rejectReviewService(req.params.id, { reason, notes });
+    const result = await rejectReviewService(req.params.id, req.user.id, { reason, notes });
 
     const review = result?.review ?? result;
     sendReviewRejectedEmail({
@@ -85,7 +86,17 @@ export const rejectReview = async (req, res, next) => {
 export const respondToReview = async (req, res, next) => {
   try {
     const { responseText } = req.body;
-    const result = await respondToReviewService(req.params.id, { responseText });
+    const result = await respondToReviewService(req.params.id, req.user.id, { responseText });
+    return res.status(HTTP_STATUS.OK).json({ data: result, error: null, meta: null });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteReview = async (req, res, next) => {
+  try {
+    const { reason, detail } = req.body;
+    const result = await deleteReviewService(req.params.id, req.user.id, { reason, detail });
     return res.status(HTTP_STATUS.OK).json({ data: result, error: null, meta: null });
   } catch (error) {
     next(error);

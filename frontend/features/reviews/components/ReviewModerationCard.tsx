@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ThumbsUp, XCircle, MessageSquare } from 'lucide-react';
+import { ThumbsUp, XCircle, MessageSquare, Trash2 } from 'lucide-react';
 import type { ReviewModerationCardProps } from '../types/reviews.types';
 import { REVIEWS_STRINGS } from '../constants/reviews.constants';
 import { timeAgo } from '@/lib/utils/timeAgo';
@@ -9,6 +9,7 @@ import { StarRating } from './StarRating';
 import { ReviewStatusBadge } from './ReviewStatusBadge';
 import { RejectReviewModal } from './RejectReviewModal';
 import { RespondReviewModal } from './RespondReviewModal';
+import { DeleteReviewModal } from './DeleteReviewModal';
 
 const strings = REVIEWS_STRINGS.card;
 const errorStrings = REVIEWS_STRINGS.errors;
@@ -18,11 +19,13 @@ export function ReviewModerationCard({
   onApprove,
   onReject,
   onRespond,
+  onDelete,
   loadingId,
   errorId,
 }: ReviewModerationCardProps) {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [respondOpen, setRespondOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const isThisLoading = loadingId === review.id;
   const hasError = errorId === review.id;
@@ -71,7 +74,13 @@ export function ReviewModerationCard({
         {/* Error feedback */}
         {hasError && (
           <p role="alert" className="mt-2 text-xs text-destructive">
-            {rejectOpen ? errorStrings.rejectError : respondOpen ? errorStrings.respondError : errorStrings.approveError}
+            {deleteOpen
+              ? errorStrings.deleteError
+              : rejectOpen
+                ? errorStrings.rejectError
+                : respondOpen
+                  ? errorStrings.respondError
+                  : errorStrings.approveError}
           </p>
         )}
 
@@ -117,6 +126,17 @@ export function ReviewModerationCard({
               {review.adminResponse ? 'Editar respuesta' : strings.respond}
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            disabled={isThisLoading}
+            className="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 px-3 py-1.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+            aria-label={`${strings.delete} reseña de ${clientName}`}
+          >
+            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+            {strings.delete}
+          </button>
         </div>
       </article>
 
@@ -140,6 +160,18 @@ export function ReviewModerationCard({
             // Modal stays open until action completes — closed by parent on success
           }}
           onClose={() => setRespondOpen(false)}
+        />
+      )}
+
+      {deleteOpen && (
+        <DeleteReviewModal
+          review={review}
+          isLoading={isThisLoading}
+          onConfirm={(reason, detail) => {
+            onDelete(review.id, reason, detail);
+            // Modal stays open until action completes — closed by parent on success
+          }}
+          onClose={() => setDeleteOpen(false)}
         />
       )}
     </>

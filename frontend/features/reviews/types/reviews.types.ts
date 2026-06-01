@@ -53,11 +53,17 @@ export interface RejectReviewPayload {
   notes?: string;
 }
 
+export interface DeleteReviewPayload {
+  reason: ModerationReason;
+  detail?: string;
+}
+
 export interface ReviewModerationCardProps {
   review: Review;
   onApprove: (id: string) => void;
   onReject: (id: string, reason: ModerationReason, notes?: string) => void;
   onRespond: (id: string, responseText: string) => void;
+  onDelete: (id: string, reason: ModerationReason, detail?: string) => void;
   loadingId: string | null;
   errorId: string | null;
 }
