@@ -71,6 +71,7 @@ export function useConsumptionForm(
     append,
     remove,
     availableSupplies,
+    watchedItems,
     errors,
     isSubmitting,
     suppliesCount: supplies.length,

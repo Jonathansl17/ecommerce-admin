@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/FormField';
 import { SupplyItemRow } from './SupplyItemRow';
-import { INVENTORY_STRINGS } from '../constants/inventory.constants';
+import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '../constants/inventory.constants';
 import { useConsumptionForm } from '../hooks/useConsumptionForm';
 import type { ConsumptionModalProps } from '../types/inventory.modal.types';
 
 const strings = INVENTORY_STRINGS.consumption;
 
 export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: ConsumptionModalProps) {
-  const { register, handleSubmit, fields, append, remove, availableSupplies, errors, isSubmitting, suppliesCount } =
+  const { register, handleSubmit, fields, append, remove, availableSupplies, watchedItems, errors, isSubmitting, suppliesCount } =
     useConsumptionForm(supplies, onSubmit);
 
   const footer = (
@@ -63,22 +63,37 @@ export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: C
         </FormField>
 
         <div className="space-y-3">
-          {fields.map((field, index) => (
-            <SupplyItemRow
-              key={field.id}
-              index={index}
-              availableSupplies={availableSupplies(index)}
-              showRemove={fields.length > 1}
-              onRemove={() => remove(index)}
-              removeLabel={strings.removeItemButton}
-              supplyLabel={strings.supplyLabel}
-              supplyPlaceholder={strings.supplyPlaceholder}
-              quantityLabel={strings.quantityLabel}
-              quantityPlaceholder={strings.quantityPlaceholder}
-              register={register as Parameters<typeof SupplyItemRow>[0]['register']}
-              errors={errors}
-            />
-          ))}
+          {fields.map((field, index) => {
+            const selectedSupply = supplies.find(
+              (s) => s.id === watchedItems[index]?.supplyId
+            );
+            return (
+              <div key={field.id} className="space-y-1">
+                <SupplyItemRow
+                  index={index}
+                  availableSupplies={availableSupplies(index)}
+                  showRemove={fields.length > 1}
+                  onRemove={() => remove(index)}
+                  removeLabel={strings.removeItemButton}
+                  supplyLabel={strings.supplyLabel}
+                  supplyPlaceholder={strings.supplyPlaceholder}
+                  quantityLabel={strings.quantityLabel}
+                  quantityPlaceholder={strings.quantityPlaceholder}
+                  register={register as Parameters<typeof SupplyItemRow>[0]['register']}
+                  errors={errors}
+                />
+                {selectedSupply && (
+                  <p className="px-1 text-xs text-foreground/50">
+                    Stock disponible:{' '}
+                    <span className="font-medium text-foreground/70">
+                      {Number(selectedSupply.currentStock)}{' '}
+                      {UNIT_OF_MEASURE_LABELS[selectedSupply.unitOfMeasure]}
+                    </span>
+                  </p>
+                )}
+              </div>
+            );
+          })}
 
           {errors.items?.root?.message && (
             <p className="text-sm text-red-500">{errors.items.root.message}</p>
