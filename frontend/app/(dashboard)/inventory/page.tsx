@@ -27,6 +27,7 @@ export default function InventoryPage() {
   // Server errors per modal
   const [supplyFormError, setSupplyFormError] = useState<string | null>(null);
   const [showCreationHint, setShowCreationHint] = useState(false);
+  const [createdSupply, setCreatedSupply] = useState<Supply | null>(null);
   const [entryError, setEntryError] = useState<string | null>(null);
   const [consumptionError, setConsumptionError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
@@ -54,6 +55,7 @@ export default function InventoryPage() {
       const newSupply = await createSupply(data);
       setSupplies((prev) => [...prev, newSupply]);
       setSupplyFormOpen(false);
+      setCreatedSupply(newSupply);
       setShowCreationHint(true);
     } catch (err: unknown) {
       const error = err as { error?: string };
@@ -139,13 +141,26 @@ export default function InventoryPage() {
               <p className="text-sm font-medium text-blue-800">{strings.creationHint.title}</p>
               <p className="text-sm text-blue-700">{strings.creationHint.body}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowCreationHint(false)}
-              className="shrink-0 rounded-md border border-blue-300 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
-            >
-              {strings.creationHint.dismiss}
-            </button>
+            <div className="flex shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingSupply(createdSupply);
+                  setShowCreationHint(false);
+                  setCreatedSupply(null);
+                }}
+                className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
+              >
+                {strings.creationHint.editNow}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowCreationHint(false); setCreatedSupply(null); }}
+                className="rounded-md border border-blue-300 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+              >
+                {strings.creationHint.dismiss}
+              </button>
+            </div>
           </div>
         )}
 
