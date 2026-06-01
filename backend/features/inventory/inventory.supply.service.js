@@ -2,22 +2,49 @@ import prisma from '../../shared/db/prisma.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
 import { INVENTORY_MESSAGES, INVENTORY_CONFIG } from './inventory.constants.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
+import {
+  sincronizarAlertaTrasCambioUmbral,
+  calcAvgDailyConsumption,
+} from '../../shared/services/supplyAlert.service.js';
+
+const DAILY_WINDOW = 30;
 
 export const getAll = async () => {
   const items = await prisma.item.findMany({
     where: { itemType: INVENTORY_CONFIG.ITEM_TYPE },
-    include: { supply: true },
+    include: { supply: { include: { alerts: { where: { active: true }, take: 1 } } } },
     orderBy: { name: 'asc' },
   });
 
-  return items.map((item) => ({
-    id: item.id.toString(),
-    name: item.name,
-    status: item.status,
-    unitOfMeasure: item.supply?.unitOfMeasure ?? null,
-    currentStock: item.supply?.currentStock ?? null,
-    minThreshold: item.supply?.minThreshold ?? null,
-  }));
+  const results = await Promise.all(
+    items.map(async (item) => {
+      const supply = item.supply;
+      const hasActiveAlert = supply?.alerts?.length > 0;
+      let avgDailySales = null;
+      let daysRemaining = null;
+
+      if (hasActiveAlert && supply) {
+        avgDailySales = await calcAvgDailyConsumption(prisma, item.id);
+        daysRemaining =
+          avgDailySales > 0
+            ? Math.floor(Number(supply.currentStock) / avgDailySales)
+            : null;
+      }
+
+      return {
+        id: item.id.toString(),
+        name: item.name,
+        status: item.status,
+        unitOfMeasure: supply?.unitOfMeasure ?? null,
+        currentStock: supply?.currentStock ?? null,
+        minThreshold: supply?.minThreshold ?? null,
+        avgDailySales: avgDailySales !== null ? Math.round(avgDailySales * 100) / 100 : null,
+        daysRemaining,
+      };
+    }),
+  );
+
+  return results;
 };
 
 export const create = async ({ name, unitOfMeasure, initialStock }) => {
@@ -93,22 +120,7 @@ export const update = async (id, { name, unitOfMeasure, minThreshold = 0 }) => {
       data: { unitOfMeasure, minThreshold },
     });
 
-    // Sync alert state after threshold change
-    const currentStock = Number(updatedSupply.currentStock);
-    const threshold = Number(minThreshold);
-    const shouldAlert = threshold > 0 && currentStock <= threshold;
-
-    if (shouldAlert) {
-      const alertType = currentStock <= 0 ? 'out_of_stock' : 'low_stock';
-      const existing = await tx.supplyAlert.findFirst({ where: { supplyId: itemId } });
-      if (existing) {
-        await tx.supplyAlert.update({ where: { id: existing.id }, data: { type: alertType, threshold: minThreshold, active: true } });
-      } else {
-        await tx.supplyAlert.create({ data: { supplyId: itemId, type: alertType, threshold: minThreshold, active: true } });
-      }
-    } else {
-      await tx.supplyAlert.updateMany({ where: { supplyId: itemId, active: true }, data: { active: false } });
-    }
+    await sincronizarAlertaTrasCambioUmbral(tx, itemId, Number(updatedSupply.currentStock), Number(minThreshold));
 
     return {
       id: updatedItem.id.toString(),
