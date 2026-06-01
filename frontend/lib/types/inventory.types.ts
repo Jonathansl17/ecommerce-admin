@@ -25,12 +25,6 @@ export interface UpdateSupplyForm {
   minThreshold: number;
 }
 
-export interface CreateSupplyEntryForm {
-  supplyId: string;
-  quantity: number;
-  date: string; // YYYY-MM-DD
-}
-
 export interface EntryItem {
   supplyId: string;
   quantity: number;
