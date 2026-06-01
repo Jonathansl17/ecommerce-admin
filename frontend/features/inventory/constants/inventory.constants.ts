@@ -38,7 +38,7 @@ export const INVENTORY_STRINGS = {
     stockLabel: 'Stock actual (solo lectura)',
     thresholdLabel: 'Umbral mínimo de alerta',
     thresholdPlaceholder: '0',
-    thresholdHint: 'El sistema alertará cuando el stock llegue a esta cantidad. Usa 0 para desactivar.',
+    thresholdHint: 'El sistema alertará cuando el stock llegue a esta cantidad. Con 0, solo recibirás alerta si el insumo se agota por completo.',
     saveButton: 'Guardar cambios',
     savingButton: 'Guardando...',
     cancelButton: 'Cancelar',
@@ -177,6 +177,7 @@ export const INVENTORY_STRINGS = {
   creationHint: {
     title: 'Insumo registrado correctamente.',
     body: 'Te recomendamos configurar un umbral mínimo de alerta desde la opción Editar del insumo. Si lo dejás en 0, el sistema solo te avisará cuando el stock llegue exactamente a cero — no antes.',
+    editNow: 'Editar ahora',
     dismiss: 'Entendido',
   },
 } as const;
