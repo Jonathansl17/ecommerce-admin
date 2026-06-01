@@ -16,15 +16,19 @@ export interface OrderNotificationProduct {
   quantity: number;
   unitPrice: number;
   isCustomizable: boolean;
+  customizationDetails?: Record<string, string>;
 }
 
 export interface OrderNotificationContent {
   orderId: string;
   clientName: string;
+  clientEmail?: string;
   products: OrderNotificationProduct[];
   total: number;
   shippingAddress: string;
   hasCustomization: boolean;
+  customizationStatus?: 'accepted' | 'rejected';
+  customizationRejectionReason?: string;
 }
 
 export interface ReviewNotificationContent {

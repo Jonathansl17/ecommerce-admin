@@ -62,6 +62,12 @@ export const REVIEWS_STRINGS = {
     rejectError: 'Error al rechazar la reseña.',
     respondError: 'Error al publicar la respuesta.',
   },
+  toasts: {
+    approved: 'Reseña aprobada',
+    rejected: 'Reseña rechazada',
+    approveError: 'No se pudo aprobar la reseña',
+    rejectError: 'No se pudo rechazar la reseña',
+  },
   time: {
     justNow: 'Justo ahora',
     minutesAgo: (n: number) => `hace ${n} minuto${n === 1 ? '' : 's'}`,
