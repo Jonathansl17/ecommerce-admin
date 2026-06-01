@@ -8,6 +8,7 @@ export const ORDER_MESSAGES = {
 
 export const ORDER_VALIDATION = {
   ORDER_ID_MIN: 1,
+  ORDER_ID_MAX: 100,
   CLIENT_NAME_MIN: 1,
   CLIENT_NAME_MAX: 150,
   PRODUCTS_MIN: 1,
@@ -47,6 +48,7 @@ export const ORDER_VALIDATION_MESSAGES = {
   UNIT_PRICE_NONNEGATIVE: 'El precio unitario no puede ser negativo',
   ORDER_ID_REQUIRED: 'El ID del pedido es requerido',
   ORDER_ID_EMPTY: 'El ID del pedido no puede estar vacío',
+  ORDER_ID_MAX: `El ID del pedido no puede superar ${ORDER_VALIDATION.ORDER_ID_MAX} caracteres`,
   CLIENT_NAME_REQUIRED: 'El nombre del cliente es requerido',
   CLIENT_NAME_EMPTY: 'El nombre del cliente no puede estar vacío',
   CLIENT_NAME_MAX: `El nombre del cliente no puede superar ${ORDER_VALIDATION.CLIENT_NAME_MAX} caracteres`,

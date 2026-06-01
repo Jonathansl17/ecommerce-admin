@@ -12,6 +12,8 @@ export const NOTIFICATION_STRINGS = {
     emptyRead: 'Sin notificaciones leídas',
     emptyReadSubtitle: 'Las notificaciones que leas aparecerán aquí.',
     settingsTitle: 'Preferencias de notificaciones',
+    disconnectedWarning:
+      'Sin conexión en tiempo real. Es posible que no recibas notificaciones nuevas hasta que recargues la página.',
   },
   card: {
     markRead: 'Marcar como leída',
