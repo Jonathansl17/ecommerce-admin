@@ -11,9 +11,11 @@ import type { ConsumptionModalProps } from '../types/inventory.modal.types';
 
 const strings = INVENTORY_STRINGS.consumption;
 
-export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: ConsumptionModalProps) {
+export function ConsumptionModal({ isOpen, supplies, onClose, onSubmit, serverError }: ConsumptionModalProps) {
   const { register, handleSubmit, fields, append, remove, availableSupplies, watchedItems, errors, isSubmitting, suppliesCount } =
     useConsumptionForm(supplies, onSubmit);
+
+  if (!isOpen) return null;
 
   const footer = (
     <>
@@ -43,6 +45,7 @@ export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: C
       title={strings.title}
       onClose={onClose}
       footer={footer}
+      disableBackdropClose
     >
       <form id="consumption-form" onSubmit={handleSubmit} className="space-y-4">
         <FormField id="consumption-reference" label={strings.referenceLabel}>

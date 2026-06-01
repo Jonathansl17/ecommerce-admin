@@ -10,6 +10,7 @@ interface ModalProps {
   footer?: ReactNode;
   children: ReactNode;
   size?: 'sm' | 'md' | 'lg';
+  disableBackdropClose?: boolean;
 }
 
 const SIZE_CLASSES: Record<NonNullable<ModalProps['size']>, string> = {
@@ -18,11 +19,11 @@ const SIZE_CLASSES: Record<NonNullable<ModalProps['size']>, string> = {
   lg: 'max-w-4xl',
 };
 
-export function Modal({ titleId, title, description, onClose, footer, children, size = 'md' }: ModalProps) {
+export function Modal({ titleId, title, description, onClose, footer, children, size = 'md', disableBackdropClose = false }: ModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
+      onClick={disableBackdropClose ? undefined : onClose}
     >
       <div
         className={`flex max-h-[90vh] w-full ${SIZE_CLASSES[size]} flex-col rounded-lg border border-foreground/10 bg-background shadow-lg`}
