@@ -193,13 +193,12 @@ export default function InventoryPage() {
       </div>
 
       {/* Modales */}
-      {supplyFormOpen && (
-        <SupplyFormModal
-          onClose={() => { setSupplyFormOpen(false); setSupplyFormError(null); }}
-          onSubmit={handleCreate}
-          serverError={supplyFormError}
-        />
-      )}
+      <SupplyFormModal
+        isOpen={supplyFormOpen}
+        onClose={() => { setSupplyFormOpen(false); setSupplyFormError(null); }}
+        onSubmit={handleCreate}
+        serverError={supplyFormError}
+      />
 
       {entryOpen && (
         <SupplyEntryModal
