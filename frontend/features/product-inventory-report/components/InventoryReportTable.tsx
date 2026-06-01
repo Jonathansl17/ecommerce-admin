@@ -1,5 +1,5 @@
 import { INVENTORY_REPORT_MESSAGES } from '../constants/messages';
-import type { InventoryReportRow, StockStatus } from '../models/product-inventory-report.models';
+import type { InventoryReportRow, InventoryReportTableProps, StockStatus } from '../models/product-inventory-report.models';
 
 const strings = INVENTORY_REPORT_MESSAGES;
 
@@ -9,11 +9,6 @@ const STOCK_STATUS_STYLES: Record<StockStatus, string> = {
   out_of_stock: 'bg-red-100 text-red-700',
   all: '',
 };
-
-interface InventoryReportTableProps {
-  rows: InventoryReportRow[];
-  emptyMessage?: string;
-}
 
 export function InventoryReportTable({
   rows,
