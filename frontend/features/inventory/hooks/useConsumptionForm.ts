@@ -39,7 +39,7 @@ export function useConsumptionForm(
   } = useForm<CreateConsumptionForm>({
     resolver: zodResolver(schema),
     defaultValues: {
-      items: [{ supplyId: '', quantity: undefined as unknown as number }],
+      items: [{ supplyId: '', quantity: NaN }],
       reference: '',
       date: today(),
     },
@@ -58,7 +58,7 @@ export function useConsumptionForm(
   const onFormSubmit = async (data: CreateConsumptionForm) => {
     await onSubmit(data);
     reset({
-      items: [{ supplyId: '', quantity: undefined as unknown as number }],
+      items: [{ supplyId: '', quantity: NaN }],
       reference: '',
       date: today(),
     });
