@@ -12,7 +12,7 @@ import type { ConsumptionModalProps } from '../types/inventory.modal.types';
 const strings = INVENTORY_STRINGS.consumption;
 
 export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: ConsumptionModalProps) {
-  const { register, handleSubmit, fields, append, remove, availableSupplies, errors, isSubmitting } =
+  const { register, handleSubmit, fields, append, remove, availableSupplies, errors, isSubmitting, suppliesCount } =
     useConsumptionForm(supplies, onSubmit);
 
   const footer = (
@@ -84,13 +84,15 @@ export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: C
             <p className="text-sm text-red-500">{errors.items.root.message}</p>
           )}
 
-          <button
-            type="button"
-            onClick={() => append({ supplyId: '', quantity: NaN })}
-            className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-          >
-            {strings.addItemButton}
-          </button>
+          {fields.length < suppliesCount && (
+            <button
+              type="button"
+              onClick={() => append({ supplyId: '', quantity: NaN })}
+              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              {strings.addItemButton}
+            </button>
+          )}
         </div>
 
         {serverError && (
