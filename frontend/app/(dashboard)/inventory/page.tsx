@@ -200,15 +200,14 @@ export default function InventoryPage() {
         serverError={supplyFormError}
       />
 
-      {entryOpen && (
-        <SupplyEntryModal
-          supplies={supplies}
-          onClose={() => { setEntryOpen(false); setEntryError(null); setQuickEntrySupplyId(undefined); }}
-          onSubmit={handleCreateEntry}
-          serverError={entryError}
-          defaultSupplyId={quickEntrySupplyId}
-        />
-      )}
+      <SupplyEntryModal
+        isOpen={entryOpen}
+        supplies={supplies}
+        onClose={() => { setEntryOpen(false); setEntryError(null); setQuickEntrySupplyId(undefined); }}
+        onSubmit={handleCreateEntry}
+        serverError={entryError}
+        defaultSupplyId={quickEntrySupplyId}
+      />
 
       <ConsumptionModal
         isOpen={consumptionOpen}
