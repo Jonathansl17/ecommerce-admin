@@ -1,5 +1,9 @@
 export type UnitOfMeasure = 'grams' | 'kilograms' | 'milliliters' | 'liters' | 'units';
 
+export interface ApiErrorBody {
+  error?: string;
+}
+
 export type ItemStatus = 'active' | 'inactive';
 
 export interface Supply {

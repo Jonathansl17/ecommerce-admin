@@ -10,7 +10,7 @@ import { ConsumptionModal } from '@/features/inventory/components/ConsumptionMod
 import { InventoryAlerts } from '@/features/inventory/components/InventoryAlerts';
 import { getSupplies, createSupply, updateSupply, registerEntries, registerConsumption } from '@/features/inventory/shared/inventory.api';
 import { INVENTORY_STRINGS } from '@/features/inventory/constants/inventory.constants';
-import type { Supply, CreateSupplyForm, UpdateSupplyForm, CreateSupplyEntriesForm, CreateConsumptionForm } from '@/lib/types/inventory.types';
+import type { Supply, CreateSupplyForm, UpdateSupplyForm, CreateSupplyEntriesForm, CreateConsumptionForm, ApiErrorBody } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS;
 
@@ -58,7 +58,7 @@ export default function InventoryPage() {
       setCreatedSupply(newSupply);
       setShowCreationHint(true);
     } catch (err: unknown) {
-      const error = err as { error?: string };
+      const error = err as ApiErrorBody;
       setSupplyFormError(
         error?.error === strings.errors.duplicateName
           ? strings.errors.duplicateName
@@ -86,7 +86,7 @@ export default function InventoryPage() {
       setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
       setConsumptionOpen(false);
     } catch (err: unknown) {
-      const error = err as { error?: string };
+      const error = err as ApiErrorBody;
       setConsumptionError(
         error?.error === strings.errors.stockInsufficient
           ? strings.errors.stockInsufficient
@@ -102,7 +102,7 @@ export default function InventoryPage() {
       setSupplies((prev) => prev.map((s) => (s.id === id ? updated : s)));
       setEditingSupply(null);
     } catch (err: unknown) {
-      const error = err as { error?: string };
+      const error = err as ApiErrorBody;
       setEditError(
         error?.error === strings.errors.duplicateName
           ? strings.errors.duplicateName
