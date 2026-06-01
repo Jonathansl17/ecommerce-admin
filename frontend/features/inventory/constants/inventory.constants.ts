@@ -174,4 +174,9 @@ export const INVENTORY_STRINGS = {
     created: 'Insumo registrado correctamente',
     entryCreated: 'Entrada registrada correctamente',
   },
+  creationHint: {
+    title: 'Insumo registrado correctamente.',
+    body: 'Te recomendamos configurar un umbral mínimo de alerta desde la opción Editar del insumo. Si lo dejás en 0, el sistema solo te avisará cuando el stock llegue exactamente a cero — no antes.',
+    dismiss: 'Entendido',
+  },
 } as const;

@@ -26,6 +26,7 @@ export default function InventoryPage() {
 
   // Server errors per modal
   const [supplyFormError, setSupplyFormError] = useState<string | null>(null);
+  const [showCreationHint, setShowCreationHint] = useState(false);
   const [entryError, setEntryError] = useState<string | null>(null);
   const [consumptionError, setConsumptionError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
@@ -53,6 +54,7 @@ export default function InventoryPage() {
       const newSupply = await createSupply(data);
       setSupplies((prev) => [...prev, newSupply]);
       setSupplyFormOpen(false);
+      setShowCreationHint(true);
     } catch (err: unknown) {
       const error = err as { error?: string };
       setSupplyFormError(
@@ -129,6 +131,23 @@ export default function InventoryPage() {
             {strings.report.reportButton}
           </Link>
         </div>
+
+        {/* Hint post-creación */}
+        {showCreationHint && (
+          <div className="flex items-start justify-between gap-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-blue-800">{strings.creationHint.title}</p>
+              <p className="text-sm text-blue-700">{strings.creationHint.body}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowCreationHint(false)}
+              className="shrink-0 rounded-md border border-blue-300 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+            >
+              {strings.creationHint.dismiss}
+            </button>
+          </div>
+        )}
 
         {/* Alertas */}
         <InventoryAlerts supplies={supplies} onQuickEntry={handleQuickEntry} />
