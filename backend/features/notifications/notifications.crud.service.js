@@ -10,6 +10,9 @@ import {
 import { serializeNotification, serializePreferences } from './notifications.serializers.js';
 
 async function findAndAssertOwnership(notificationId, adminId) {
+  if (!/^\d+$/.test(String(notificationId))) {
+    throw crearError(NOTIFICATION_MESSAGES.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
+  }
   const id = BigInt(notificationId);
   const notification = await prisma.adminNotification.findUnique({ where: { id } });
   if (!notification) throw crearError(NOTIFICATION_MESSAGES.NOT_FOUND, HTTP_STATUS.NOT_FOUND);

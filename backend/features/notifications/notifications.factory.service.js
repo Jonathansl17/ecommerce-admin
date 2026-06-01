@@ -9,12 +9,12 @@ import { serializeNotification } from './notifications.serializers.js';
 export const createOrderNotification = async (orderData, targetAdminIds) => {
   if (targetAdminIds.length === 0) return [];
 
-  // Idempotency: skip admins that already have a notification for this orderId
+  // Idempotency: indexed lookup on entityExternalId avoids a full-table LIKE scan
   const alreadyNotified = await prisma.adminNotification.findMany({
     where: {
       adminId: { in: targetAdminIds },
       entityType: NOTIFICATION_CONFIG.DEFAULT_ORDER_ENTITY_TYPE,
-      content: { contains: `"orderId":"${orderData.orderId}"` },
+      entityExternalId: orderData.orderId,
     },
     select: { adminId: true },
   });
@@ -42,6 +42,7 @@ export const createOrderNotification = async (orderData, targetAdminIds) => {
             orderId: orderData.orderId,
           }),
           entityType: NOTIFICATION_CONFIG.DEFAULT_ORDER_ENTITY_TYPE,
+          entityExternalId: orderData.orderId,
           entityId: null,
           read: false,
           sentAt: now,
@@ -56,12 +57,12 @@ export const createOrderNotification = async (orderData, targetAdminIds) => {
 export const createReviewNotification = async (reviewData, targetAdminIds) => {
   if (targetAdminIds.length === 0) return [];
 
-  // Idempotency: skip admins already notified for this reviewId
+  // Idempotency: indexed lookup on entityExternalId avoids a full-table LIKE scan
   const alreadyNotified = await prisma.adminNotification.findMany({
     where: {
       adminId: { in: targetAdminIds },
       entityType: NOTIFICATION_CONFIG.DEFAULT_REVIEW_ENTITY_TYPE,
-      content: { contains: `"reviewId":"${reviewData.reviewId}"` },
+      entityExternalId: reviewData.reviewId,
     },
     select: { adminId: true },
   });
@@ -76,9 +77,8 @@ export const createReviewNotification = async (reviewData, targetAdminIds) => {
     ? NOTIFICATION_REVIEW_TITLES.PRIORITY
     : NOTIFICATION_REVIEW_TITLES.STANDARD;
 
-  const entityId = reviewData.internalReviewId
-    ? BigInt(reviewData.internalReviewId)
-    : reviewData.reviewId && !Number.isNaN(Number(reviewData.reviewId))
+  const entityId =
+    reviewData.reviewId && /^\d+$/.test(String(reviewData.reviewId))
       ? BigInt(reviewData.reviewId)
       : null;
 
@@ -99,6 +99,7 @@ export const createReviewNotification = async (reviewData, targetAdminIds) => {
             isPriority: reviewData.isPriority,
           }),
           entityType: NOTIFICATION_CONFIG.DEFAULT_REVIEW_ENTITY_TYPE,
+          entityExternalId: reviewData.reviewId,
           entityId,
           read: false,
           sentAt: now,

@@ -41,6 +41,45 @@ export interface ReviewNotificationContent {
   isPriority: boolean;
 }
 
+export interface NotificationCardProps {
+  notification: Notification;
+  onMarkRead: (id: string) => void;
+}
+
+export type SaveState = 'idle' | 'saving';
+
+export interface ToggleRowProps {
+  id: string;
+  label: string;
+  checked: boolean;
+  disabled: boolean;
+  onToggle: () => void;
+}
+
+export interface OrderNotificationContentProps {
+  content: OrderNotificationContent;
+}
+
+export interface ReviewNotificationContentProps {
+  content: ReviewNotificationContent;
+}
+
+export interface BadgeCountProps {
+  count: number;
+}
+
+export interface ToastItemProps {
+  toast: ToastNotification;
+  onDismiss: (id: string) => void;
+}
+
+export interface ToastNotification {
+  id: string;
+  notification: Notification;
+  orderContent: OrderNotificationContent | null;
+  reviewContent: ReviewNotificationContent | null;
+}
+
 export interface NotificationPreference {
   adminUserId: string;
   receiveOrderNotifications: boolean;

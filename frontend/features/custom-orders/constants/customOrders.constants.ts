@@ -6,6 +6,7 @@ export const CUSTOM_ORDERS_STRINGS = {
     filterAll: 'Todos',
     ariaTabList: 'Filtrar pedidos personalizados',
     ariaOrderList: 'Lista de pedidos personalizados',
+    ariaLoading: 'Cargando pedidos personalizados',
     ariaPendingCount: (n: number) => `${n} pedido${n === 1 ? '' : 's'} pendiente${n === 1 ? '' : 's'}`,
     ariaAcceptedCount: (n: number) => `${n} pedido${n === 1 ? '' : 's'} aceptado${n === 1 ? '' : 's'}`,
     ariaAllCount: (n: number) => `${n} pedido${n === 1 ? '' : 's'} en total`,
@@ -52,3 +53,23 @@ export const CUSTOM_ORDERS_STRINGS = {
     retryLabel: 'Reintentar',
   },
 } as const;
+
+export const ORDER_STATUS = { ACCEPTED: 'accepted', REJECTED: 'rejected' } as const;
+
+export const BORDER_COLOR_CLASSES = {
+  pending: 'border-l-amber-400',
+  accepted: 'border-l-green-500',
+  rejected: 'border-l-red-500',
+} as const;
+
+export type StatusFilter = 'pending' | 'accepted' | 'all';
+
+export const CUSTOM_ORDER_CARD_STRINGS = CUSTOM_ORDERS_STRINGS.card;
+
+export const SKELETON_COUNT = 3;
+
+export const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
+  { key: 'pending', label: CUSTOM_ORDERS_STRINGS.page.filterPending },
+  { key: 'accepted', label: CUSTOM_ORDERS_STRINGS.page.filterAccepted },
+  { key: 'all', label: CUSTOM_ORDERS_STRINGS.page.filterAll },
+];

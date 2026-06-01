@@ -2,36 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { Check, AlertCircle } from 'lucide-react';
+import type { ToastProps } from './toast.types';
+import { DISMISS_DURATION_MS, VARIANT_CLASSES } from './toast.constants';
 
-export type ToastVariant = 'success' | 'error';
+export type { ToastVariant, ToastItem } from './toast.types';
 
-/** Duration of the exit animation in ms. Must match the Tailwind duration class below. */
-const DISMISS_DURATION_MS = 350;
-
-interface ToastProps {
-  message: string;
-  variant?: ToastVariant;
-  duration?: number;
-  onDismiss: () => void;
-}
-
-const VARIANT_CONFIG = {
-  success: {
-    bar: 'bg-green-500',
-    iconBg: 'bg-green-50',
-    icon: <Check className="h-3.5 w-3.5 text-green-600" strokeWidth={2.5} aria-hidden="true" />,
-  },
-  error: {
-    bar: 'bg-red-500',
-    iconBg: 'bg-red-50',
-    icon: <AlertCircle className="h-3.5 w-3.5 text-red-600" aria-hidden="true" />,
-  },
-};
-
-/**
- * Manages the visible state for a toast: entrance via rAF, auto-dismiss after
- * `duration` ms, then exit animation of `DISMISS_DURATION_MS` before `onDismiss` fires.
- */
 function useToastDismiss(duration: number, onDismiss: () => void) {
   const [visible, setVisible] = useState(false);
 
@@ -50,10 +25,21 @@ function useToastDismiss(duration: number, onDismiss: () => void) {
   return visible;
 }
 
+function ToastIcon({ variant, iconBg, iconColor }: { variant: 'success' | 'error'; iconBg: string; iconColor: string }) {
+  return (
+    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${iconBg}`}>
+      {variant === 'success' ? (
+        <Check className={`h-3.5 w-3.5 ${iconColor}`} strokeWidth={2.5} aria-hidden="true" />
+      ) : (
+        <AlertCircle className={`h-3.5 w-3.5 ${iconColor}`} aria-hidden="true" />
+      )}
+    </span>
+  );
+}
+
 export function Toast({ message, variant = 'success', duration = 2800, onDismiss }: ToastProps) {
   const visible = useToastDismiss(duration, onDismiss);
-
-  const { bar, iconBg, icon } = VARIANT_CONFIG[variant];
+  const { bar, iconBg, iconColor } = VARIANT_CLASSES[variant];
 
   return (
     <div
@@ -66,15 +52,8 @@ export function Toast({ message, variant = 'success', duration = 2800, onDismiss
           : 'translate-x-4 opacity-0 scale-95',
       ].join(' ')}
     >
-      {/* Accent bar */}
       <span className={`h-full w-1 self-stretch shrink-0 ${bar}`} aria-hidden="true" />
-
-      {/* Icon */}
-      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${iconBg}`}>
-        {icon}
-      </span>
-
-      {/* Message */}
+      <ToastIcon variant={variant} iconBg={iconBg} iconColor={iconColor} />
       <p className="flex-1 py-3 pr-4 text-sm font-medium text-foreground">{message}</p>
     </div>
   );

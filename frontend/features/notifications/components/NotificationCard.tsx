@@ -2,47 +2,15 @@
 
 import { Check } from 'lucide-react';
 import type {
-  Notification,
   OrderNotificationContent,
   ReviewNotificationContent,
 } from '../types/notifications.types';
+import type { NotificationCardProps } from '../types/notifications.types';
 import { OrderNotificationContent as OrderContent } from './OrderNotificationContent';
 import { ReviewNotificationContent as ReviewContent } from './ReviewNotificationContent';
-import { NOTIFICATION_STRINGS } from '../constants/notifications.constants';
-import { parseNotificationContent } from '@/lib/utils/notifications';
-
-const strings = NOTIFICATION_STRINGS.card;
-
-const BORDER_COLOR_NEGATIVE = '#ef4444';
-const BORDER_COLOR_CUSTOMIZATION = '#f59e0b';
-
-function getCardBorderStyle(
-  isNegativeReview: boolean,
-  isOrderWithCustomization: boolean,
-  read: boolean,
-): React.CSSProperties | undefined {
-  if (isNegativeReview) return { borderLeftColor: BORDER_COLOR_NEGATIVE };
-  if (isOrderWithCustomization) return { borderLeftColor: BORDER_COLOR_CUSTOMIZATION };
-  if (!read) return { borderLeftColor: 'var(--primary)' };
-  return undefined;
-}
-
-interface NotificationCardProps {
-  notification: Notification;
-  onMarkRead: (id: string) => void;
-}
-
-function timeAgo(isoString: string): string {
-  const diffMs = Date.now() - new Date(isoString).getTime();
-  const diffMinutes = Math.floor(diffMs / 60_000);
-  const diffHours = Math.floor(diffMs / 3_600_000);
-  const diffDays = Math.floor(diffMs / 86_400_000);
-
-  if (diffMinutes < 1) return strings.justNow;
-  if (diffHours < 1) return strings.minutesAgo(diffMinutes);
-  if (diffDays < 1) return strings.hoursAgo(diffHours);
-  return strings.daysAgo(diffDays);
-}
+import { NOTIFICATION_STRINGS, NOTIFICATION_CARD_STRINGS as strings } from '../constants/notifications.constants';
+import { parseNotificationContent, getCardBorderStyle } from '@/lib/utils/notifications';
+import { timeAgo } from '@/lib/utils/timeAgo';
 
 export function NotificationCard({ notification, onMarkRead }: NotificationCardProps) {
   const { id, title, content, entityType, read, createdAt } = notification;
@@ -57,9 +25,7 @@ export function NotificationCard({ notification, onMarkRead }: NotificationCardP
     if (!read) onMarkRead(id);
   };
 
-  // Left-border color: red > amber > primary (unread only)
   const borderStyle = getCardBorderStyle(isNegativeReview, isOrderWithCustomization, read);
-
   const hasPriorityBorder = isNegativeReview || isOrderWithCustomization || !read;
 
   return (
@@ -95,7 +61,7 @@ export function NotificationCard({ notification, onMarkRead }: NotificationCardP
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">{timeAgo(createdAt)}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{timeAgo(createdAt, strings)}</p>
         </div>
 
         {!read && (

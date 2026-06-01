@@ -7,6 +7,11 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import 'dotenv/config';
+
+if (process.env.NODE_ENV === 'production') {
+  throw new Error('Seed must not run in production. Set NODE_ENV != production or use a dedicated migration script.');
+}
+
 import bcrypt from 'bcrypt';
 import pkg from '@prisma/client';
 import { NOTIFICATION_CONFIG, NOTIFICATION_REVIEW_TITLES, NOTIFICATION_TYPE } from '../features/notifications/notifications.constants.js';
@@ -27,8 +32,8 @@ const SUPPLY_INITIAL_STOCK = 100;
 const SKELETON_LOADERS = 3;
 
 const TEST_ADMIN = {
-  email: 'admin@gmail.com',
-  password: 'Admin12345',
+  email: process.env.SEED_ADMIN_EMAIL || 'admin@example.com',
+  password: process.env.SEED_ADMIN_PASSWORD || 'ChangeThisPassword123',
   fullName: 'Administrador Principal',
 };
 

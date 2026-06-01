@@ -1,23 +1,12 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import type { Review, ModerationReason } from '@/features/reviews/types/reviews.types';
+import type { Review, ModerationReason, ToastItem } from '@/features/reviews/types/reviews.types';
 import { useReviews } from '@/features/reviews/hooks/useReviews';
 import { useReviewActions } from '@/features/reviews/hooks/useReviewActions';
 import { ReviewModerationPanel } from '@/features/reviews/components/ReviewModerationPanel';
-import { REVIEWS_STRINGS } from '@/features/reviews/constants/reviews.constants';
+import { REVIEWS_STRINGS as strings } from '@/features/reviews/constants/reviews.constants';
 import { Toast, ToastContainer, type ToastVariant } from '@/components/ui/Toast';
-
-const strings = REVIEWS_STRINGS;
-
-const ERROR_BADGE_BG = '#fee2e2';
-const ERROR_BADGE_TEXT = '#991b1b';
-
-interface ToastItem {
-  id: string;
-  message: string;
-  variant: ToastVariant;
-}
 
 export default function ReviewsPage() {
   const { reviews, isLoading, error, statusFilter, setStatusFilter, refetch } = useReviews();
@@ -83,8 +72,7 @@ export default function ReviewsPage() {
         {/* Error state */}
         {error && (
           <div
-            className="rounded-md p-3 text-sm font-medium"
-            style={{ backgroundColor: ERROR_BADGE_BG, color: ERROR_BADGE_TEXT }}
+            className="rounded-md p-3 text-sm font-medium bg-red-100 text-red-800"
             role="alert"
           >
             {strings.errors.fetchError}
@@ -93,7 +81,7 @@ export default function ReviewsPage() {
 
         {/* Loading skeleton */}
         {isLoading ? (
-          <div className="space-y-3" aria-busy="true" aria-label="Cargando reseñas">
+          <div className="space-y-3" aria-busy="true" aria-label={strings.page.ariaLoading}>
             {Array.from({ length: 4 }, (_, i) => (
               <div
                 key={i}

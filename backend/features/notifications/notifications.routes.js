@@ -1,5 +1,7 @@
 import { Router } from 'express';
-import { requireAuth } from '../../shared/middleware/authMiddleware.js';
+import { requireAuth, requireRole } from '../../shared/middleware/authMiddleware.js';
+
+const ADMIN_ROLES = ['administrador'];
 import {
   validateUpdatePreferences,
   validateUpdateCustomizationStatus,
@@ -26,7 +28,7 @@ router.get('/', requireAuth, getAll);
 router.get('/unread-count', requireAuth, getUnreadCount);
 router.patch('/read-all', requireAuth, markAllRead);
 router.patch('/:id/read', requireAuth, markRead);
-router.patch('/:id/customization-status', requireAuth, validateUpdateCustomizationStatus, updateCustomizationStatus);
+router.patch('/:id/customization-status', requireAuth, requireRole(ADMIN_ROLES), validateUpdateCustomizationStatus, updateCustomizationStatus);
 router.get('/preferences', requireAuth, getPreferences);
 router.put('/preferences', requireAuth, validateUpdatePreferences, updatePreferences);
 

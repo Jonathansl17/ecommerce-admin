@@ -1,8 +1,46 @@
 import { z } from 'zod/v4';
-import { REVIEW_VALIDATION, REVIEW_VALIDATION_MESSAGES } from './reviews.constants.js';
+import { REVIEW_VALIDATION, REVIEW_VALIDATION_MESSAGES, REVIEW_LIST_LIMITS, REVIEW_LIST_STATUSES } from './reviews.constants.js';
 import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
 const MODERATION_REASONS = ['offensive_content', 'spam', 'false_information', 'off_topic', 'other'];
+
+const optionalIntFromQuery = ({ min, max, label }) =>
+  z.preprocess(
+    (v) => {
+      if (v === undefined || v === null || v === '') return undefined;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : v;
+    },
+    z.number({ invalid_type_error: `${label} debe ser un número` })
+      .int(`${label} debe ser un entero`)
+      .min(min, `${label} no puede ser menor a ${min}`)
+      .max(max, `${label} no puede ser mayor a ${max}`)
+      .optional()
+  );
+
+const listReviewsQuerySchema = z.object({
+  status: z.enum(REVIEW_LIST_STATUSES).optional(),
+  productId: z.string().trim().min(1).max(100).optional(),
+  clientUserId: z.string().trim().min(1).max(100).optional(),
+  rating: optionalIntFromQuery({ min: REVIEW_VALIDATION.RATING_MIN, max: REVIEW_VALIDATION.RATING_MAX, label: 'rating' }),
+  limit: optionalIntFromQuery({ min: REVIEW_LIST_LIMITS.MIN_LIMIT, max: REVIEW_LIST_LIMITS.MAX_LIMIT, label: 'limit' }),
+  offset: optionalIntFromQuery({ min: REVIEW_LIST_LIMITS.MIN_OFFSET, max: Number.MAX_SAFE_INTEGER, label: 'offset' }),
+});
+
+export const validateListReviewsQuery = (req, res, next) => {
+  const result = listReviewsQuerySchema.safeParse(req.query);
+  if (!result.success) return responderErrores(res, result.error);
+  const data = result.data;
+  req.validatedQuery = {
+    status: data.status,
+    productId: data.productId,
+    clientUserId: data.clientUserId,
+    rating: data.rating,
+    limit: data.limit ?? REVIEW_LIST_LIMITS.DEFAULT_LIMIT,
+    offset: data.offset ?? REVIEW_LIST_LIMITS.MIN_OFFSET,
+  };
+  next();
+};
 
 const notifyNewReviewSchema = z.object({
   reviewId: z

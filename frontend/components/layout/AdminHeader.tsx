@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, Home } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/AuthContext';
-import { DASHBOARD_ROUTE, HEADER_CONFIG, PAGE_TITLES } from './adminHeader.constants';
+import { DASHBOARD_ROUTE, HEADER_CONFIG, PAGE_TITLES } from './constants/adminHeader.constants';
 
 interface AdminHeaderProps {
   onMenuOpen: () => void;

@@ -6,8 +6,9 @@ import { usePathname } from 'next/navigation';
 import { LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/AuthContext';
 import { getUnreadCount } from '@/features/notifications/shared/notifications.api';
-import { HEADER_CONFIG } from './adminHeader.constants';
-import { NAV_SECTIONS, MAX_BADGE, SIDEBAR_STRINGS } from './adminSidebar.constants';
+import { HEADER_CONFIG } from './constants/adminHeader.constants';
+import { NAV_SECTIONS, MAX_BADGE, SIDEBAR_STRINGS } from './constants/adminSidebar.constants';
+import type { AdminSidebarProps } from './types/adminSidebar.types';
 
 function UnreadBadge({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -19,11 +20,6 @@ function UnreadBadge({ count }: { count: number }) {
       {count > MAX_BADGE ? `${MAX_BADGE}+` : count}
     </span>
   );
-}
-
-interface AdminSidebarProps {
-  collapsed: boolean;
-  onToggle: () => void;
 }
 
 export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
