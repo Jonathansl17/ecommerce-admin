@@ -211,14 +211,13 @@ export default function InventoryPage() {
         />
       )}
 
-      {consumptionOpen && (
-        <ConsumptionModal
-          supplies={supplies}
-          onClose={() => { setConsumptionOpen(false); setConsumptionError(null); }}
-          onSubmit={handleConsumption}
-          serverError={consumptionError}
-        />
-      )}
+      <ConsumptionModal
+        isOpen={consumptionOpen}
+        supplies={supplies}
+        onClose={() => { setConsumptionOpen(false); setConsumptionError(null); }}
+        onSubmit={handleConsumption}
+        serverError={consumptionError}
+      />
 
       <EditSupplyModal
         supply={editingSupply}
