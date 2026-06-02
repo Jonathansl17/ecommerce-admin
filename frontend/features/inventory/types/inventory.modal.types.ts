@@ -7,7 +7,6 @@ import type {
 } from '@/lib/types/inventory.types';
 
 export interface SupplyFormModalProps {
-  isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreateSupplyForm) => Promise<void>;
   serverError?: string | null;
