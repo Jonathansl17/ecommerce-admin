@@ -8,6 +8,7 @@ import type {
   CreateSupplyEntriesForm,
   CreateConsumptionForm,
   SupplyHistory,
+  PaginationMeta,
   InventoryReport,
 } from '@/lib/types/inventory.types';
 
@@ -67,20 +68,21 @@ export async function getInventoryReport(
 
 export async function getSupplyMovements(
   supplyId: string,
-  filters: { type?: string; dateFrom?: string; dateTo?: string },
-): Promise<SupplyHistory> {
+  filters: { type?: string; dateFrom?: string; dateTo?: string; page?: number; limit?: number },
+): Promise<{ data: SupplyHistory; meta: PaginationMeta }> {
   const params = new URLSearchParams();
   if (filters.type) params.set('type', filters.type);
   if (filters.dateFrom) params.set('dateFrom', filters.dateFrom);
   if (filters.dateTo) params.set('dateTo', filters.dateTo);
+  if (filters.page) params.set('page', String(filters.page));
+  if (filters.limit) params.set('limit', String(filters.limit));
 
   try {
-    return await unwrap(
-      apiFetch<{ data: SupplyHistory }>(
-        `/inventory/supplies/${supplyId}/movements?${params}`,
-        { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) }
-      )
+    const body = await apiFetch<{ data: SupplyHistory; meta: PaginationMeta }>(
+      `/inventory/supplies/${supplyId}/movements?${params}`,
+      { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) }
     );
+    return { data: body.data, meta: body.meta };
   } catch {
     throw new Error('fetch_error');
   }

@@ -1,4 +1,4 @@
-import { INVENTORY_VALIDATION, UNIT_OF_MEASURE } from './inventory.constants.js';
+import { INVENTORY_VALIDATION, UNIT_OF_MEASURE, PAGINATION_CONFIG, REPORT_CONFIG } from './inventory.constants.js';
 
 export const INVENTORY_VALIDATION_MESSAGES = {
   // Name
@@ -37,4 +37,12 @@ export const INVENTORY_VALIDATION_MESSAGES = {
 
   // Movement type
   TYPE_INVALID: "El tipo debe ser 'entry' o 'consumption'",
+
+  // Pagination
+  PAGE_MIN: 'El número de página debe ser mayor a cero',
+  LIMIT_MIN: 'El límite debe ser mayor a cero',
+  LIMIT_MAX: `El límite no puede superar ${PAGINATION_CONFIG.MAX_LIMIT} registros`,
+
+  // Date range
+  DATE_RANGE_MAX: `El rango de fechas no puede superar ${REPORT_CONFIG.MAX_DATE_RANGE_DAYS} días`,
 };
