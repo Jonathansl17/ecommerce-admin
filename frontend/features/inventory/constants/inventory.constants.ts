@@ -1,5 +1,9 @@
 import type { UnitOfMeasure } from '@/lib/types/inventory.types';
 
+export const INVENTORY_CONFIG = {
+  POLL_INTERVAL_MS: 60_000,
+};
+
 export const UNIT_OF_MEASURE_LABELS: Record<UnitOfMeasure, string> = {
   grams: 'Gramos',
   kilograms: 'Kilogramos',
