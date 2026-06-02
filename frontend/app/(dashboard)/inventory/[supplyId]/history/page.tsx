@@ -130,7 +130,7 @@ export default function SupplyHistoryPage({
 
       {/* Cargando */}
       {isLoading && !history && (
-        <p className="text-sm text-foreground/50">Cargando...</p>
+        <p className="text-sm text-foreground/50">{strings.loadingMessage}</p>
       )}
 
       {/* Tabla de movimientos */}

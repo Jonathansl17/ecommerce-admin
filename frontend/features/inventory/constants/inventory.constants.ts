@@ -99,6 +99,7 @@ export const INVENTORY_STRINGS = {
     filterTypeConsumption: 'Solo consumos',
     filterDateFrom: 'Desde',
     filterDateTo: 'Hasta',
+    loadingMessage: 'Cargando...',
     colDate: 'Fecha y hora',
     colType: 'Tipo',
     colQuantity: 'Cantidad',
