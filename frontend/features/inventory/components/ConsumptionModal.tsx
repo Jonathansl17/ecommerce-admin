@@ -89,7 +89,7 @@ export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: C
                 />
                 {selectedSupply && (
                   <p className="px-1 text-xs text-foreground/50">
-                    Stock disponible:{' '}
+                    {strings.stockAvailableLabel}{' '}
                     <span className="font-medium text-foreground/70">
                       {Number(selectedSupply.currentStock)}{' '}
                       {UNIT_OF_MEASURE_LABELS[selectedSupply.unitOfMeasure]}
