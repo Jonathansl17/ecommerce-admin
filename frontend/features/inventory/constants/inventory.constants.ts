@@ -107,6 +107,10 @@ export const INVENTORY_STRINGS = {
     typeConsumption: 'Consumo',
     emptyMessage: 'No hay movimientos que coincidan con los filtros.',
     historyButton: 'Historial',
+    loadingMessage: 'Cargando...',
+    paginationPrev: 'Anterior',
+    paginationNext: 'Siguiente',
+    paginationInfo: (page: number, total: number) => `Página ${page} · ${total} movimientos`,
   },
   consumption: {
     title: 'Registrar consumo de insumos',

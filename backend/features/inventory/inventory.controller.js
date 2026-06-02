@@ -42,9 +42,9 @@ export const getReport = async (req, res, next) => {
 
 export const getMovements = async (req, res, next) => {
   try {
-    const { type, dateFrom, dateTo } = req.query;
-    const data = await getMovementsService(req.params.id, { type, dateFrom, dateTo });
-    return res.status(HTTP_STATUS.OK).json({ data, error: null, meta: null });
+    const { type, dateFrom, dateTo, page, limit } = req.query;
+    const { meta, ...data } = await getMovementsService(req.params.id, { type, dateFrom, dateTo, page, limit });
+    return res.status(HTTP_STATUS.OK).json({ data, error: null, meta });
   } catch (error) {
     next(error);
   }

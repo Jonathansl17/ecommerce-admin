@@ -1,14 +1,12 @@
 'use client';
 
-import { use, useState, useEffect, useCallback } from 'react';
+import { use } from 'react';
 import Link from 'next/link';
-import { getSupplyMovements } from '@/features/inventory/shared/inventory.api';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/constants/inventory.constants';
-import type { SupplyHistory } from '@/lib/types/inventory.types';
+import { useSupplyHistory } from '@/features/inventory/hooks/useSupplyHistory';
+import type { MovementTypeFilter } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS.history;
-
-type MovementTypeFilter = '' | 'entry' | 'consumption';
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('es-CR', {
@@ -27,32 +25,16 @@ export default function SupplyHistoryPage({
 }) {
   const { supplyId } = use(params);
 
-  const [history, setHistory] = useState<SupplyHistory | null>(null);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-  const [typeFilter, setTypeFilter] = useState<MovementTypeFilter>('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-
-  const loadMovements = useCallback(async () => {
-    try {
-      setFetchError(null);
-      const data = await getSupplyMovements(
-        supplyId,
-        { type: typeFilter || undefined, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined },
-      );
-      setHistory(data);
-    } catch {
-      setFetchError(INVENTORY_STRINGS.errors.historyError);
-    }
-  }, [supplyId, typeFilter, dateFrom, dateTo]);
-
-  useEffect(() => {
-    loadMovements();
-  }, [loadMovements]);
+  const {
+    history, meta, fetchError, isLoading,
+    typeFilter, setTypeFilter,
+    dateFrom, setDateFrom,
+    dateTo, setDateTo,
+    page, setPage,
+  } = useSupplyHistory(supplyId);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <Link
@@ -70,7 +52,6 @@ export default function SupplyHistoryPage({
         </div>
       </div>
 
-      {/* Stock actual */}
       {history && (
         <div className="inline-flex items-center gap-3 rounded-lg border border-foreground/10 bg-background px-5 py-3">
           <span className="text-sm text-foreground/60">{strings.stockLabel}:</span>
@@ -83,12 +64,9 @@ export default function SupplyHistoryPage({
         </div>
       )}
 
-      {/* Filtros */}
       <div className="flex flex-wrap items-end gap-4 rounded-lg border border-foreground/10 bg-background p-4">
         <div className="space-y-1">
-          <label className="block text-xs font-medium text-foreground/60">
-            {strings.filterTypeLabel}
-          </label>
+          <label className="block text-xs font-medium text-foreground/60">{strings.filterTypeLabel}</label>
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as MovementTypeFilter)}
@@ -101,9 +79,7 @@ export default function SupplyHistoryPage({
         </div>
 
         <div className="space-y-1">
-          <label className="block text-xs font-medium text-foreground/60">
-            {strings.filterDateFrom}
-          </label>
+          <label className="block text-xs font-medium text-foreground/60">{strings.filterDateFrom}</label>
           <input
             type="date"
             value={dateFrom}
@@ -114,9 +90,7 @@ export default function SupplyHistoryPage({
         </div>
 
         <div className="space-y-1">
-          <label className="block text-xs font-medium text-foreground/60">
-            {strings.filterDateTo}
-          </label>
+          <label className="block text-xs font-medium text-foreground/60">{strings.filterDateTo}</label>
           <input
             type="date"
             value={dateTo}
@@ -131,62 +105,84 @@ export default function SupplyHistoryPage({
             onClick={() => { setTypeFilter(''); setDateFrom(''); setDateTo(''); }}
             className="text-sm text-foreground/50 hover:text-foreground/80 transition-colors pb-2"
           >
-            {INVENTORY_STRINGS.history.clearFilters}
+            {strings.clearFilters}
           </button>
         )}
       </div>
 
-      {/* Error */}
-      {fetchError && (
-        <p role="alert" className="text-sm text-red-500">{fetchError}</p>
+      {fetchError && <p role="alert" className="text-sm text-red-500">{fetchError}</p>}
+
+      {isLoading && !history && (
+        <p className="text-sm text-foreground/50">{strings.loadingMessage}</p>
       )}
 
-      {/* Tabla de movimientos */}
       {history && (
         history.movements.length === 0 ? (
           <p className="text-sm text-foreground/60">{strings.emptyMessage}</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-foreground/10">
-            <table className="w-full text-sm">
-              <thead className="bg-foreground/5 text-left text-foreground/70">
-                <tr>
-                  <th className="px-4 py-3 font-medium">{strings.colDate}</th>
-                  <th className="px-4 py-3 font-medium">{strings.colType}</th>
-                  <th className="px-4 py-3 font-medium">{strings.colQuantity}</th>
-                  <th className="px-4 py-3 font-medium">{strings.colPreviousStock}</th>
-                  <th className="px-4 py-3 font-medium">{strings.colNewStock}</th>
-                  <th className="px-4 py-3 font-medium">{strings.colReference}</th>
-                  <th className="px-4 py-3 font-medium">{strings.colAdmin}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-foreground/10">
-                {history.movements.map((m) => (
-                  <tr key={m.id} className="hover:bg-foreground/5 transition-colors">
-                    <td className="px-4 py-3 text-foreground/70 whitespace-nowrap">
-                      {formatDateTime(m.createdAt)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          m.type === 'entry'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-orange-100 text-orange-700'
-                        }`}
-                      >
-                        {m.type === 'entry' ? strings.typeEntry : strings.typeConsumption}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-foreground/70">{m.quantity}</td>
-                    <td className="px-4 py-3 text-foreground/70">{m.previousStock}</td>
-                    <td className="px-4 py-3 font-medium text-foreground">{m.newStock}</td>
-                    <td className="px-4 py-3 text-foreground/60">
-                      {m.reference ?? <span className="text-foreground/30">—</span>}
-                    </td>
-                    <td className="px-4 py-3 text-foreground/70">{m.adminName}</td>
+          <div className="space-y-4">
+            <div className="overflow-x-auto rounded-lg border border-foreground/10">
+              <table className="w-full text-sm">
+                <thead className="bg-foreground/5 text-left text-foreground/70">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">{strings.colDate}</th>
+                    <th className="px-4 py-3 font-medium">{strings.colType}</th>
+                    <th className="px-4 py-3 font-medium">{strings.colQuantity}</th>
+                    <th className="px-4 py-3 font-medium">{strings.colPreviousStock}</th>
+                    <th className="px-4 py-3 font-medium">{strings.colNewStock}</th>
+                    <th className="px-4 py-3 font-medium">{strings.colReference}</th>
+                    <th className="px-4 py-3 font-medium">{strings.colAdmin}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-foreground/10">
+                  {history.movements.map((m) => (
+                    <tr key={m.id} className="hover:bg-foreground/5 transition-colors">
+                      <td className="px-4 py-3 text-foreground/70 whitespace-nowrap">
+                        {formatDateTime(m.createdAt)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                          m.type === 'entry' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {m.type === 'entry' ? strings.typeEntry : strings.typeConsumption}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-foreground/70">{m.quantity}</td>
+                      <td className="px-4 py-3 text-foreground/70">{m.previousStock}</td>
+                      <td className="px-4 py-3 font-medium text-foreground">{m.newStock}</td>
+                      <td className="px-4 py-3 text-foreground/60">
+                        {m.reference ?? <span className="text-foreground/30">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-foreground/70">{m.adminName}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {meta && (
+              <div className="flex items-center justify-between px-1">
+                <p className="text-xs text-foreground/50">
+                  {strings.paginationInfo(meta.page, meta.total)}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPage(page - 1)}
+                    disabled={page <= 1}
+                    className="rounded-md border border-foreground/20 px-3 py-1 text-xs text-foreground/70 hover:bg-foreground/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {strings.paginationPrev}
+                  </button>
+                  <button
+                    onClick={() => setPage(page + 1)}
+                    disabled={!meta.hasMore}
+                    className="rounded-md border border-foreground/20 px-3 py-1 text-xs text-foreground/70 hover:bg-foreground/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {strings.paginationNext}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )
       )}
