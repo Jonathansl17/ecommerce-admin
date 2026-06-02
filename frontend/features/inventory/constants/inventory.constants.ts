@@ -126,6 +126,7 @@ export const INVENTORY_STRINGS = {
     submitButton: 'Registrar consumo',
     submittingButton: 'Registrando...',
     cancelButton: 'Cancelar',
+    stockAvailableLabel: 'Stock disponible:',
   },
   entry: {
     openButton: 'Registrar entrada',
