@@ -10,10 +10,8 @@ import type { SupplyFormModalProps } from '../types/inventory.modal.types';
 
 const strings = INVENTORY_STRINGS.form;
 
-export function SupplyFormModal({ isOpen, onClose, onSubmit, serverError }: SupplyFormModalProps) {
+export function SupplyFormModal({ onClose, onSubmit, serverError }: SupplyFormModalProps) {
   const { register, handleSubmit, errors, isSubmitting } = useSupplyForm(onSubmit);
-
-  if (!isOpen) return null;
 
   const footer = (
     <>
