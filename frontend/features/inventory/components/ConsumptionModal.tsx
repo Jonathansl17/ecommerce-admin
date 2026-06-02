@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -11,11 +12,14 @@ import type { ConsumptionModalProps } from '../types/inventory.modal.types';
 
 const strings = INVENTORY_STRINGS.consumption;
 
-export function ConsumptionModal({ isOpen, supplies, onClose, onSubmit, serverError }: ConsumptionModalProps) {
+export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: ConsumptionModalProps) {
   const { register, handleSubmit, fields, append, remove, availableSupplies, watchedItems, errors, isSubmitting, suppliesCount } =
     useConsumptionForm(supplies, onSubmit);
 
-  if (!isOpen) return null;
+  const suppliesById = useMemo(
+    () => new Map(supplies.map((s) => [s.id, s])),
+    [supplies]
+  );
 
   const footer = (
     <>
@@ -67,9 +71,7 @@ export function ConsumptionModal({ isOpen, supplies, onClose, onSubmit, serverEr
 
         <div className="space-y-3">
           {fields.map((field, index) => {
-            const selectedSupply = supplies.find(
-              (s) => s.id === watchedItems[index]?.supplyId
-            );
+            const selectedSupply = suppliesById.get(watchedItems[index]?.supplyId);
             return (
               <div key={field.id} className="space-y-1">
                 <SupplyItemRow
@@ -87,7 +89,7 @@ export function ConsumptionModal({ isOpen, supplies, onClose, onSubmit, serverEr
                 />
                 {selectedSupply && (
                   <p className="px-1 text-xs text-foreground/50">
-                    Stock disponible:{' '}
+                    {strings.stockAvailableLabel}{' '}
                     <span className="font-medium text-foreground/70">
                       {Number(selectedSupply.currentStock)}{' '}
                       {UNIT_OF_MEASURE_LABELS[selectedSupply.unitOfMeasure]}
