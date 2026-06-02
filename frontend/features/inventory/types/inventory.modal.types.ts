@@ -7,7 +7,6 @@ import type {
 } from '@/lib/types/inventory.types';
 
 export interface SupplyFormModalProps {
-  isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreateSupplyForm) => Promise<void>;
   serverError?: string | null;
@@ -21,7 +20,6 @@ export interface EditSupplyModalProps {
 }
 
 export interface SupplyEntryModalProps {
-  isOpen: boolean;
   supplies: Supply[];
   onClose: () => void;
   onSubmit: (data: CreateSupplyEntriesForm) => Promise<void>;
@@ -30,7 +28,6 @@ export interface SupplyEntryModalProps {
 }
 
 export interface ConsumptionModalProps {
-  isOpen: boolean;
   supplies: Supply[];
   onClose: () => void;
   onSubmit: (data: CreateConsumptionForm) => Promise<void>;
