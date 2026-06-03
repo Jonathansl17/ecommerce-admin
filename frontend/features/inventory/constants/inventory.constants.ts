@@ -80,6 +80,7 @@ export const INVENTORY_STRINGS = {
     colQty: 'Cantidad consumida',
     noRendimiento: 'No hay consumos con referencia de producto en este período.',
     dateRequired: 'Selecciona un rango de fechas para generar el reporte.',
+    dateRangeInvalid: 'La fecha de inicio debe ser anterior o igual a la fecha de fin.',
   },
   alerts: {
     sectionTitle: 'Alertas de stock',
