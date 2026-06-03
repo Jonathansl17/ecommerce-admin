@@ -8,7 +8,7 @@ import {
   registerEntries,
   registerConsumption,
 } from '@/features/inventory/shared/inventory.api';
-import { INVENTORY_STRINGS } from '@/features/inventory/constants/inventory.constants';
+import { INVENTORY_STRINGS, INVENTORY_CONFIG } from '@/features/inventory/constants/inventory.constants';
 import type {
   Supply,
   CreateSupplyForm,
@@ -49,6 +49,8 @@ export function useInventoryPage() {
 
   useEffect(() => {
     loadSupplies();
+    const interval = setInterval(loadSupplies, INVENTORY_CONFIG.POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
   }, [loadSupplies]);
 
   // --- Open handlers ---
