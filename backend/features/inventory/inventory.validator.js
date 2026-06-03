@@ -148,5 +148,6 @@ export const validateReportQuery = (req, res, next) => {
 export const validateMovementsQuery = (req, res, next) => {
   const resultado = movementsQuerySchema.safeParse(req.query);
   if (!resultado.success) return responderErrores(res, resultado.error);
+  req.query = resultado.data;
   next();
 };
