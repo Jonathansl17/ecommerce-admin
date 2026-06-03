@@ -2,6 +2,8 @@ export type UnitOfMeasure = 'grams' | 'kilograms' | 'milliliters' | 'liters' | '
 
 export type ItemStatus = 'active' | 'inactive';
 
+export type MovementTypeFilter = '' | 'entry' | 'consumption';
+
 export interface Supply {
   id: string;
   name: string;
@@ -23,12 +25,6 @@ export interface UpdateSupplyForm {
   name: string;
   unitOfMeasure: UnitOfMeasure;
   minThreshold: number;
-}
-
-export interface CreateSupplyEntryForm {
-  supplyId: string;
-  quantity: number;
-  date: string; // YYYY-MM-DD
 }
 
 export interface EntryItem {
