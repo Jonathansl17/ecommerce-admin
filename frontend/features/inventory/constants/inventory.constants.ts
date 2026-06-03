@@ -8,6 +8,14 @@ export const UNIT_OF_MEASURE_LABELS: Record<UnitOfMeasure, string> = {
   units: 'Unidades',
 };
 
+export const UNIT_OF_MEASURE_VALUES = [
+  'grams',
+  'kilograms',
+  'milliliters',
+  'liters',
+  'units',
+] as const satisfies readonly UnitOfMeasure[];
+
 export const UNIT_OF_MEASURE_OPTIONS = (
   Object.entries(UNIT_OF_MEASURE_LABELS) as [UnitOfMeasure, string][]
 ).map(([value, label]) => ({ value, label }));
