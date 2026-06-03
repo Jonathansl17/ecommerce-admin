@@ -3,18 +3,18 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { INVENTORY_STRINGS, UNIT_OF_MEASURE } from '../constants/inventory.constants';
+import { INVENTORY_STRINGS, UNIT_OF_MEASURE_VALUES } from '../constants/inventory.constants';
 import type { UpdateSupplyForm, Supply } from '@/lib/types/inventory.types';
 
 const { validation: v } = INVENTORY_STRINGS;
 
 const schema = z.object({
   name: z.string().min(1, v.nameRequired).max(100, v.nameMax),
-  unitOfMeasure: z.enum(UNIT_OF_MEASURE, {
+  unitOfMeasure: z.enum(UNIT_OF_MEASURE_VALUES, {
     error: v.unitRequired,
   }),
   minThreshold: z
-    .number({ invalid_type_error: v.thresholdMin })
+    .number({ error: v.thresholdMin })
     .min(0, v.thresholdMin),
 });
 

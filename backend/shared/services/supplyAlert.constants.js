@@ -13,3 +13,10 @@ export const SUPPLY_ALERT_TYPES = {
 export const INVENTORY_MOVEMENT_TYPES = {
   CONSUMPTION: 'consumption',
 };
+
+/**
+ * Window (in days) used to calculate average daily consumption.
+ */
+export const SUPPLY_ALERT_CONFIG = {
+  AVG_DAILY_WINDOW: 30,
+};

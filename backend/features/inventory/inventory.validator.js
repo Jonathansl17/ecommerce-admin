@@ -1,99 +1,107 @@
 import { z } from 'zod/v4';
-import { INVENTORY_VALIDATION, UNIT_OF_MEASURE, MOVEMENT_TYPES } from './inventory.constants.js';
+import { INVENTORY_VALIDATION, UNIT_OF_MEASURE, PAGINATION_CONFIG, REPORT_CONFIG } from './inventory.constants.js';
+import { INVENTORY_VALIDATION_MESSAGES as MSG } from './inventory.validation-messages.js';
 import { responderErrores } from '../../shared/middleware/validatorUtils.js';
+
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 const createSupplySchema = z.object({
   name: z
-    .string({ required_error: 'El nombre del insumo es requerido' })
-    .min(INVENTORY_VALIDATION.NAME_MIN, 'El nombre no puede estar vacío')
-    .max(INVENTORY_VALIDATION.NAME_MAX, `El nombre no puede superar ${INVENTORY_VALIDATION.NAME_MAX} caracteres`),
+    .string({ required_error: MSG.NAME_REQUIRED })
+    .min(INVENTORY_VALIDATION.NAME_MIN, MSG.NAME_EMPTY)
+    .max(INVENTORY_VALIDATION.NAME_MAX, MSG.NAME_MAX),
   unitOfMeasure: z.enum(UNIT_OF_MEASURE, {
-    error: `La unidad de medida debe ser una de: ${UNIT_OF_MEASURE.join(', ')}`,
+    error: MSG.UNIT_INVALID,
   }),
   initialStock: z
-    .number({ required_error: 'El stock inicial es requerido' })
-    .min(INVENTORY_VALIDATION.STOCK_MIN, 'El stock inicial no puede ser negativo'),
+    .number({ required_error: MSG.STOCK_REQUIRED })
+    .min(INVENTORY_VALIDATION.STOCK_MIN, MSG.STOCK_MIN),
 });
 
 const updateSupplySchema = z.object({
   name: z
-    .string({ required_error: 'El nombre del insumo es requerido' })
-    .min(INVENTORY_VALIDATION.NAME_MIN, 'El nombre no puede estar vacío')
-    .max(INVENTORY_VALIDATION.NAME_MAX, `El nombre no puede superar ${INVENTORY_VALIDATION.NAME_MAX} caracteres`),
+    .string({ required_error: MSG.NAME_REQUIRED })
+    .min(INVENTORY_VALIDATION.NAME_MIN, MSG.NAME_EMPTY)
+    .max(INVENTORY_VALIDATION.NAME_MAX, MSG.NAME_MAX),
   unitOfMeasure: z.enum(UNIT_OF_MEASURE, {
-    error: `La unidad de medida debe ser una de: ${UNIT_OF_MEASURE.join(', ')}`,
+    error: MSG.UNIT_INVALID,
   }),
   minThreshold: z
     .number()
-    .min(INVENTORY_VALIDATION.STOCK_MIN, 'El umbral mínimo no puede ser negativo')
+    .min(INVENTORY_VALIDATION.STOCK_MIN, MSG.THRESHOLD_MIN)
     .optional()
     .default(0),
 });
 
 const createEntrySchema = z.object({
   quantity: z
-    .number({ required_error: 'La cantidad es requerida' })
-    .min(INVENTORY_VALIDATION.QUANTITY_MIN, 'La cantidad debe ser mayor a cero'),
+    .number({ required_error: MSG.QUANTITY_REQUIRED })
+    .min(INVENTORY_VALIDATION.QUANTITY_MIN, MSG.QUANTITY_MIN),
   date: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha debe tener el formato YYYY-MM-DD')
+    .regex(DATE_REGEX, MSG.DATE_FORMAT)
     .optional(),
 });
 
 const itemSchema = z.object({
   supplyId: z
-    .string({ required_error: 'El ID del insumo es requerido' })
-    .min(INVENTORY_VALIDATION.SUPPLY_ID_MIN, 'El ID del insumo no puede estar vacío'),
+    .string({ required_error: MSG.SUPPLY_ID_REQUIRED })
+    .min(INVENTORY_VALIDATION.SUPPLY_ID_MIN, MSG.SUPPLY_ID_EMPTY),
   quantity: z
-    .number({ required_error: 'La cantidad es requerida' })
-    .min(INVENTORY_VALIDATION.QUANTITY_MIN, 'La cantidad debe ser mayor a cero'),
+    .number({ required_error: MSG.QUANTITY_REQUIRED })
+    .min(INVENTORY_VALIDATION.QUANTITY_MIN, MSG.QUANTITY_MIN),
 });
 
 const createEntriesSchema = z.object({
   items: z
     .array(itemSchema)
-    .min(INVENTORY_VALIDATION.ITEMS_MIN, 'Debe incluir al menos un insumo'),
+    .min(INVENTORY_VALIDATION.ITEMS_MIN, MSG.ITEMS_MIN),
   date: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha debe tener el formato YYYY-MM-DD')
+    .regex(DATE_REGEX, MSG.DATE_FORMAT)
     .optional(),
 });
 
 const createConsumptionSchema = z.object({
   items: z
     .array(itemSchema)
-    .min(INVENTORY_VALIDATION.ITEMS_MIN, 'Debe incluir al menos un insumo'),
+    .min(INVENTORY_VALIDATION.ITEMS_MIN, MSG.ITEMS_MIN),
   reference: z
     .string()
-    .max(INVENTORY_VALIDATION.REFERENCE_MAX, `La referencia no puede superar ${INVENTORY_VALIDATION.REFERENCE_MAX} caracteres`)
+    .max(INVENTORY_VALIDATION.REFERENCE_MAX, MSG.REFERENCE_MAX)
     .optional(),
   date: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha debe tener el formato YYYY-MM-DD')
+    .regex(DATE_REGEX, MSG.DATE_FORMAT)
     .optional(),
 });
 
 const dateRangeQuerySchema = z.object({
   dateFrom: z
-    .string({ required_error: 'El parámetro dateFrom es requerido' })
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'dateFrom debe tener el formato YYYY-MM-DD'),
+    .string({ required_error: MSG.DATE_FROM_REQUIRED })
+    .regex(DATE_REGEX, MSG.DATE_FROM_FORMAT),
   dateTo: z
-    .string({ required_error: 'El parámetro dateTo es requerido' })
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo debe tener el formato YYYY-MM-DD'),
-});
+    .string({ required_error: MSG.DATE_TO_REQUIRED })
+    .regex(DATE_REGEX, MSG.DATE_TO_FORMAT),
+}).refine(({ dateFrom, dateTo }) => {
+  const diff = (new Date(dateTo) - new Date(dateFrom)) / (1000 * 60 * 60 * 24);
+  return diff <= REPORT_CONFIG.MAX_DATE_RANGE_DAYS;
+}, { message: MSG.DATE_RANGE_MAX });
 
 const movementsQuerySchema = z.object({
   dateFrom: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'dateFrom debe tener el formato YYYY-MM-DD')
+    .regex(DATE_REGEX, MSG.DATE_FROM_FORMAT)
     .optional(),
   dateTo: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo debe tener el formato YYYY-MM-DD')
+    .regex(DATE_REGEX, MSG.DATE_TO_FORMAT)
     .optional(),
-  type: z.enum([MOVEMENT_TYPES.ENTRY, MOVEMENT_TYPES.CONSUMPTION], {
-    error: `El tipo debe ser '${MOVEMENT_TYPES.ENTRY}' o '${MOVEMENT_TYPES.CONSUMPTION}'`,
+  type: z.enum(['entry', 'consumption'], {
+    error: MSG.TYPE_INVALID,
   }).optional(),
+  page: z.coerce.number().int().min(1, MSG.PAGE_MIN).optional().default(PAGINATION_CONFIG.DEFAULT_PAGE),
+  limit: z.coerce.number().int().min(1, MSG.LIMIT_MIN).max(PAGINATION_CONFIG.MAX_LIMIT, MSG.LIMIT_MAX).optional().default(PAGINATION_CONFIG.DEFAULT_LIMIT),
 });
 
 export const validateCreateSupply = (req, res, next) => {
@@ -140,5 +148,6 @@ export const validateReportQuery = (req, res, next) => {
 export const validateMovementsQuery = (req, res, next) => {
   const resultado = movementsQuerySchema.safeParse(req.query);
   if (!resultado.success) return responderErrores(res, resultado.error);
+  req.query = resultado.data;
   next();
 };

@@ -6,6 +6,7 @@ export const INVENTORY_MESSAGES = {
   CONSUMO_REGISTRADO: 'Consumo registrado correctamente',
   STOCK_INSUFICIENTE: 'Stock insuficiente para uno o más insumos',
   INSUMO_DUPLICADO_EN_OPERACION: 'No se puede incluir el mismo insumo más de una vez',
+  ELIMINADO_EXITOSO: 'Insumo eliminado correctamente',
 };
 
 export const INVENTORY_CONFIG = {
@@ -21,6 +22,16 @@ export const INVENTORY_VALIDATION = {
   REFERENCE_MAX: 200,
   SUPPLY_ID_MIN: 1,
   ITEMS_MIN: 1,
+};
+
+export const PAGINATION_CONFIG = {
+  DEFAULT_LIMIT: 50,
+  MAX_LIMIT: 100,
+  DEFAULT_PAGE: 1,
+};
+
+export const REPORT_CONFIG = {
+  MAX_DATE_RANGE_DAYS: 365,
 };
 
 export const UNIT_OF_MEASURE = ['grams', 'kilograms', 'milliliters', 'liters', 'units'];
