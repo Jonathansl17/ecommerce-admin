@@ -8,6 +8,7 @@ import { SupplyEntryModal } from '@/features/inventory/components/SupplyEntryMod
 import { ConsumptionModal } from '@/features/inventory/components/ConsumptionModal';
 import { InventoryAlerts } from '@/features/inventory/components/InventoryAlerts';
 import { CreationHintBanner } from '@/features/inventory/components/CreationHintBanner';
+import { DeleteSupplyModal } from '@/features/inventory/components/DeleteSupplyModal';
 import { useInventoryPage } from '@/features/inventory/hooks/useInventoryPage';
 import { INVENTORY_STRINGS } from '@/features/inventory/constants/inventory.constants';
 
@@ -16,13 +17,13 @@ const strings = INVENTORY_STRINGS;
 export default function InventoryPage() {
   const {
     supplies, fetchError,
-    supplyFormOpen, entryOpen, consumptionOpen, editingSupply, quickEntrySupplyId,
-    supplyFormError, entryError, consumptionError, editError,
+    supplyFormOpen, entryOpen, consumptionOpen, editingSupply, deletingSupply, quickEntrySupplyId,
+    supplyFormError, entryError, consumptionError, editError, deleteError, isDeleting,
     showCreationHint,
-    openSupplyForm, openEntry, openEdit, openConsumption,
-    closeSupplyForm, closeEntry, closeConsumption, closeEdit,
+    openSupplyForm, openEntry, openEdit, openDelete, openConsumption,
+    closeSupplyForm, closeEntry, closeConsumption, closeEdit, closeDelete,
     editFromHint, dismissCreationHint,
-    handleCreate, handleCreateEntry, handleConsumption, handleUpdate, handleQuickEntry,
+    handleCreate, handleCreateEntry, handleConsumption, handleUpdate, handleDelete, handleQuickEntry,
   } = useInventoryPage();
 
   return (
@@ -66,7 +67,7 @@ export default function InventoryPage() {
         {fetchError ? (
           <p role="alert" className="text-sm text-red-500">{fetchError}</p>
         ) : (
-          <SupplyList supplies={supplies} onEdit={openEdit} />
+          <SupplyList supplies={supplies} onEdit={openEdit} onDelete={openDelete} />
         )}
       </div>
 
@@ -102,6 +103,14 @@ export default function InventoryPage() {
         onClose={closeEdit}
         onSave={handleUpdate}
         serverError={editError}
+      />
+
+      <DeleteSupplyModal
+        supply={deletingSupply}
+        isDeleting={isDeleting}
+        onClose={closeDelete}
+        onConfirm={handleDelete}
+        serverError={deleteError}
       />
     </>
   );
