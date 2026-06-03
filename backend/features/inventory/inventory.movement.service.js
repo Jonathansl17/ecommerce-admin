@@ -1,6 +1,6 @@
 import prisma from '../../shared/db/prisma.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
-import { INVENTORY_MESSAGES, INVENTORY_CONFIG } from './inventory.constants.js';
+import { INVENTORY_MESSAGES, INVENTORY_CONFIG, MOVEMENT_TYPES } from './inventory.constants.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 import { procesarAlertaStockBajo, limpiarAlertaStockBajo } from '../../shared/services/supplyAlert.service.js';
 
@@ -31,7 +31,7 @@ export const createEntry = async (supplyId, { quantity, date }, adminId) => {
       data: {
         supplyId: itemId,
         adminId: BigInt(adminId),
-        type: 'entry',
+        type: MOVEMENT_TYPES.ENTRY,
         quantity,
         previousStock,
         newStock,
@@ -83,7 +83,7 @@ export const createEntries = async (items, { date }, adminId) => {
       });
 
       await tx.inventoryMovement.create({
-        data: { supplyId: itemId, adminId: adminBigId, type: 'entry', quantity, previousStock, newStock, createdAt: entryDate },
+        data: { supplyId: itemId, adminId: adminBigId, type: MOVEMENT_TYPES.ENTRY, quantity, previousStock, newStock, createdAt: entryDate },
       });
 
       await limpiarAlertaStockBajo(tx, itemId, newStock, Number(updatedSupply.minThreshold));
@@ -147,7 +147,7 @@ export const createConsumption = async (items, { reference, date }, adminId) => 
         data: {
           supplyId: itemId,
           adminId: adminBigId,
-          type: 'consumption',
+          type: MOVEMENT_TYPES.CONSUMPTION,
           quantity,
           previousStock,
           newStock,

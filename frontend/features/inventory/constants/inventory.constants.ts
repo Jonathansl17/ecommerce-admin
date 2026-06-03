@@ -1,5 +1,9 @@
 import type { UnitOfMeasure } from '@/lib/types/inventory.types';
 
+export const UNIT_OF_MEASURE: [UnitOfMeasure, ...UnitOfMeasure[]] = [
+  'grams', 'kilograms', 'milliliters', 'liters', 'units',
+];
+
 export const UNIT_OF_MEASURE_LABELS: Record<UnitOfMeasure, string> = {
   grams: 'Gramos',
   kilograms: 'Kilogramos',
