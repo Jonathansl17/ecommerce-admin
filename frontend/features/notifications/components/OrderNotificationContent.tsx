@@ -1,72 +1,105 @@
-import type { OrderNotificationContent as OrderContent } from '../types/notifications.types';
-import { NOTIFICATION_STRINGS } from '../constants/notifications.constants';
-
-const strings = NOTIFICATION_STRINGS.order;
-
-interface OrderNotificationContentProps {
-  content: OrderContent;
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('es-CR', {
-    style: 'currency',
-    currency: 'CRC',
-    minimumFractionDigits: 2,
-  }).format(amount);
-}
+import Link from 'next/link';
+import { MapPin, Check, X } from 'lucide-react';
+import type {
+  OrderNotificationContent as OrderContent,
+  OrderNotificationContentProps,
+} from '../types/notifications.types';
+import { NOTIFICATION_ORDER_STRINGS as strings, ROUTES } from '../constants/notifications.constants';
+import { formatCurrency } from '@/lib/utils/format';
 
 export function OrderNotificationContent({ content }: OrderNotificationContentProps) {
-  const { products, total, shippingAddress, hasCustomization } = content;
+  const {
+    orderId,
+    clientName,
+    products,
+    total,
+    shippingAddress,
+    hasCustomization,
+    customizationStatus,
+    customizationRejectionReason,
+  } = content;
 
-  return (
-    <div className="mt-2 space-y-3 text-sm">
-      {hasCustomization && (
-        <div
-          className="flex items-center gap-2 rounded-md px-3 py-2"
-          style={{ backgroundColor: '#fef3c7', color: '#92400e' }}
-          role="alert"
-        >
-          <span aria-hidden="true">&#9888;</span>
-          <span className="font-medium">{strings.customizationBanner}</span>
+  if (hasCustomization) {
+    return (
+      <div className="mt-2 space-y-2 text-sm">
+        {/* Identity */}
+        <div className="space-y-0.5">
+          {orderId && <p className="text-xs font-medium text-foreground/60">#{orderId}</p>}
+          <p className="font-semibold text-foreground text-sm">{clientName}</p>
         </div>
-      )}
 
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
-          {strings.productsLabel}
-        </p>
-        <ul className="space-y-1">
+        {/* Products */}
+        <ul className="space-y-0.5">
           {products.map((product, index) => (
-            <li key={index} className="flex items-start justify-between gap-2">
-              <span className="text-foreground">
-                {product.quantity}x {product.name}
-                {product.isCustomizable && (
-                  <span
-                    className="ml-1 inline-block rounded px-1 py-0.5 text-xs font-medium"
-                    style={{ backgroundColor: '#fef3c7', color: '#92400e' }}
-                  >
-                    {strings.customizationBadge}
-                  </span>
-                )}
-              </span>
-              <span className="shrink-0 text-muted-foreground">
-                {formatCurrency(product.unitPrice)} {strings.unitPrice}
-              </span>
+            <li key={index} className="text-sm text-foreground">
+              {product.quantity} {product.name}
             </li>
           ))}
         </ul>
+
+        {/* Customization resolved: accepted / rejected */}
+        {customizationStatus && (
+          <div className="border-t border-border pt-2">
+            {customizationStatus === 'accepted' ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                <Check className="h-3 w-3" aria-hidden="true" />
+                {strings.customizationAccepted}
+              </span>
+            ) : (
+              <>
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
+                  <X className="h-3 w-3" aria-hidden="true" />
+                  {strings.customizationRejected}
+                </span>
+                {customizationRejectionReason && (
+                  <p className="mt-1 text-xs italic text-muted-foreground">{customizationRejectionReason}</p>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Pending customization: action button */}
+        {!customizationStatus && (
+          <div className="border-t border-border pt-2" onClick={(e) => e.stopPropagation()}>
+            <Link
+              href={`${ROUTES.CUSTOM_ORDERS}${orderId ? `?order=${orderId}` : ''}`}
+              className="inline-flex items-center justify-center rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {strings.viewDetailsText}
+            </Link>
+          </div>
+        )}
       </div>
+    );
+  }
+
+  return (
+    <div className="mt-2 space-y-2.5 text-sm">
+      <ul className="space-y-1.5">
+        {products.map((product, index) => (
+          <li key={index} className="flex items-baseline justify-between gap-3">
+            <span className="truncate text-foreground">
+              {product.quantity} {product.name}
+            </span>
+            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+              {formatCurrency(product.unitPrice)} {strings.unitPrice}
+            </span>
+          </li>
+        ))}
+      </ul>
 
       <div className="flex items-center justify-between border-t border-border pt-2">
-        <span className="font-semibold text-foreground">{strings.totalLabel}</span>
-        <span className="font-semibold text-foreground">{formatCurrency(total)}</span>
+        <span className="text-xs font-medium text-muted-foreground">{strings.totalLabel}</span>
+        <span className="text-sm font-bold text-foreground tabular-nums">{formatCurrency(total)}</span>
       </div>
 
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">
-          {strings.shippingLabel}
-        </p>
-        <p className="text-foreground">{shippingAddress}</p>
+      <div className="space-y-0.5">
+        <p className="text-xs font-medium text-muted-foreground">{strings.shippingLabel}</p>
+        <div className="flex items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <p className="text-xs text-muted-foreground">{shippingAddress}</p>
+        </div>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/FormField';
-import { INVENTORY_STRINGS, UNIT_OF_MEASURE_OPTIONS } from '../constants/inventory.constants';
+import { INVENTORY_STRINGS, UNIT_OF_MEASURE_OPTIONS, UNIT_OF_MEASURE } from '../constants/inventory.constants';
 import type { CreateSupplyForm } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS.form;
@@ -17,10 +17,7 @@ const schema = z.object({
     .string()
     .min(1, validationStrings.nameRequired)
     .max(100, validationStrings.nameMax),
-  unitOfMeasure: z.enum(
-    ['grams', 'kilograms', 'milliliters', 'liters', 'units'],
-    { error: validationStrings.unitRequired }
-  ),
+  unitOfMeasure: z.enum(UNIT_OF_MEASURE, { error: validationStrings.unitRequired }),
   initialStock: z
     .number({ error: validationStrings.stockMin })
     .min(0, validationStrings.stockMin),
