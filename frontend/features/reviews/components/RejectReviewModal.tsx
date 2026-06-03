@@ -2,22 +2,13 @@
 
 import { useState, type FormEvent } from 'react';
 import { Modal } from '@/components/ui/Modal';
-import type { ModerationReason } from '../types/reviews.types';
+import type { ModerationReason, RejectReviewModalProps } from '../types/reviews.types';
 import {
   MODERATION_REASON_LABELS,
-  REVIEWS_STRINGS,
+  REVIEWS_MODAL_STRINGS as strings,
+  MODERATION_REASONS,
+  REVIEW_TEXT_MAX_LENGTH,
 } from '../constants/reviews.constants';
-
-const strings = REVIEWS_STRINGS.modals;
-const MODERATION_REASONS = Object.keys(MODERATION_REASON_LABELS) as ModerationReason[];
-const MAX_NOTES_LENGTH = 500;
-
-interface RejectReviewModalProps {
-  reviewId: string;
-  onConfirm: (reason: ModerationReason, notes?: string) => void;
-  onClose: () => void;
-  isLoading: boolean;
-}
 
 export function RejectReviewModal({
   reviewId: _reviewId,
@@ -28,12 +19,12 @@ export function RejectReviewModal({
   const [reason, setReason] = useState<ModerationReason>('other');
   const [notes, setNotes] = useState('');
 
+  const notesRemaining = REVIEW_TEXT_MAX_LENGTH - notes.length;
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     onConfirm(reason, notes.trim() || undefined);
   };
-
-  const notesRemaining = MAX_NOTES_LENGTH - notes.length;
 
   return (
     <Modal
@@ -56,8 +47,7 @@ export function RejectReviewModal({
             type="submit"
             form="reject-review-form"
             disabled={isLoading}
-            className="rounded-md px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
-            style={{ backgroundColor: isLoading ? '#f87171' : '#ef4444' }}
+            className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors disabled:opacity-50"
           >
             {isLoading ? strings.submitting : strings.confirmReject}
           </button>
@@ -66,10 +56,7 @@ export function RejectReviewModal({
     >
       <form id="reject-review-form" onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <label
-            htmlFor="reject-reason"
-            className="block text-sm font-medium text-foreground"
-          >
+          <label htmlFor="reject-reason" className="block text-sm font-medium text-foreground">
             {strings.rejectReasonLabel}
           </label>
           <select
@@ -89,16 +76,13 @@ export function RejectReviewModal({
         </div>
 
         <div className="space-y-1.5">
-          <label
-            htmlFor="reject-notes"
-            className="block text-sm font-medium text-foreground"
-          >
+          <label htmlFor="reject-notes" className="block text-sm font-medium text-foreground">
             {strings.rejectNotesLabel}
           </label>
           <textarea
             id="reject-notes"
             value={notes}
-            onChange={(e) => setNotes(e.target.value.slice(0, MAX_NOTES_LENGTH))}
+            onChange={(e) => setNotes(e.target.value.slice(0, REVIEW_TEXT_MAX_LENGTH))}
             placeholder={strings.rejectNotesPlaceholder}
             rows={3}
             disabled={isLoading}
