@@ -2,17 +2,12 @@
 
 import { useState, type FormEvent } from 'react';
 import { Modal } from '@/components/ui/Modal';
-import { REVIEWS_STRINGS } from '../constants/reviews.constants';
+import type { RespondReviewModalProps } from '../types/reviews.types';
+import { REVIEW_FORM_LIMITS, REVIEWS_STRINGS } from '../constants/reviews.constants';
 
 const strings = REVIEWS_STRINGS.modals;
-const MIN_LENGTH = 10;
-const MAX_LENGTH = 500;
-
-interface RespondReviewModalProps {
-  onConfirm: (responseText: string) => void;
-  onClose: () => void;
-  isLoading: boolean;
-}
+const MIN_LENGTH = REVIEW_FORM_LIMITS.responseMin;
+const MAX_LENGTH = REVIEW_FORM_LIMITS.responseMax;
 
 export function RespondReviewModal({ onConfirm, onClose, isLoading }: RespondReviewModalProps) {
   const [text, setText] = useState('');

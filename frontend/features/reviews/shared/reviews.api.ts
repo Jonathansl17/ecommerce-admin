@@ -3,10 +3,10 @@ import { REQUEST_TIMEOUT_MS } from '@/lib/constants/api.constants';
 import type {
   Review,
   ReviewListResponse,
-  ReviewStatus,
   ReviewStats,
   RejectReviewPayload,
   DeleteReviewPayload,
+  GetReviewsParams,
 } from '../types/reviews.types';
 
 const unwrap = async <T>(promise: Promise<{ data: T }>): Promise<T> => {
@@ -21,15 +21,25 @@ const rethrowErrorBody = (err: unknown): never => {
   throw err;
 };
 
-export async function getReviews(status?: ReviewStatus): Promise<Review[]> {
-  const params = status ? `?status=${status}` : '';
+export async function getReviews({
+  status,
+  page = 1,
+  pageSize,
+}: GetReviewsParams = {}): Promise<ReviewListResponse> {
+  const search = new URLSearchParams();
+  if (status) search.set('status', status);
+  if (pageSize) {
+    search.set('limit', String(pageSize));
+    search.set('offset', String((page - 1) * pageSize));
+  }
+  const query = search.toString();
+
   try {
-    const result = await unwrap(
-      apiFetch<{ data: ReviewListResponse }>(`/reviews${params}`, {
+    return await unwrap(
+      apiFetch<{ data: ReviewListResponse }>(`/reviews${query ? `?${query}` : ''}`, {
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       })
     );
-    return result.items;
   } catch {
     throw new Error('fetch_error');
   }

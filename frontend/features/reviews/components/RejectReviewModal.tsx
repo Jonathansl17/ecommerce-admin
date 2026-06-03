@@ -2,22 +2,12 @@
 
 import { useState, type FormEvent } from 'react';
 import { Modal } from '@/components/ui/Modal';
-import type { ModerationReason } from '../types/reviews.types';
-import {
-  MODERATION_REASON_LABELS,
-  REVIEWS_STRINGS,
-} from '../constants/reviews.constants';
+import type { ModerationReason, RejectReviewModalProps } from '../types/reviews.types';
+import { REVIEW_FORM_LIMITS, REVIEWS_STRINGS } from '../constants/reviews.constants';
+import { ModerationReasonSelect } from './ModerationReasonSelect';
 
 const strings = REVIEWS_STRINGS.modals;
-const MODERATION_REASONS = Object.keys(MODERATION_REASON_LABELS) as ModerationReason[];
-const MAX_NOTES_LENGTH = 500;
-
-interface RejectReviewModalProps {
-  reviewId: string;
-  onConfirm: (reason: ModerationReason, notes?: string) => void;
-  onClose: () => void;
-  isLoading: boolean;
-}
+const MAX_NOTES_LENGTH = REVIEW_FORM_LIMITS.notesMax;
 
 export function RejectReviewModal({
   reviewId: _reviewId,
@@ -65,28 +55,13 @@ export function RejectReviewModal({
       }
     >
       <form id="reject-review-form" onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <label
-            htmlFor="reject-reason"
-            className="block text-sm font-medium text-foreground"
-          >
-            {strings.rejectReasonLabel}
-          </label>
-          <select
-            id="reject-reason"
-            value={reason}
-            onChange={(e) => setReason(e.target.value as ModerationReason)}
-            required
-            disabled={isLoading}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-          >
-            {MODERATION_REASONS.map((r) => (
-              <option key={r} value={r}>
-                {MODERATION_REASON_LABELS[r]}
-              </option>
-            ))}
-          </select>
-        </div>
+        <ModerationReasonSelect
+          id="reject-reason"
+          label={strings.rejectReasonLabel}
+          value={reason}
+          onChange={setReason}
+          disabled={isLoading}
+        />
 
         <div className="space-y-1.5">
           <label

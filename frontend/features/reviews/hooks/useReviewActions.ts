@@ -1,37 +1,17 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import type { Review, ModerationReason } from '../types/reviews.types';
+import type {
+  Review,
+  ModerationReason,
+  UseReviewActionsReturn,
+} from '../types/reviews.types';
 import {
   approveReview,
   rejectReview,
   respondToReview,
   deleteReview,
 } from '../shared/reviews.api';
-
-interface UseReviewActionsReturn {
-  approve: (id: string, onSuccess: (updated: Review) => void) => Promise<void>;
-  reject: (
-    id: string,
-    reason: ModerationReason,
-    notes: string | undefined,
-    onSuccess: (updated: Review) => void
-  ) => Promise<void>;
-  respond: (
-    id: string,
-    responseText: string,
-    onSuccess: (updated: Review) => void
-  ) => Promise<void>;
-  remove: (
-    id: string,
-    reason: ModerationReason,
-    detail: string | undefined,
-    onSuccess: () => void
-  ) => Promise<void>;
-  loadingId: string | null;
-  actionError: string | null;
-  clearError: () => void;
-}
 
 export function useReviewActions(): UseReviewActionsReturn {
   const [loadingId, setLoadingId] = useState<string | null>(null);

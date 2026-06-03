@@ -1,12 +1,11 @@
 'use client';
 
-interface StarRatingProps {
-  rating: number;
-}
+import type { StarRatingProps } from '../types/reviews.types';
+import { REVIEWS_STRINGS } from '../constants/reviews.constants';
 
 export function StarRating({ rating }: StarRatingProps) {
   return (
-    <span className="inline-flex items-center gap-0.5" aria-label={`${rating} de 5 estrellas`}>
+    <span className="inline-flex items-center gap-0.5" aria-label={REVIEWS_STRINGS.a11y.starRating(rating)}>
       {Array.from({ length: 5 }, (_, i) => (
         <svg
           key={i}
