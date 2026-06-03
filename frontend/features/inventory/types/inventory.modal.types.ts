@@ -6,6 +6,14 @@ import type {
   CreateConsumptionForm,
 } from '@/lib/types/inventory.types';
 
+export interface DeleteSupplyModalProps {
+  supply: Supply | null;
+  isDeleting: boolean;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+  serverError?: string | null;
+}
+
 export interface SupplyFormModalProps {
   onClose: () => void;
   onSubmit: (data: CreateSupplyForm) => Promise<void>;

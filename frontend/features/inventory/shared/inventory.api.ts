@@ -126,3 +126,14 @@ export async function registerConsumption(data: CreateConsumptionForm): Promise<
     return rethrowErrorBody(err);
   }
 }
+
+export async function deleteSupply(id: string): Promise<void> {
+  try {
+    await apiFetch<{ data: null }>(`/inventory/supplies/${id}`, {
+      method: 'DELETE',
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (err) {
+    return rethrowErrorBody(err);
+  }
+}
