@@ -48,9 +48,22 @@ export function useInventoryPage() {
   }, []);
 
   useEffect(() => {
-    loadSupplies();
-    const interval = setInterval(loadSupplies, INVENTORY_CONFIG.POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    let cancelled = false;
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const poll = async () => {
+      if (cancelled) return;
+      await loadSupplies();
+      if (cancelled) return;
+      timeout = setTimeout(poll, INVENTORY_CONFIG.POLL_INTERVAL_MS);
+    };
+
+    poll();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
   }, [loadSupplies]);
 
   // --- Open handlers ---
