@@ -1,54 +1,60 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getSupplyMovements } from '@/features/inventory/shared/inventory.api';
 import { INVENTORY_STRINGS } from '@/features/inventory/constants/inventory.constants';
-import type { SupplyHistory, MovementTypeFilter } from '@/lib/types/inventory.types';
+import type { SupplyHistory, PaginationMeta, MovementTypeFilter } from '@/lib/types/inventory.types';
 
 export function useSupplyHistory(supplyId: string) {
   const [history, setHistory] = useState<SupplyHistory | null>(null);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState<MovementTypeFilter>('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-
-  const requestIdRef = useRef(0);
+  const [page, setPage] = useState(1);
 
   const loadMovements = useCallback(async () => {
-    const requestId = ++requestIdRef.current;
-
     try {
       setIsLoading(true);
       setFetchError(null);
-      const data = await getSupplyMovements(supplyId, {
+      const result = await getSupplyMovements(supplyId, {
         type: typeFilter || undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
+        page,
       });
-      if (requestId !== requestIdRef.current) return;
-      setHistory(data);
+      setHistory(result.data);
+      setMeta(result.meta);
     } catch {
-      if (requestId !== requestIdRef.current) return;
       setFetchError(INVENTORY_STRINGS.errors.historyError);
     } finally {
-      if (requestId === requestIdRef.current) setIsLoading(false);
+      setIsLoading(false);
     }
-  }, [supplyId, typeFilter, dateFrom, dateTo]);
+  }, [supplyId, typeFilter, dateFrom, dateTo, page]);
 
   useEffect(() => {
     loadMovements();
   }, [loadMovements]);
 
+  const handleFilterChange = (setter: (v: string) => void) => (value: string) => {
+    setPage(1);
+    setter(value);
+  };
+
   return {
     history,
+    meta,
     fetchError,
     isLoading,
     typeFilter,
-    setTypeFilter,
+    setTypeFilter: handleFilterChange(setTypeFilter),
     dateFrom,
-    setDateFrom,
+    setDateFrom: handleFilterChange(setDateFrom),
     dateTo,
-    setDateTo,
+    setDateTo: handleFilterChange(setDateTo),
+    page,
+    setPage,
   };
 }

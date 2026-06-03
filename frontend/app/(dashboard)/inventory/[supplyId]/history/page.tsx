@@ -26,6 +26,13 @@ export default function SupplyHistoryPage({
   const { supplyId } = use(params);
 
   const {
+<<<<<<< HEAD
+    history, meta, fetchError, isLoading,
+    typeFilter, setTypeFilter,
+    dateFrom, setDateFrom,
+    dateTo, setDateTo,
+    page, setPage,
+=======
     history,
     fetchError,
     isLoading,
@@ -35,11 +42,11 @@ export default function SupplyHistoryPage({
     setDateFrom,
     dateTo,
     setDateTo,
+>>>>>>> origin/develop
   } = useSupplyHistory(supplyId);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <Link
@@ -57,7 +64,6 @@ export default function SupplyHistoryPage({
         </div>
       </div>
 
-      {/* Stock actual */}
       {history && (
         <div className="inline-flex items-center gap-3 rounded-lg border border-foreground/10 bg-background px-5 py-3">
           <span className="text-sm text-foreground/60">{strings.stockLabel}:</span>
@@ -70,12 +76,9 @@ export default function SupplyHistoryPage({
         </div>
       )}
 
-      {/* Filtros */}
       <div className="flex flex-wrap items-end gap-4 rounded-lg border border-foreground/10 bg-background p-4">
         <div className="space-y-1">
-          <label className="block text-xs font-medium text-foreground/60">
-            {strings.filterTypeLabel}
-          </label>
+          <label className="block text-xs font-medium text-foreground/60">{strings.filterTypeLabel}</label>
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as MovementTypeFilter)}
@@ -88,9 +91,7 @@ export default function SupplyHistoryPage({
         </div>
 
         <div className="space-y-1">
-          <label className="block text-xs font-medium text-foreground/60">
-            {strings.filterDateFrom}
-          </label>
+          <label className="block text-xs font-medium text-foreground/60">{strings.filterDateFrom}</label>
           <input
             type="date"
             value={dateFrom}
@@ -101,9 +102,7 @@ export default function SupplyHistoryPage({
         </div>
 
         <div className="space-y-1">
-          <label className="block text-xs font-medium text-foreground/60">
-            {strings.filterDateTo}
-          </label>
+          <label className="block text-xs font-medium text-foreground/60">{strings.filterDateTo}</label>
           <input
             type="date"
             value={dateTo}
@@ -123,62 +122,88 @@ export default function SupplyHistoryPage({
         )}
       </div>
 
-      {/* Error */}
-      {fetchError && (
-        <p role="alert" className="text-sm text-red-500">{fetchError}</p>
+      {fetchError && <p role="alert" className="text-sm text-red-500">{fetchError}</p>}
+
+      {isLoading && !history && (
+        <p className="text-sm text-foreground/50">{strings.loadingMessage}</p>
       )}
 
+<<<<<<< HEAD
+=======
       {/* Cargando */}
       {isLoading && !history && (
         <p className="text-sm text-foreground/50">{strings.loadingMessage}</p>
       )}
 
       {/* Tabla de movimientos */}
+>>>>>>> origin/develop
       {history && (
         history.movements.length === 0 ? (
           <p className="text-sm text-foreground/60">{strings.emptyMessage}</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-foreground/10">
-            <table className="w-full text-sm">
-              <thead className="bg-foreground/5 text-left text-foreground/70">
-                <tr>
-                  <th className="px-4 py-3 font-medium">{strings.colDate}</th>
-                  <th className="px-4 py-3 font-medium">{strings.colType}</th>
-                  <th className="px-4 py-3 font-medium">{strings.colQuantity}</th>
-                  <th className="px-4 py-3 font-medium">{strings.colPreviousStock}</th>
-                  <th className="px-4 py-3 font-medium">{strings.colNewStock}</th>
-                  <th className="px-4 py-3 font-medium">{strings.colReference}</th>
-                  <th className="px-4 py-3 font-medium">{strings.colAdmin}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-foreground/10">
-                {history.movements.map((m) => (
-                  <tr key={m.id} className="hover:bg-foreground/5 transition-colors">
-                    <td className="px-4 py-3 text-foreground/70 whitespace-nowrap">
-                      {formatDateTime(m.createdAt)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          m.type === 'entry'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-orange-100 text-orange-700'
-                        }`}
-                      >
-                        {m.type === 'entry' ? strings.typeEntry : strings.typeConsumption}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-foreground/70">{m.quantity}</td>
-                    <td className="px-4 py-3 text-foreground/70">{m.previousStock}</td>
-                    <td className="px-4 py-3 font-medium text-foreground">{m.newStock}</td>
-                    <td className="px-4 py-3 text-foreground/60">
-                      {m.reference ?? <span className="text-foreground/30">—</span>}
-                    </td>
-                    <td className="px-4 py-3 text-foreground/70">{m.adminName}</td>
+          <div className="space-y-4">
+            <div className="overflow-x-auto rounded-lg border border-foreground/10">
+              <table className="w-full text-sm">
+                <thead className="bg-foreground/5 text-left text-foreground/70">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">{strings.colDate}</th>
+                    <th className="px-4 py-3 font-medium">{strings.colType}</th>
+                    <th className="px-4 py-3 font-medium">{strings.colQuantity}</th>
+                    <th className="px-4 py-3 font-medium">{strings.colPreviousStock}</th>
+                    <th className="px-4 py-3 font-medium">{strings.colNewStock}</th>
+                    <th className="px-4 py-3 font-medium">{strings.colReference}</th>
+                    <th className="px-4 py-3 font-medium">{strings.colAdmin}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-foreground/10">
+                  {history.movements.map((m) => (
+                    <tr key={m.id} className="hover:bg-foreground/5 transition-colors">
+                      <td className="px-4 py-3 text-foreground/70 whitespace-nowrap">
+                        {formatDateTime(m.createdAt)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                          m.type === 'entry' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {m.type === 'entry' ? strings.typeEntry : strings.typeConsumption}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-foreground/70">{m.quantity}</td>
+                      <td className="px-4 py-3 text-foreground/70">{m.previousStock}</td>
+                      <td className="px-4 py-3 font-medium text-foreground">{m.newStock}</td>
+                      <td className="px-4 py-3 text-foreground/60">
+                        {m.reference ?? <span className="text-foreground/30">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-foreground/70">{m.adminName}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {meta && (
+              <div className="flex items-center justify-between px-1">
+                <p className="text-xs text-foreground/50">
+                  {strings.paginationInfo(meta.page, meta.total)}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPage(page - 1)}
+                    disabled={page <= 1}
+                    className="rounded-md border border-foreground/20 px-3 py-1 text-xs text-foreground/70 hover:bg-foreground/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {strings.paginationPrev}
+                  </button>
+                  <button
+                    onClick={() => setPage(page + 1)}
+                    disabled={!meta.hasMore}
+                    className="rounded-md border border-foreground/20 px-3 py-1 text-xs text-foreground/70 hover:bg-foreground/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {strings.paginationNext}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )
       )}

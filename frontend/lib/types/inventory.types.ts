@@ -59,6 +59,15 @@ export interface InventoryMovement {
   adminName: string;
 }
 
+export type MovementTypeFilter = '' | 'entry' | 'consumption';
+
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
+
 export interface SupplyHistory {
   supply: Supply;
   movements: InventoryMovement[];

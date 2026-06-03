@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { INVENTORY_VALIDATION, UNIT_OF_MEASURE } from './inventory.constants.js';
+import { INVENTORY_VALIDATION, UNIT_OF_MEASURE, PAGINATION_CONFIG, REPORT_CONFIG } from './inventory.constants.js';
 import { INVENTORY_VALIDATION_MESSAGES as MSG } from './inventory.validation-messages.js';
 import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
@@ -83,7 +83,10 @@ const dateRangeQuerySchema = z.object({
   dateTo: z
     .string({ required_error: MSG.DATE_TO_REQUIRED })
     .regex(DATE_REGEX, MSG.DATE_TO_FORMAT),
-});
+}).refine(({ dateFrom, dateTo }) => {
+  const diff = (new Date(dateTo) - new Date(dateFrom)) / (1000 * 60 * 60 * 24);
+  return diff <= REPORT_CONFIG.MAX_DATE_RANGE_DAYS;
+}, { message: MSG.DATE_RANGE_MAX });
 
 const movementsQuerySchema = z.object({
   dateFrom: z
@@ -97,6 +100,8 @@ const movementsQuerySchema = z.object({
   type: z.enum(['entry', 'consumption'], {
     error: MSG.TYPE_INVALID,
   }).optional(),
+  page: z.coerce.number().int().min(1, MSG.PAGE_MIN).optional().default(PAGINATION_CONFIG.DEFAULT_PAGE),
+  limit: z.coerce.number().int().min(1, MSG.LIMIT_MIN).max(PAGINATION_CONFIG.MAX_LIMIT, MSG.LIMIT_MAX).optional().default(PAGINATION_CONFIG.DEFAULT_LIMIT),
 });
 
 export const validateCreateSupply = (req, res, next) => {
@@ -143,5 +148,6 @@ export const validateReportQuery = (req, res, next) => {
 export const validateMovementsQuery = (req, res, next) => {
   const resultado = movementsQuerySchema.safeParse(req.query);
   if (!resultado.success) return responderErrores(res, resultado.error);
+  req.query = resultado.data;
   next();
 };
