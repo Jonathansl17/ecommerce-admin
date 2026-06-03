@@ -85,7 +85,7 @@ const STOCK_MOVEMENT_TYPES = ['sale', 'manual_adjustment'];
 const PRODUCT_STOCK_TYPES = ['sale', 'manual_adjustment', 'production'];
 const STOCK_REASONS = ['manual_adjustment', 'error_correction', 'damaged_product', 'return'];
 const CUSTOM_ORDER_STATUSES = ['received', 'in_process', 'ready', 'sold', 'rejected'];
-const INVENTORY_MOVEMENT_TYPES = ['entry', 'consumption'];
+const INVENTORY_MOVEMENT_TYPES = { ENTRY: 'entry', CONSUMPTION: 'consumption' };
 const ALERT_TYPES = ['low_stock', 'out_of_stock'];
 const MODERATION_REASONS = ['offensive_content', 'spam', 'false_information', 'off_topic', 'other'];
 const REVIEW_STATUSES = ['pending', 'approved', 'rejected'];
@@ -240,7 +240,7 @@ async function sembrarMovimientosInventario(supplies, admins) {
       data: {
         supplyId: supply.itemId,
         adminId: admin.id,
-        type: isEntry ? 'entry' : 'consumption',
+        type: isEntry ? INVENTORY_MOVEMENT_TYPES.ENTRY : INVENTORY_MOVEMENT_TYPES.CONSUMPTION,
         quantity,
         previousStock,
         newStock,
