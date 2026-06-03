@@ -1,7 +1,12 @@
-import type { UnitOfMeasure } from '@/lib/types/inventory.types';
+import type { UnitOfMeasure, ItemStatus } from '@/lib/types/inventory.types';
 
 export const INVENTORY_CONFIG = {
   POLL_INTERVAL_MS: 60_000,
+};
+
+export const ITEM_STATUS: Record<string, ItemStatus> = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
 };
 
 export const UNIT_OF_MEASURE_LABELS: Record<UnitOfMeasure, string> = {
