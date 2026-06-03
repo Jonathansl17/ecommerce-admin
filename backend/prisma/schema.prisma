@@ -321,9 +321,10 @@ model AdminNotification {
   type         NotificationType
   title        String           @db.VarChar(200)
   content      String?
-  entityType   String?          @map("entity_type") @db.VarChar(50)
-  entityId     BigInt?          @map("entity_id")
-  read         Boolean
+  entityType       String?          @map("entity_type") @db.VarChar(50)
+  entityId         BigInt?          @map("entity_id")
+  entityExternalId String?          @map("entity_external_id") @db.VarChar(100)
+  read             Boolean
   sentAt       DateTime?        @map("sent_at")
   sendAttempts Int              @default(0) @map("send_attempts") @db.SmallInt
   createdAt    DateTime         @default(now()) @map("created_at")
@@ -331,6 +332,7 @@ model AdminNotification {
 
   @@index([adminId])
   @@index([entityType, entityId])
+  @@index([adminId, entityType, entityExternalId])
   @@map("admin_notifications")
 }
 

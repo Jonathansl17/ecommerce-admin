@@ -1,42 +1,48 @@
 import { z } from 'zod/v4';
-import { ORDER_LIST_LIMITS, ORDER_VALIDATION } from './orders.constants.js';
+import { ORDER_LIST_LIMITS, ORDER_VALIDATION, ORDER_VALIDATION_MESSAGES } from './orders.constants.js';
 import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
 const orderProductSchema = z.object({
   name: z
-    .string({ required_error: 'El nombre del producto es requerido' })
-    .min(ORDER_VALIDATION.PRODUCT_NAME_MIN, 'El nombre del producto no puede estar vacío')
-    .max(ORDER_VALIDATION.PRODUCT_NAME_MAX, `El nombre del producto no puede superar ${ORDER_VALIDATION.PRODUCT_NAME_MAX} caracteres`),
+    .string({ required_error: ORDER_VALIDATION_MESSAGES.PRODUCT_NAME_REQUIRED })
+    .min(ORDER_VALIDATION.PRODUCT_NAME_MIN, ORDER_VALIDATION_MESSAGES.PRODUCT_NAME_EMPTY)
+    .max(ORDER_VALIDATION.PRODUCT_NAME_MAX, ORDER_VALIDATION_MESSAGES.PRODUCT_NAME_MAX),
   quantity: z
-    .number({ required_error: 'La cantidad es requerida' })
-    .int('La cantidad debe ser un número entero')
-    .positive('La cantidad debe ser mayor a cero'),
+    .number({ required_error: ORDER_VALIDATION_MESSAGES.QUANTITY_REQUIRED })
+    .int(ORDER_VALIDATION_MESSAGES.QUANTITY_INTEGER)
+    .positive(ORDER_VALIDATION_MESSAGES.QUANTITY_POSITIVE),
   unitPrice: z
-    .number({ required_error: 'El precio unitario es requerido' })
-    .nonnegative('El precio unitario no puede ser negativo'),
+    .number({ required_error: ORDER_VALIDATION_MESSAGES.UNIT_PRICE_REQUIRED })
+    .nonnegative(ORDER_VALIDATION_MESSAGES.UNIT_PRICE_NONNEGATIVE),
   isCustomizable: z.boolean().optional().default(false),
+  customizationDetails: z
+    .record(z.string().max(100), z.string().max(500))
+    .refine((val) => Object.keys(val).length <= 50, {
+      message: 'customizationDetails no puede tener más de 50 entradas',
+    })
+    .optional(),
 });
 
 const notifyNewOrderSchema = z.object({
   orderId: z
-    .string({ required_error: 'El ID del pedido es requerido' })
-    .min(ORDER_VALIDATION.ORDER_ID_MIN, 'El ID del pedido no puede estar vacío')
-    .max(100, 'El ID del pedido no puede superar 100 caracteres'),
+    .string({ required_error: ORDER_VALIDATION_MESSAGES.ORDER_ID_REQUIRED })
+    .min(ORDER_VALIDATION.ORDER_ID_MIN, ORDER_VALIDATION_MESSAGES.ORDER_ID_EMPTY)
+    .max(ORDER_VALIDATION.ORDER_ID_MAX, ORDER_VALIDATION_MESSAGES.ORDER_ID_MAX),
   clientName: z
-    .string({ required_error: 'El nombre del cliente es requerido' })
-    .min(ORDER_VALIDATION.CLIENT_NAME_MIN, 'El nombre del cliente no puede estar vacío')
-    .max(ORDER_VALIDATION.CLIENT_NAME_MAX, `El nombre del cliente no puede superar ${ORDER_VALIDATION.CLIENT_NAME_MAX} caracteres`),
+    .string({ required_error: ORDER_VALIDATION_MESSAGES.CLIENT_NAME_REQUIRED })
+    .min(ORDER_VALIDATION.CLIENT_NAME_MIN, ORDER_VALIDATION_MESSAGES.CLIENT_NAME_EMPTY)
+    .max(ORDER_VALIDATION.CLIENT_NAME_MAX, ORDER_VALIDATION_MESSAGES.CLIENT_NAME_MAX),
   products: z
     .array(orderProductSchema)
-    .min(ORDER_VALIDATION.PRODUCTS_MIN, 'Debe incluir al menos un producto'),
+    .min(ORDER_VALIDATION.PRODUCTS_MIN, ORDER_VALIDATION_MESSAGES.PRODUCTS_MIN),
   total: z
-    .number({ required_error: 'El total es requerido' })
-    .nonnegative('El total no puede ser negativo'),
+    .number({ required_error: ORDER_VALIDATION_MESSAGES.TOTAL_REQUIRED })
+    .nonnegative(ORDER_VALIDATION_MESSAGES.TOTAL_NONNEGATIVE),
   shippingAddress: z
-    .string({ required_error: 'La dirección de envío es requerida' })
-    .min(ORDER_VALIDATION.SHIPPING_ADDRESS_MIN, 'La dirección de envío no puede estar vacía')
-    .max(ORDER_VALIDATION.SHIPPING_ADDRESS_MAX, `La dirección de envío no puede superar ${ORDER_VALIDATION.SHIPPING_ADDRESS_MAX} caracteres`),
-  hasCustomization: z.boolean({ required_error: 'El campo hasCustomization es requerido' }),
+    .string({ required_error: ORDER_VALIDATION_MESSAGES.SHIPPING_ADDRESS_REQUIRED })
+    .min(ORDER_VALIDATION.SHIPPING_ADDRESS_MIN, ORDER_VALIDATION_MESSAGES.SHIPPING_ADDRESS_EMPTY)
+    .max(ORDER_VALIDATION.SHIPPING_ADDRESS_MAX, ORDER_VALIDATION_MESSAGES.SHIPPING_ADDRESS_MAX),
+  hasCustomization: z.boolean({ required_error: ORDER_VALIDATION_MESSAGES.HAS_CUSTOMIZATION_REQUIRED }),
 });
 
 export const validateNotifyNewOrder = (req, res, next) => {
@@ -115,10 +121,10 @@ export const validateListOrdersQuery = (req, res, next) => {
 
 const updateOrderStatusSchema = z.object({
   status: z
-    .string({ required_error: 'El campo status es requerido' })
+    .string({ required_error: ORDER_VALIDATION_MESSAGES.STATUS_REQUIRED })
     .trim()
-    .min(ORDER_VALIDATION.STATUS_MIN, 'El campo status no puede estar vacío')
-    .max(ORDER_VALIDATION.STATUS_MAX, `El campo status no puede superar ${ORDER_VALIDATION.STATUS_MAX} caracteres`),
+    .min(ORDER_VALIDATION.STATUS_MIN, ORDER_VALIDATION_MESSAGES.STATUS_EMPTY)
+    .max(ORDER_VALIDATION.STATUS_MAX, ORDER_VALIDATION_MESSAGES.STATUS_MAX),
 });
 
 export const validateUpdateOrderStatus = (req, res, next) => {
