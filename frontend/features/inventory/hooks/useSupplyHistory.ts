@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getSupplyMovements } from '@/features/inventory/shared/inventory.api';
 import { INVENTORY_STRINGS } from '@/features/inventory/constants/inventory.constants';
 import type { SupplyHistory, MovementTypeFilter } from '@/lib/types/inventory.types';
@@ -13,7 +13,11 @@ export function useSupplyHistory(supplyId: string) {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
+  const requestIdRef = useRef(0);
+
   const loadMovements = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
+
     try {
       setIsLoading(true);
       setFetchError(null);
@@ -22,11 +26,13 @@ export function useSupplyHistory(supplyId: string) {
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
       });
+      if (requestId !== requestIdRef.current) return;
       setHistory(data);
     } catch {
+      if (requestId !== requestIdRef.current) return;
       setFetchError(INVENTORY_STRINGS.errors.historyError);
     } finally {
-      setIsLoading(false);
+      if (requestId === requestIdRef.current) setIsLoading(false);
     }
   }, [supplyId, typeFilter, dateFrom, dateTo]);
 
