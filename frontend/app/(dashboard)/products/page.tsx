@@ -1,6 +1,7 @@
 'use client';
 
 import { useReducer, useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiFetch';
 import { REQUEST_TIMEOUT_MS } from '@/lib/constants/api.constants';
 import { PRODUCTS_API } from '@/features/products/constants/api';
@@ -162,6 +163,12 @@ export default function ProductsPage() {
               </button>
             ) : (
               <>
+                <Link
+                  href="/products/report"
+                  className="px-4 py-2 text-sm rounded-md border border-foreground/20 text-foreground hover:bg-foreground/5 transition-colors"
+                >
+                  {strings.report.button}
+                </Link>
                 <button
                   onClick={handleOpenCreate}
                   className="px-4 py-2 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors"
