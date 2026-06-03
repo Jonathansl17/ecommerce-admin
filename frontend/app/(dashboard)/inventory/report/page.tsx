@@ -103,14 +103,16 @@ export default function InventoryReportPage() {
             </div>
           )}
 
-          {report.rendimiento.length > 0 && (
-            <div className="space-y-4">
+          <div className="space-y-4">
               <h2 className="text-base font-semibold text-foreground">{strings.rendimientoTitle}</h2>
 
               <div className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3">
                 <p className="text-sm text-blue-700">{strings.rendimientoDisclaimer}</p>
               </div>
 
+              {report.rendimiento.length === 0 ? (
+                <p className="text-sm text-foreground/60">{strings.noRendimiento}</p>
+              ) : (
               <div className="space-y-4">
                 {report.rendimiento.map((group) => (
                   <div key={group.reference} className="rounded-lg border border-foreground/10">
@@ -138,8 +140,8 @@ export default function InventoryReportPage() {
                   </div>
                 ))}
               </div>
+              )}
             </div>
-          )}
         </div>
       )}
     </div>
