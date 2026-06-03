@@ -83,6 +83,33 @@ export const create = async ({ name, unitOfMeasure, initialStock }) => {
   });
 };
 
+export const remove = async (id) => {
+  const itemId = BigInt(id);
+
+  const item = await prisma.item.findFirst({
+    where: { id: itemId, itemType: INVENTORY_CONFIG.ITEM_TYPE },
+    include: { supply: true },
+  });
+
+  if (!item) throw crearError(INVENTORY_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.inventoryMovement.deleteMany({ where: { supplyId: itemId } });
+    await tx.supplyAlert.deleteMany({ where: { supplyId: itemId } });
+    await tx.supply.delete({ where: { itemId } });
+    await tx.item.delete({ where: { id: itemId } });
+  });
+
+  return {
+    id: item.id.toString(),
+    name: item.name,
+    status: item.status,
+    unitOfMeasure: item.supply?.unitOfMeasure ?? null,
+    currentStock: item.supply?.currentStock ?? null,
+    minThreshold: item.supply?.minThreshold ?? null,
+  };
+};
+
 export const update = async (id, { name, unitOfMeasure, minThreshold = 0 }) => {
   const itemId = BigInt(id);
 
