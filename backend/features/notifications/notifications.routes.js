@@ -1,6 +1,11 @@
 import { Router } from 'express';
-import { requireAuth } from '../../shared/middleware/authMiddleware.js';
-import { validateUpdatePreferences } from './notifications.validator.js';
+import { requireAuth, requireRole } from '../../shared/middleware/authMiddleware.js';
+
+const ADMIN_ROLES = ['administrador'];
+import {
+  validateUpdatePreferences,
+  validateUpdateCustomizationStatus,
+} from './notifications.validator.js';
 import {
   stream,
   getAll,
@@ -9,6 +14,7 @@ import {
   markAllRead,
   getPreferences,
   updatePreferences,
+  updateCustomizationStatus,
 } from './notifications.controller.js';
 
 const router = Router();
@@ -20,8 +26,9 @@ router.get('/stream', requireAuth, stream);
 
 router.get('/', requireAuth, getAll);
 router.get('/unread-count', requireAuth, getUnreadCount);
-router.patch('/:id/read', requireAuth, markRead);
 router.patch('/read-all', requireAuth, markAllRead);
+router.patch('/:id/read', requireAuth, markRead);
+router.patch('/:id/customization-status', requireAuth, requireRole(ADMIN_ROLES), validateUpdateCustomizationStatus, updateCustomizationStatus);
 router.get('/preferences', requireAuth, getPreferences);
 router.put('/preferences', requireAuth, validateUpdatePreferences, updatePreferences);
 

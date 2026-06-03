@@ -1,4 +1,13 @@
-import type { UnitOfMeasure } from '@/lib/types/inventory.types';
+import type { UnitOfMeasure, ItemStatus } from '@/lib/types/inventory.types';
+
+export const ITEM_STATUS: Record<string, ItemStatus> = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+};
+
+export const UNIT_OF_MEASURE: [UnitOfMeasure, ...UnitOfMeasure[]] = [
+  'grams', 'kilograms', 'milliliters', 'liters', 'units',
+];
 
 export const UNIT_OF_MEASURE_LABELS: Record<UnitOfMeasure, string> = {
   grams: 'Gramos',
@@ -38,7 +47,7 @@ export const INVENTORY_STRINGS = {
     stockLabel: 'Stock actual (solo lectura)',
     thresholdLabel: 'Umbral mínimo de alerta',
     thresholdPlaceholder: '0',
-    thresholdHint: 'El sistema alertará cuando el stock llegue a esta cantidad. Usa 0 para desactivar.',
+    thresholdHint: 'El sistema alertará cuando el stock llegue a esta cantidad. Con 0, solo recibirás alerta si el insumo se agota por completo.',
     saveButton: 'Guardar cambios',
     savingButton: 'Guardando...',
     cancelButton: 'Cancelar',
@@ -118,6 +127,7 @@ export const INVENTORY_STRINGS = {
     submitButton: 'Registrar consumo',
     submittingButton: 'Registrando...',
     cancelButton: 'Cancelar',
+    stockAvailableLabel: 'Stock disponible:',
   },
   entry: {
     openButton: 'Registrar entrada',
@@ -158,6 +168,7 @@ export const INVENTORY_STRINGS = {
     consumptionQuantityMin: 'La cantidad debe ser mayor a cero',
     dateRequired: 'La fecha es obligatoria',
     itemsRequired: 'Agrega al menos un insumo',
+    referenceMax: 'La referencia no puede superar los 200 caracteres',
   },
   errors: {
     duplicateName: 'Ya existe un insumo con ese nombre',
@@ -173,5 +184,11 @@ export const INVENTORY_STRINGS = {
   success: {
     created: 'Insumo registrado correctamente',
     entryCreated: 'Entrada registrada correctamente',
+  },
+  creationHint: {
+    title: 'Insumo registrado correctamente.',
+    body: 'Te recomendamos configurar un umbral mínimo de alerta desde la opción Editar del insumo. Si lo dejás en 0, el sistema solo te avisará cuando el stock llegue exactamente a cero — no antes.',
+    editNow: 'Editar ahora',
+    dismiss: 'Entendido',
   },
 } as const;

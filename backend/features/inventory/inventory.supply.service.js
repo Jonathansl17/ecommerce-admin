@@ -7,7 +7,6 @@ import {
   calcAvgDailyConsumption,
 } from '../../shared/services/supplyAlert.service.js';
 
-const DAILY_WINDOW = 30;
 
 export const getAll = async () => {
   const items = await prisma.item.findMany({

@@ -1,23 +1,21 @@
-import type { ReviewNotificationContent as ReviewContent } from '../types/notifications.types';
-import { NOTIFICATION_STRINGS } from '../constants/notifications.constants';
-
-const strings = NOTIFICATION_STRINGS.review;
-
-interface ReviewNotificationContentProps {
-  content: ReviewContent;
-}
+import Link from 'next/link';
+import { Tag, User, MessageSquare } from 'lucide-react';
+import type { ReviewNotificationContentProps } from '../types/notifications.types';
+import { NOTIFICATION_REVIEW_STRINGS as strings, ROUTES } from '../constants/notifications.constants';
 
 function StarRating({ rating }: { rating: number }) {
   return (
-    <span aria-label={`${rating} de 5 estrellas`} className="inline-flex gap-0.5">
+    <span aria-label={`${rating} de 5 estrellas`} className="inline-flex items-center gap-0.5">
       {Array.from({ length: 5 }, (_, i) => (
         <span
           key={i}
           aria-hidden="true"
-          style={{ color: i < rating ? '#f59e0b' : undefined }}
-          className={i < rating ? undefined : 'text-muted-foreground'}
+          // Both filled and empty stars use the same '★' character.
+          // The visual distinction is handled entirely by CSS color class,
+          // not by using a different character (e.g. '☆').
+          className={i < rating ? 'text-amber-400' : 'text-muted-foreground/40'}
         >
-          {i < rating ? '★' : '☆'}
+          {'★'}
         </span>
       ))}
     </span>
@@ -25,57 +23,52 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export function ReviewNotificationContent({ content }: ReviewNotificationContentProps) {
-  const { productName, clientName, rating, reviewText, isPriority } = content;
+  const { productName, clientName, rating, reviewText } = content;
 
   return (
-    <div className="mt-2 space-y-3 text-sm">
-      {isPriority && (
-        <div
-          className="flex items-center gap-2 rounded-md px-3 py-2"
-          style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}
-          role="alert"
-        >
-          <span aria-hidden="true">&#9888;</span>
-          <span className="font-medium">{strings.priorityBanner}</span>
+    <div className="mt-2 space-y-2 text-sm">
+      {/* Metadata row: product · client · rating in one compact line */}
+      <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5">
+            <Tag className="h-3 w-3 shrink-0 text-muted-foreground/60" aria-hidden="true" />
+            <p className="truncate font-medium text-foreground">{productName}</p>
+          </div>
+          <div className="flex items-center gap-1.5 pl-4">
+            <User className="h-3 w-3 shrink-0 text-muted-foreground/60" aria-hidden="true" />
+            <p className="truncate text-xs text-muted-foreground">{clientName}</p>
+          </div>
         </div>
+        <div className="shrink-0 text-right">
+          <StarRating rating={rating} />
+          <p className="text-xs text-muted-foreground">{rating}/5</p>
+        </div>
+      </div>
+
+      {/* Review text: visually distinct section */}
+      {reviewText && (
+        <p
+          className="border-l-2 border-border pl-2.5 text-muted-foreground"
+          style={{
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}
+        >
+          {reviewText}
+        </p>
       )}
 
-      <div className="space-y-1.5">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">
-              {strings.productLabel}
-            </p>
-            <p className="font-medium text-foreground">{productName}</p>
-          </div>
-          <div className="text-right shrink-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">
-              {strings.ratingLabel}
-            </p>
-            <StarRating rating={rating} />
-          </div>
-        </div>
-
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">
-            {strings.clientLabel}
-          </p>
-          <p className="text-muted-foreground">{clientName}</p>
-        </div>
-
-        {reviewText && (
-          <p
-            className="text-foreground"
-            style={{
-              display: '-webkit-box',
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
-            {reviewText}
-          </p>
-        )}
+      {/* Action: grouped with its content, not orphaned at card bottom */}
+      <div className="pt-1">
+        <Link
+          href={ROUTES.REVIEWS}
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+          {strings.moderateAction}
+        </Link>
       </div>
     </div>
   );

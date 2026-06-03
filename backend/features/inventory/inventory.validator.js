@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { INVENTORY_VALIDATION, UNIT_OF_MEASURE } from './inventory.constants.js';
+import { INVENTORY_VALIDATION, UNIT_OF_MEASURE, MOVEMENT_TYPES } from './inventory.constants.js';
 import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
 const createSupplySchema = z.object({
@@ -91,8 +91,8 @@ const movementsQuerySchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo debe tener el formato YYYY-MM-DD')
     .optional(),
-  type: z.enum(['entry', 'consumption'], {
-    error: "El tipo debe ser 'entry' o 'consumption'",
+  type: z.enum([MOVEMENT_TYPES.ENTRY, MOVEMENT_TYPES.CONSUMPTION], {
+    error: `El tipo debe ser '${MOVEMENT_TYPES.ENTRY}' o '${MOVEMENT_TYPES.CONSUMPTION}'`,
   }).optional(),
 });
 
