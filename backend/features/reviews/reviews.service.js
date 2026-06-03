@@ -97,15 +97,28 @@ export const createReviewNotification = async (reviewData) => {
 };
 
 /**
- * List reviews, optionally filtered by status / rating, ordered by priority
- * then recency. Returns the `{ total, items }` shape the frontend expects.
+ * Build a Prisma `where` from the supported review filters. `product` and
+ * `client` are case-insensitive substring matches on the denormalized names.
  *
- * @param {{ status?: string, rating?: number, limit?: number, offset?: number }} filters
+ * @param {{ status?: string, rating?: number, product?: string, client?: string }} filters
  */
-export const getReviews = async ({ status, rating, limit, offset } = {}) => {
+const buildReviewWhere = ({ status, rating, product, client } = {}) => {
   const where = {};
   if (status) where.status = status;
   if (rating) where.rating = rating;
+  if (product) where.productName = { contains: product, mode: 'insensitive' };
+  if (client) where.clientName = { contains: client, mode: 'insensitive' };
+  return where;
+};
+
+/**
+ * List reviews, optionally filtered by status / rating / product / client,
+ * ordered by priority then recency. Returns `{ total, items }`.
+ *
+ * @param {{ status?: string, rating?: number, product?: string, client?: string, limit?: number, offset?: number }} filters
+ */
+export const getReviews = async ({ status, rating, product, client, limit, offset } = {}) => {
+  const where = buildReviewWhere({ status, rating, product, client });
 
   const [total, rows] = await prisma.$transaction([
     prisma.review.count({ where }),
@@ -254,13 +267,17 @@ export const deleteReview = async (id, adminId, { reason, detail } = {}) => {
 };
 
 /**
- * Aggregate review counts by status.
+ * Aggregate review counts by status, honoring the optional product/client
+ * filters so the panel tab counts match the active search.
+ *
+ * @param {{ product?: string, client?: string }} filters
  */
-export const stats = async () => {
+export const stats = async ({ product, client } = {}) => {
+  const base = buildReviewWhere({ product, client });
   const [pending, approved, rejected] = await Promise.all([
-    prisma.review.count({ where: { status: 'pending' } }),
-    prisma.review.count({ where: { status: 'approved' } }),
-    prisma.review.count({ where: { status: 'rejected' } }),
+    prisma.review.count({ where: { ...base, status: 'pending' } }),
+    prisma.review.count({ where: { ...base, status: 'approved' } }),
+    prisma.review.count({ where: { ...base, status: 'rejected' } }),
   ]);
   return { pending, approved, rejected, total: pending + approved + rejected };
 };

@@ -75,6 +75,8 @@ export interface ReviewModerationPanelProps {
   counts: ReviewStats;
   statusFilter: ReviewStatusFilter;
   onFilterChange: (filter: ReviewStatusFilter) => void;
+  onSearch: (product: string, client: string) => void;
+  onClearSearch: () => void;
   onApprove: (id: string) => void;
   onReject: (id: string, reason: ModerationReason, notes?: string) => void;
   onRespond: (id: string, responseText: string) => void;
@@ -83,8 +85,27 @@ export interface ReviewModerationPanelProps {
   pageSize: number;
   total: number;
   onPageChange: (page: number) => void;
+  isLoading: boolean;
   loadingId: string | null;
   errorId: string | null;
+}
+
+export interface ReviewStatusTabsProps {
+  statusFilter: ReviewStatusFilter;
+  counts: ReviewStats;
+  onFilterChange: (filter: ReviewStatusFilter) => void;
+}
+
+export interface ReviewSearchFiltersProps {
+  onSearch: (product: string, client: string) => void;
+  onClear: () => void;
+}
+
+export interface ReviewPaginationProps {
+  page: number;
+  pageSize: number;
+  total: number;
+  onPageChange: (page: number) => void;
 }
 
 export interface RejectReviewModalProps {
@@ -156,8 +177,15 @@ export interface ModerationReasonSelectProps {
 
 export interface GetReviewsParams {
   status?: ReviewStatus;
+  product?: string;
+  client?: string;
   page?: number;
   pageSize?: number;
+}
+
+export interface GetReviewStatsParams {
+  product?: string;
+  client?: string;
 }
 
 export interface UseReviewsReturn {
@@ -171,6 +199,8 @@ export interface UseReviewsReturn {
   error: string | null;
   statusFilter: ReviewStatusFilter;
   setStatusFilter: (filter: ReviewStatusFilter) => void;
+  applySearch: (product: string, client: string) => void;
+  clearSearch: () => void;
   refetch: () => void;
 }
 

@@ -122,6 +122,12 @@ export const REVIEWS_STRINGS = {
     approved: 'No hay reseñas aprobadas.',
     rejected: 'No hay reseñas rechazadas.',
   },
+  filters: {
+    productPlaceholder: 'Buscar por producto',
+    personPlaceholder: 'Buscar por persona',
+    search: 'Buscar',
+    clear: 'Limpiar',
+  },
   pagination: {
     previous: 'Anterior',
     next: 'Siguiente',
@@ -151,5 +157,8 @@ export const REVIEWS_STRINGS = {
     pagination: 'Paginación de reseñas',
     loading: 'Cargando reseñas',
     starRating: (rating: number) => `${rating} de 5 estrellas`,
+    productSearch: 'Buscar reseñas por producto',
+    personSearch: 'Buscar reseñas por persona',
+    searchForm: 'Filtros de búsqueda de reseñas',
   },
 } as const;

@@ -7,6 +7,7 @@ import type {
   RejectReviewPayload,
   DeleteReviewPayload,
   GetReviewsParams,
+  GetReviewStatsParams,
 } from '../types/reviews.types';
 
 const unwrap = async <T>(promise: Promise<{ data: T }>): Promise<T> => {
@@ -23,11 +24,15 @@ const rethrowErrorBody = (err: unknown): never => {
 
 export async function getReviews({
   status,
+  product,
+  client,
   page = 1,
   pageSize,
 }: GetReviewsParams = {}): Promise<ReviewListResponse> {
   const search = new URLSearchParams();
   if (status) search.set('status', status);
+  if (product?.trim()) search.set('product', product.trim());
+  if (client?.trim()) search.set('client', client.trim());
   if (pageSize) {
     search.set('limit', String(pageSize));
     search.set('offset', String((page - 1) * pageSize));
@@ -45,10 +50,18 @@ export async function getReviews({
   }
 }
 
-export async function getReviewStats(): Promise<ReviewStats> {
+export async function getReviewStats({
+  product,
+  client,
+}: GetReviewStatsParams = {}): Promise<ReviewStats> {
+  const search = new URLSearchParams();
+  if (product?.trim()) search.set('product', product.trim());
+  if (client?.trim()) search.set('client', client.trim());
+  const query = search.toString();
+
   try {
     return await unwrap(
-      apiFetch<{ data: ReviewStats }>(`/reviews/stats`, {
+      apiFetch<{ data: ReviewStats }>(`/reviews/stats${query ? `?${query}` : ''}`, {
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       })
     );

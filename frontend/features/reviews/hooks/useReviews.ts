@@ -22,14 +22,33 @@ export function useReviews(): UseReviewsReturn {
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilterState] = useState<ReviewStatusFilter>('all');
+  const [statusFilter, setStatusFilterState] = useState<ReviewStatusFilter>(
+    REVIEW_STATUS_FILTER_ALL,
+  );
+
+  // Applied search filters — only change on an explicit search/clear action.
+  const [product, setProduct] = useState('');
+  const [client, setClient] = useState('');
+
   const [fetchTick, setFetchTick] = useState(0);
 
   const refetch = useCallback(() => setFetchTick((t) => t + 1), []);
 
-  // Changing the filter always returns to the first page.
+  // Changing the status filter always returns to the first page.
   const setStatusFilter = useCallback((filter: ReviewStatusFilter) => {
     setStatusFilterState(filter);
+    setPage(1);
+  }, []);
+
+  const applySearch = useCallback((nextProduct: string, nextClient: string) => {
+    setProduct(nextProduct.trim());
+    setClient(nextClient.trim());
+    setPage(1);
+  }, []);
+
+  const clearSearch = useCallback(() => {
+    setProduct('');
+    setClient('');
     setPage(1);
   }, []);
 
@@ -43,10 +62,12 @@ export function useReviews(): UseReviewsReturn {
         const [list, statsResult] = await Promise.all([
           getReviews({
             status: statusFilter === REVIEW_STATUS_FILTER_ALL ? undefined : statusFilter,
+            product,
+            client,
             page,
             pageSize,
           }),
-          getReviewStats(),
+          getReviewStats({ product, client }),
         ]);
         if (cancelled) return;
 
@@ -73,7 +94,7 @@ export function useReviews(): UseReviewsReturn {
     return () => {
       cancelled = true;
     };
-  }, [statusFilter, page, pageSize, fetchTick]);
+  }, [statusFilter, product, client, page, pageSize, fetchTick]);
 
   return {
     reviews,
@@ -86,6 +107,8 @@ export function useReviews(): UseReviewsReturn {
     error,
     statusFilter,
     setStatusFilter,
+    applySearch,
+    clearSearch,
     refetch,
   };
 }
