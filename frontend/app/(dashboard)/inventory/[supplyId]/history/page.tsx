@@ -4,19 +4,10 @@ import { use } from 'react';
 import Link from 'next/link';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/constants/inventory.constants';
 import { useSupplyHistory } from '@/features/inventory/hooks/useSupplyHistory';
+import { formatDateTime } from '@/lib/utils/format';
 import type { MovementTypeFilter } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS.history;
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('es-CR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 export default function SupplyHistoryPage({
   params,
