@@ -2,6 +2,8 @@ export type UnitOfMeasure = 'grams' | 'kilograms' | 'milliliters' | 'liters' | '
 
 export type ItemStatus = 'active' | 'inactive';
 
+export type MovementTypeFilter = '' | 'entry' | 'consumption';
+
 export interface Supply {
   id: string;
   name: string;

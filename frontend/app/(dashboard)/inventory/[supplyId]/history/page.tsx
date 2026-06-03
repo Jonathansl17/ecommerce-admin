@@ -1,14 +1,12 @@
 'use client';
 
-import { use, useState, useEffect, useCallback } from 'react';
+import { use } from 'react';
 import Link from 'next/link';
-import { getSupplyMovements } from '@/features/inventory/shared/inventory.api';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/constants/inventory.constants';
-import type { SupplyHistory } from '@/lib/types/inventory.types';
+import { useSupplyHistory } from '@/features/inventory/hooks/useSupplyHistory';
+import type { MovementTypeFilter } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS.history;
-
-type MovementTypeFilter = '' | 'entry' | 'consumption';
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('es-CR', {
@@ -27,28 +25,17 @@ export default function SupplyHistoryPage({
 }) {
   const { supplyId } = use(params);
 
-  const [history, setHistory] = useState<SupplyHistory | null>(null);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-  const [typeFilter, setTypeFilter] = useState<MovementTypeFilter>('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-
-  const loadMovements = useCallback(async () => {
-    try {
-      setFetchError(null);
-      const data = await getSupplyMovements(
-        supplyId,
-        { type: typeFilter || undefined, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined },
-      );
-      setHistory(data);
-    } catch {
-      setFetchError(INVENTORY_STRINGS.errors.historyError);
-    }
-  }, [supplyId, typeFilter, dateFrom, dateTo]);
-
-  useEffect(() => {
-    loadMovements();
-  }, [loadMovements]);
+  const {
+    history,
+    fetchError,
+    isLoading,
+    typeFilter,
+    setTypeFilter,
+    dateFrom,
+    setDateFrom,
+    dateTo,
+    setDateTo,
+  } = useSupplyHistory(supplyId);
 
   return (
     <div className="space-y-6">
@@ -131,7 +118,7 @@ export default function SupplyHistoryPage({
             onClick={() => { setTypeFilter(''); setDateFrom(''); setDateTo(''); }}
             className="text-sm text-foreground/50 hover:text-foreground/80 transition-colors pb-2"
           >
-            {INVENTORY_STRINGS.history.clearFilters}
+            {strings.clearFilters}
           </button>
         )}
       </div>
@@ -139,6 +126,11 @@ export default function SupplyHistoryPage({
       {/* Error */}
       {fetchError && (
         <p role="alert" className="text-sm text-red-500">{fetchError}</p>
+      )}
+
+      {/* Cargando */}
+      {isLoading && !history && (
+        <p className="text-sm text-foreground/50">{strings.loadingMessage}</p>
       )}
 
       {/* Tabla de movimientos */}
