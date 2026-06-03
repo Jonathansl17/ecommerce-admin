@@ -160,8 +160,18 @@ export const INVENTORY_STRINGS = {
     colStatus: 'Estado',
     colActions: 'Acciones',
     editButton: 'Editar',
+    deleteButton: 'Eliminar',
     statusActive: 'Activo',
     statusInactive: 'Inactivo',
+  },
+  delete: {
+    title: 'Eliminar insumo',
+    confirmMessage: (name: string) =>
+      `¿Estás seguro de que deseas eliminar "${name}"? Esta acción no se puede deshacer.`,
+    deleteButton: 'Eliminar',
+    deletingButton: 'Eliminando...',
+    cancelButton: 'Cancelar',
+    deleteError: 'No se pudo eliminar el insumo.',
   },
   shared: {
     itemLabel: 'Insumo',
