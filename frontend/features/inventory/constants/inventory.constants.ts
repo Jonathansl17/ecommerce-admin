@@ -14,7 +14,7 @@ export const UNIT_OF_MEASURE_VALUES = [
   'milliliters',
   'liters',
   'units',
-] as const;
+] as const satisfies readonly UnitOfMeasure[];
 
 export const UNIT_OF_MEASURE_OPTIONS = (
   Object.entries(UNIT_OF_MEASURE_LABELS) as [UnitOfMeasure, string][]
