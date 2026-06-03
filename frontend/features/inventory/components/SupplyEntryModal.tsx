@@ -43,6 +43,7 @@ export function SupplyEntryModal({ supplies, onClose, onSubmit, serverError, def
       title={strings.title}
       onClose={onClose}
       footer={footer}
+      disableBackdropClose
     >
       <form id="entry-form" onSubmit={handleSubmit} className="space-y-4">
         <FormField id="entry-date" label={strings.dateLabel} error={errors.date?.message}>

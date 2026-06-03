@@ -5,10 +5,11 @@ import {
   getSupplies,
   createSupply,
   updateSupply,
+  deleteSupply,
   registerEntries,
   registerConsumption,
 } from '@/features/inventory/shared/inventory.api';
-import { INVENTORY_STRINGS } from '@/features/inventory/constants/inventory.constants';
+import { INVENTORY_STRINGS, INVENTORY_CONFIG } from '@/features/inventory/constants/inventory.constants';
 import type {
   Supply,
   CreateSupplyForm,
@@ -27,12 +28,15 @@ export function useInventoryPage() {
   const [entryOpen, setEntryOpen] = useState(false);
   const [consumptionOpen, setConsumptionOpen] = useState(false);
   const [editingSupply, setEditingSupply] = useState<Supply | null>(null);
+  const [deletingSupply, setDeletingSupply] = useState<Supply | null>(null);
   const [quickEntrySupplyId, setQuickEntrySupplyId] = useState<string | undefined>(undefined);
 
   const [supplyFormError, setSupplyFormError] = useState<string | null>(null);
   const [entryError, setEntryError] = useState<string | null>(null);
   const [consumptionError, setConsumptionError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [showCreationHint, setShowCreationHint] = useState(false);
   const [createdSupply, setCreatedSupply] = useState<Supply | null>(null);
@@ -48,7 +52,22 @@ export function useInventoryPage() {
   }, []);
 
   useEffect(() => {
-    loadSupplies();
+    let cancelled = false;
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const poll = async () => {
+      if (cancelled) return;
+      await loadSupplies();
+      if (cancelled) return;
+      timeout = setTimeout(poll, INVENTORY_CONFIG.POLL_INTERVAL_MS);
+    };
+
+    poll();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
   }, [loadSupplies]);
 
   // --- Open handlers ---
@@ -61,6 +80,8 @@ export function useInventoryPage() {
   const closeEntry = () => { setEntryOpen(false); setEntryError(null); setQuickEntrySupplyId(undefined); };
   const closeConsumption = () => { setConsumptionOpen(false); setConsumptionError(null); };
   const closeEdit = () => { setEditingSupply(null); setEditError(null); };
+  const openDelete = (supply: Supply) => { setDeleteError(null); setDeletingSupply(supply); };
+  const closeDelete = () => { setDeletingSupply(null); setDeleteError(null); };
 
   // --- Creation hint actions ---
   const dismissCreationHint = () => { setShowCreationHint(false); setCreatedSupply(null); };
@@ -129,6 +150,21 @@ export function useInventoryPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!deletingSupply) return;
+    try {
+      setIsDeleting(true);
+      setDeleteError(null);
+      await deleteSupply(deletingSupply.id);
+      setSupplies((prev) => prev.filter((s) => s.id !== deletingSupply.id));
+      setDeletingSupply(null);
+    } catch {
+      setDeleteError(INVENTORY_STRINGS.delete.deleteError);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const openEdit = (supply: Supply) => { setEditError(null); setEditingSupply(supply); };
   const handleQuickEntry = (supplyId: string) => openEntry(supplyId);
 
@@ -141,23 +177,28 @@ export function useInventoryPage() {
     entryOpen,
     consumptionOpen,
     editingSupply,
+    deletingSupply,
     quickEntrySupplyId,
     // server errors
     supplyFormError,
     entryError,
     consumptionError,
     editError,
+    deleteError,
+    isDeleting,
     // creation hint
     showCreationHint,
     // open/close actions
     openSupplyForm,
     openEntry,
     openEdit,
+    openDelete,
     openConsumption,
     closeSupplyForm,
     closeEntry,
     closeConsumption,
     closeEdit,
+    closeDelete,
     // hint actions
     editFromHint,
     dismissCreationHint,
@@ -166,6 +207,7 @@ export function useInventoryPage() {
     handleCreateEntry,
     handleConsumption,
     handleUpdate,
+    handleDelete,
     handleQuickEntry,
   };
 }

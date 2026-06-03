@@ -211,6 +211,7 @@ model InventoryMovement {
 
   @@index([supplyId])
   @@index([adminId])
+  @@index([createdAt])
   @@map("inventory_movements")
 }
 

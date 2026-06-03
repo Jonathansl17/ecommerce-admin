@@ -1,9 +1,9 @@
 import prisma from '../../shared/db/prisma.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
-import { INVENTORY_MESSAGES, INVENTORY_CONFIG, MOVEMENT_TYPES } from './inventory.constants.js';
+import { INVENTORY_MESSAGES, INVENTORY_CONFIG, PAGINATION_CONFIG } from './inventory.constants.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 
-export const getMovements = async (supplyId, { type, dateFrom, dateTo }) => {
+export const getMovements = async (supplyId, { type, dateFrom, dateTo, page = PAGINATION_CONFIG.DEFAULT_PAGE, limit = PAGINATION_CONFIG.DEFAULT_LIMIT }) => {
   const itemId = BigInt(supplyId);
 
   const supply = await prisma.supply.findUnique({
@@ -27,11 +27,18 @@ export const getMovements = async (supplyId, { type, dateFrom, dateTo }) => {
     }
   }
 
-  const movements = await prisma.inventoryMovement.findMany({
-    where,
-    include: { admin: { include: { adminUser: true } } },
-    orderBy: { createdAt: 'desc' },
-  });
+  const skip = (page - 1) * limit;
+
+  const [total, movements] = await Promise.all([
+    prisma.inventoryMovement.count({ where }),
+    prisma.inventoryMovement.findMany({
+      where,
+      include: { admin: { include: { adminUser: true } } },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+  ]);
 
   return {
     supply: {
@@ -52,6 +59,12 @@ export const getMovements = async (supplyId, { type, dateFrom, dateTo }) => {
       createdAt: m.createdAt.toISOString(),
       adminName: m.admin.adminUser.fullName,
     })),
+    meta: {
+      total,
+      page,
+      limit,
+      hasMore: skip + movements.length < total,
+    },
   };
 };
 
@@ -78,7 +91,7 @@ export const getReport = async (dateFrom, dateTo) => {
       supplyTotals.set(key, { supply: m.supply, entradas: 0, consumo: 0 });
     }
     const row = supplyTotals.get(key);
-    if (m.type === MOVEMENT_TYPES.ENTRY) row.entradas += Number(m.quantity);
+    if (m.type === 'entry') row.entradas += Number(m.quantity);
     else row.consumo += Number(m.quantity);
   }
 
@@ -98,7 +111,7 @@ export const getReport = async (dateFrom, dateTo) => {
         });
         stockFinal = Number(supply.currentStock);
         for (const m of movementsAfter) {
-          if (m.type === MOVEMENT_TYPES.ENTRY) stockFinal -= Number(m.quantity);
+          if (m.type === 'entry') stockFinal -= Number(m.quantity);
           else stockFinal += Number(m.quantity);
         }
       }
@@ -118,7 +131,7 @@ export const getReport = async (dateFrom, dateTo) => {
   // Build rendimiento from consumptions with reference
   const rendimientoMap = new Map();
   for (const m of movements) {
-    if (m.type !== MOVEMENT_TYPES.CONSUMPTION || !m.reference) continue;
+    if (m.type !== 'consumption' || !m.reference) continue;
     if (!rendimientoMap.has(m.reference)) rendimientoMap.set(m.reference, new Map());
     const itemMap = rendimientoMap.get(m.reference);
     const key = m.supply.item.name;
