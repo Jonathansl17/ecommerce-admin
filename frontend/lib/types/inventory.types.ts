@@ -100,3 +100,4 @@ export interface InventoryReport {
   rendimiento: RendimientoGroup[];
 }
 
+
