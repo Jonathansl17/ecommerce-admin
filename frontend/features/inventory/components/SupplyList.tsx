@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '../constants/inventory.constants';
+import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS, ITEM_STATUS } from '../constants/inventory.constants';
 import type { Supply } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS.list;
@@ -40,11 +40,11 @@ export function SupplyList({ supplies, onEdit, onDelete }: SupplyListProps) {
               <td className="px-4 py-3 text-foreground/70">{Number(supply.currentStock)}</td>
               <td className="px-4 py-3">
                 <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                  supply.status === 'active'
+                  supply.status === ITEM_STATUS.ACTIVE
                     ? 'bg-green-100 text-green-700'
                     : 'bg-gray-100 text-gray-600'
                 }`}>
-                  {supply.status === 'active' ? strings.statusActive : strings.statusInactive}
+                  {supply.status === ITEM_STATUS.ACTIVE ? strings.statusActive : strings.statusInactive}
                 </span>
               </td>
               <td className="px-4 py-3">
