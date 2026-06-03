@@ -1,37 +1,21 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { getInventoryReport } from '@/features/inventory/shared/inventory.api';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/constants/inventory.constants';
-import type { InventoryReport } from '@/lib/types/inventory.types';
+import { useInventoryReport } from '@/features/inventory/hooks/useInventoryReport';
 
 const strings = INVENTORY_STRINGS.report;
 
 export default function InventoryReportPage() {
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [report, setReport] = useState<InventoryReport | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleGenerate = async () => {
-    if (!dateFrom || !dateTo) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getInventoryReport(dateFrom, dateTo);
-      setReport(data);
-    } catch {
-      setError(INVENTORY_STRINGS.errors.reportError);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    dateFrom, setDateFrom,
+    dateTo, setDateTo,
+    report, loading, error,
+    handleGenerate,
+  } = useInventoryReport();
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <Link
@@ -44,7 +28,6 @@ export default function InventoryReportPage() {
         </div>
       </div>
 
-      {/* Date range selector */}
       <div className="flex flex-wrap items-end gap-4 rounded-lg border border-foreground/10 bg-background p-4">
         <div className="space-y-1">
           <label className="block text-xs font-medium text-foreground/60">{strings.dateFromLabel}</label>
@@ -77,16 +60,14 @@ export default function InventoryReportPage() {
         </button>
       </div>
 
-      {!dateFrom || !dateTo ? (
+      {(!dateFrom || !dateTo) && (
         <p className="text-sm text-foreground/50">{strings.dateRequired}</p>
-      ) : null}
+      )}
 
       {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
 
-      {/* Report results */}
       {report && (
         <div className="space-y-8">
-          {/* Main table */}
           {report.supplies.length === 0 ? (
             <p className="text-sm text-foreground/60">{strings.emptyMessage}</p>
           ) : (
@@ -110,14 +91,10 @@ export default function InventoryReportPage() {
                         {UNIT_OF_MEASURE_LABELS[row.unitOfMeasure]}
                       </td>
                       <td className="px-4 py-3 text-right text-foreground/70">{row.stockInicial}</td>
-                      <td className="px-4 py-3 text-right font-medium text-green-700">
-                        +{row.entradas}
-                      </td>
-                      <td className="px-4 py-3 text-right font-medium text-orange-700">
-                        -{row.consumo}
-                      </td>
+                      <td className="px-4 py-3 text-right font-medium text-green-700">+{row.entradas}</td>
+                      <td className="px-4 py-3 text-right font-medium text-orange-700">-{row.consumo}</td>
                       <td className="px-4 py-3 text-right font-semibold text-foreground">
-                        {row.stockFinal}
+                        {Math.max(0, row.stockFinal)}
                       </td>
                     </tr>
                   ))}
@@ -126,18 +103,14 @@ export default function InventoryReportPage() {
             </div>
           )}
 
-          {/* Rendimiento section */}
-          <div className="space-y-4">
-            <h2 className="text-base font-semibold text-foreground">{strings.rendimientoTitle}</h2>
+          {report.rendimiento.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-base font-semibold text-foreground">{strings.rendimientoTitle}</h2>
 
-            {/* Disclaimer */}
-            <div className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3">
-              <p className="text-sm text-blue-700">{strings.rendimientoDisclaimer}</p>
-            </div>
+              <div className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3">
+                <p className="text-sm text-blue-700">{strings.rendimientoDisclaimer}</p>
+              </div>
 
-            {report.rendimiento.length === 0 ? (
-              <p className="text-sm text-foreground/60">{strings.noRendimiento}</p>
-            ) : (
               <div className="space-y-4">
                 {report.rendimiento.map((group) => (
                   <div key={group.reference} className="rounded-lg border border-foreground/10">
@@ -165,8 +138,8 @@ export default function InventoryReportPage() {
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>
