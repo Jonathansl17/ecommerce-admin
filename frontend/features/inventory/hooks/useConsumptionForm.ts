@@ -14,7 +14,7 @@ const schema = z.object({
       z.object({
         supplyId: z.string().min(1, v.supplyRequired),
         quantity: z
-          .number({ invalid_type_error: v.consumptionQuantityMin })
+          .number({ error: v.consumptionQuantityMin })
           .min(0.01, v.consumptionQuantityMin),
       })
     )
