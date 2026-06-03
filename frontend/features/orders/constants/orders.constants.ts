@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react';
 import type { OrderStatus } from '../types/orders.types';
 
 export const ORDERS_API = {
@@ -24,17 +23,19 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   cancelled: 'Cancelado',
 };
 
-export const ORDER_STATUS_BADGE_STYLES: Record<OrderStatus, CSSProperties> = {
-  pending_payment: { backgroundColor: '#fef9c3', color: '#854d0e' },
-  confirmed: { backgroundColor: '#dbeafe', color: '#1e40af' },
-  in_preparation: { backgroundColor: '#ede9fe', color: '#5b21b6' },
-  customization_in_progress: { backgroundColor: '#fce7f3', color: '#9d174d' },
-  ready_shipment: { backgroundColor: '#d1fae5', color: '#065f46' },
-  shipped: { backgroundColor: '#e0f2fe', color: '#0369a1' },
-  in_transit: { backgroundColor: '#fff7ed', color: '#9a3412' },
-  delivered: { backgroundColor: '#dcfce7', color: '#166534' },
-  cancelled: { backgroundColor: '#fee2e2', color: '#991b1b' },
+export const ORDER_STATUS_BADGE_CLASSES: Record<OrderStatus, string> = {
+  pending_payment: 'bg-yellow-100 text-yellow-800',
+  confirmed: 'bg-blue-100 text-blue-800',
+  in_preparation: 'bg-violet-100 text-violet-800',
+  customization_in_progress: 'bg-pink-100 text-pink-800',
+  ready_shipment: 'bg-green-100 text-green-700',
+  shipped: 'bg-sky-100 text-sky-700',
+  in_transit: 'bg-orange-50 text-orange-800',
+  delivered: 'bg-green-100 text-green-800',
+  cancelled: 'bg-red-100 text-red-800',
 };
+
+export const APPROVE_PAYMENT_BTN_COLOR = '#16a34a' as const;
 
 export const ORDER_STATUSES: OrderStatus[] = [
   'pending_payment',
@@ -72,6 +73,7 @@ export const ORDERS_STRINGS = {
     clearButton: 'Limpiar',
   },
   detail: {
+    loading: 'Cargando pedido...',
     backToList: 'Volver a pedidos',
     sectionClient: 'Cliente',
     sectionShipping: 'Dirección de envío',
@@ -79,6 +81,11 @@ export const ORDERS_STRINGS = {
     sectionPayments: 'Pagos',
     sectionTimeline: 'Historial de estados',
     noClient: 'Cliente no disponible',
+    labelSubtotal: 'Subtotal:',
+    labelTaxes: 'Impuestos:',
+    labelTotal: 'Total:',
+    labelClientName: 'Nombre',
+    labelClientEmail: 'Email',
     colItem: 'Artículo',
     colQty: 'Cantidad',
     colUnitPrice: 'Precio unitario',
@@ -104,6 +111,7 @@ export const ORDERS_STRINGS = {
     confirmCancelAccept: 'Sí, cancelar',
     confirmCancelDismiss: 'No, volver',
     approvePaymentButton: 'Aprobar pago',
+    approvingLabel: '...',
     confirmApproveTitle: 'Aprobar pago',
     confirmApproveMessage: 'Esto marcará el pago como aprobado y moverá el pedido a "Confirmado". ¿Deseas continuar?',
     confirmApproveAccept: 'Sí, aprobar',

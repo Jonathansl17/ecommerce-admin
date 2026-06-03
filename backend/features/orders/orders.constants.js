@@ -37,6 +37,23 @@ export const ORDER_PARAM_NAMES = {
   ID: 'id',
 };
 
+export const ORDER_STATUSES = {
+  CONFIRMED: 'confirmed',
+};
+
+export const ORDER_RESPONSE_FIELDS = {
+  ORDER: 'order',
+};
+
+export const ORDER_ROUTES = {
+  NOTIFY: '/notify',
+  LIST: '/',
+  BY_ID: '/:id',
+  UPDATE_STATUS: '/:id/status',
+  CANCEL: '/:id/cancel',
+  APPROVE_PAYMENT: '/:id/payments/:paymentId/approve',
+};
+
 export const ORDER_VALIDATION_MESSAGES = {
   PRODUCT_NAME_REQUIRED: 'El nombre del producto es requerido',
   PRODUCT_NAME_EMPTY: 'El nombre del producto no puede estar vacío',

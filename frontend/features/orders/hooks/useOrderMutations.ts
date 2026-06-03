@@ -1,15 +1,7 @@
 import { useState } from 'react';
 import { updateOrderStatus, cancelOrder, approvePayment } from '../api/orders.api';
 import { toUpdateStatusError, toCancelError, toApprovePaymentError } from '../utils/orders-error.utils';
-import type { AdminOrder, OrderStatus } from '../types/orders.types';
-
-interface UseOrderMutationsReturn {
-  ejecutando: boolean;
-  error: string | null;
-  actualizarEstado: (id: string, status: OrderStatus) => Promise<AdminOrder | null>;
-  cancelar: (id: string) => Promise<AdminOrder | null>;
-  aprobarPago: (id: string, paymentId: string) => Promise<boolean>;
-}
+import type { AdminOrder, OrderStatus, UseOrderMutationsReturn } from '../types/orders.types';
 
 export function useOrderMutations(): UseOrderMutationsReturn {
   const [ejecutando, setEjecutando] = useState(false);
