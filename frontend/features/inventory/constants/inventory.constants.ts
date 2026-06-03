@@ -1,4 +1,9 @@
-import type { UnitOfMeasure } from '@/lib/types/inventory.types';
+import type { UnitOfMeasure, ItemStatus } from '@/lib/types/inventory.types';
+
+export const ITEM_STATUS: Record<string, ItemStatus> = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+};
 
 export const UNIT_OF_MEASURE: [UnitOfMeasure, ...UnitOfMeasure[]] = [
   'grams', 'kilograms', 'milliliters', 'liters', 'units',
@@ -163,6 +168,7 @@ export const INVENTORY_STRINGS = {
     consumptionQuantityMin: 'La cantidad debe ser mayor a cero',
     dateRequired: 'La fecha es obligatoria',
     itemsRequired: 'Agrega al menos un insumo',
+    referenceMax: 'La referencia no puede superar los 200 caracteres',
   },
   errors: {
     duplicateName: 'Ya existe un insumo con ese nombre',
