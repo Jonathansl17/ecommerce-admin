@@ -23,6 +23,16 @@ export const INVENTORY_VALIDATION = {
   ITEMS_MIN: 1,
 };
 
+export const PAGINATION_CONFIG = {
+  DEFAULT_LIMIT: 50,
+  MAX_LIMIT: 100,
+  DEFAULT_PAGE: 1,
+};
+
+export const REPORT_CONFIG = {
+  MAX_DATE_RANGE_DAYS: 365,
+};
+
 export const UNIT_OF_MEASURE = ['grams', 'kilograms', 'milliliters', 'liters', 'units'];
 
 export const UNIT_OF_MEASURE_LABELS = {
