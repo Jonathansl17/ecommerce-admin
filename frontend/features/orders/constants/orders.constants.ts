@@ -6,6 +6,7 @@ export const ORDERS_API = {
   GET_ONE: (id: string) => `/orders/${id}`,
   UPDATE_STATUS: (id: string) => `/orders/${id}/status`,
   CANCEL: (id: string) => `/orders/${id}/cancel`,
+  APPROVE_PAYMENT: (id: string, paymentId: string) => `/orders/${id}/payments/${paymentId}/approve`,
 } as const;
 
 export const DEFAULT_LIMIT = 20;
@@ -102,6 +103,11 @@ export const ORDERS_STRINGS = {
     confirmCancelMessage: '¿Estás seguro de que deseas cancelar este pedido? Esta acción no se puede deshacer.',
     confirmCancelAccept: 'Sí, cancelar',
     confirmCancelDismiss: 'No, volver',
+    approvePaymentButton: 'Aprobar pago',
+    confirmApproveTitle: 'Aprobar pago',
+    confirmApproveMessage: 'Esto marcará el pago como aprobado y moverá el pedido a "Confirmado". ¿Deseas continuar?',
+    confirmApproveAccept: 'Sí, aprobar',
+    confirmApproveDismiss: 'Cancelar',
   },
   pagination: {
     prev: 'Anterior',
@@ -114,6 +120,7 @@ export const ORDERS_STRINGS = {
     fetchList: 'No se pudieron cargar los pedidos.',
     fetchDetail: 'No se pudo cargar el detalle del pedido.',
     updateStatus: 'No se pudo actualizar el estado del pedido.',
+    approvePayment: 'No se pudo aprobar el pago.',
     cancel: 'No se pudo cancelar el pedido.',
     unknown: 'Ocurrió un error inesperado.',
   },
