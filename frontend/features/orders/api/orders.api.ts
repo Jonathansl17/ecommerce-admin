@@ -4,13 +4,10 @@ import { ORDERS_API } from '../constants/orders.constants';
 import type {
   AdminOrder,
   AdminOrdersListResponse,
+  FetchOptions,
   OrderFilters,
   OrderStatus,
 } from '../types/orders.types';
-
-interface FetchOptions {
-  signal?: AbortSignal;
-}
 
 export async function fetchOrders(
   filters: OrderFilters = {},
