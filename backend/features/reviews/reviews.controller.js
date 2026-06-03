@@ -23,11 +23,11 @@ export const notifyNewReview = async (req, res, next) => {
 
 export const getReviews = async (req, res, next) => {
   try {
-    const { status, productId, clientUserId, rating, limit, offset } = req.query;
+    const { status, rating, product, client, limit, offset } = req.query;
     const result = await getReviewsService({
       status,
-      productId,
-      clientUserId,
+      product,
+      client,
       rating: rating !== undefined ? Number(rating) : undefined,
       limit: limit !== undefined ? Number(limit) : undefined,
       offset: offset !== undefined ? Number(offset) : undefined,
@@ -38,9 +38,10 @@ export const getReviews = async (req, res, next) => {
   }
 };
 
-export const getStats = async (_req, res, next) => {
+export const getStats = async (req, res, next) => {
   try {
-    const result = await statsService();
+    const { product, client } = req.query;
+    const result = await statsService({ product, client });
     return res.status(HTTP_STATUS.OK).json({ data: result, error: null, meta: null });
   } catch (error) {
     next(error);

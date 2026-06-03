@@ -21,6 +21,8 @@ export default function ReviewsPage() {
     error,
     statusFilter,
     setStatusFilter,
+    applySearch,
+    clearSearch,
     refetch,
   } = useReviews();
   const { approve, reject, respond, remove, loadingId, actionError } =
@@ -80,35 +82,25 @@ export default function ReviewsPage() {
         </div>
       )}
 
-      {/* Loading skeleton */}
-      {isLoading ? (
-        <div className="space-y-3" aria-busy="true" aria-label={strings.a11y.loading}>
-          {Array.from({ length: 4 }, (_, i) => (
-            <div
-              key={i}
-              className="h-28 animate-pulse rounded-lg border border-border bg-muted"
-              aria-hidden="true"
-            />
-          ))}
-        </div>
-      ) : (
-        <ReviewModerationPanel
-          reviews={reviews}
-          counts={stats}
-          statusFilter={statusFilter}
-          onFilterChange={setStatusFilter}
-          onApprove={handleApprove}
-          onReject={handleReject}
-          onRespond={handleRespond}
-          onDelete={handleDelete}
-          page={page}
-          pageSize={pageSize}
-          total={total}
-          onPageChange={setPage}
-          loadingId={loadingId}
-          errorId={actionError}
-        />
-      )}
+      <ReviewModerationPanel
+        reviews={reviews}
+        counts={stats}
+        statusFilter={statusFilter}
+        onFilterChange={setStatusFilter}
+        onSearch={applySearch}
+        onClearSearch={clearSearch}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        onRespond={handleRespond}
+        onDelete={handleDelete}
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        onPageChange={setPage}
+        isLoading={isLoading}
+        loadingId={loadingId}
+        errorId={actionError}
+      />
     </div>
   );
 }
