@@ -5,6 +5,7 @@ import {
   obtenerPorId,
   actualizarEstado,
   cancelar,
+  aprobarPago,
 } from './orders.controller.js';
 import {
   validateNotifyNewOrder,
@@ -25,6 +26,7 @@ ordersAdminRouter.get('/', requireAuth, validateListOrdersQuery, listar);
 ordersAdminRouter.get('/:id', requireAuth, obtenerPorId);
 ordersAdminRouter.patch('/:id/status', requireAuth, validateUpdateOrderStatus, actualizarEstado);
 ordersAdminRouter.post('/:id/cancel', requireAuth, cancelar);
+ordersAdminRouter.patch('/:id/payments/:paymentId/approve', requireAuth, aprobarPago);
 
 // Default export preserves the legacy import shape: the webhook router (which
 // is what server.js mounted before this split).

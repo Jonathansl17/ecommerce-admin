@@ -7,6 +7,7 @@ import { useOrderMutations } from '@/features/orders/hooks/useOrderMutations';
 import { OrderStatusBadge } from '@/features/orders/components/OrderStatusBadge';
 import { OrderStatusChanger } from '@/features/orders/components/OrderStatusChanger';
 import { CancelOrderButton } from '@/features/orders/components/CancelOrderButton';
+import { ApprovePaymentButton } from '@/features/orders/components/ApprovePaymentButton';
 import { OrderItemsList } from '@/features/orders/components/OrderItemsList';
 import { OrderPaymentsList } from '@/features/orders/components/OrderPaymentsList';
 import { ORDERS_STRINGS } from '@/features/orders/constants/orders.constants';
@@ -23,16 +24,23 @@ interface PageProps {
 export default function OrderDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const { pedido, cargando, error, recargar } = useOrderDetail(id);
-  const { ejecutando, error: mutationError, actualizarEstado, cancelar } = useOrderMutations();
+  const { ejecutando, error: mutationError, actualizarEstado, cancelar, aprobarPago } = useOrderMutations();
 
   const handleStatusChange = async (status: OrderStatus) => {
     const updated = await actualizarEstado(id, status);
-    if (updated) await recargar();
+    if (updated) recargar();
   };
 
   const handleCancel = async () => {
     const cancelled = await cancelar(id);
-    if (cancelled) await recargar();
+    if (cancelled) recargar();
+  };
+
+  const handleApprovePayment = async () => {
+    const payment = pedido?.payments[0];
+    if (!payment) return;
+    const ok = await aprobarPago(id, payment.id);
+    if (ok) recargar();
   };
 
   if (cargando) {
@@ -114,6 +122,14 @@ export default function OrderDetailPage({ params }: PageProps) {
               disabled={ejecutando}
               onChange={handleStatusChange}
             />
+            {pedido.payments[0] && (
+              <ApprovePaymentButton
+                currentStatus={pedido.status}
+                paymentStatus={pedido.payments[0].status}
+                disabled={ejecutando}
+                onApprove={handleApprovePayment}
+              />
+            )}
             <CancelOrderButton
               currentStatus={pedido.status}
               disabled={ejecutando}

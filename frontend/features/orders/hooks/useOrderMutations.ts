@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { updateOrderStatus, cancelOrder } from '../api/orders.api';
-import { toUpdateStatusError, toCancelError } from '../utils/orders-error.utils';
+import { updateOrderStatus, cancelOrder, approvePayment } from '../api/orders.api';
+import { toUpdateStatusError, toCancelError, toApprovePaymentError } from '../utils/orders-error.utils';
 import type { AdminOrder, OrderStatus } from '../types/orders.types';
 
 interface UseOrderMutationsReturn {
@@ -8,6 +8,7 @@ interface UseOrderMutationsReturn {
   error: string | null;
   actualizarEstado: (id: string, status: OrderStatus) => Promise<AdminOrder | null>;
   cancelar: (id: string) => Promise<AdminOrder | null>;
+  aprobarPago: (id: string, paymentId: string) => Promise<boolean>;
 }
 
 export function useOrderMutations(): UseOrderMutationsReturn {
@@ -45,5 +46,19 @@ export function useOrderMutations(): UseOrderMutationsReturn {
     }
   };
 
-  return { ejecutando, error, actualizarEstado, cancelar };
+  const aprobarPago = async (id: string, paymentId: string): Promise<boolean> => {
+    setEjecutando(true);
+    setError(null);
+    try {
+      await approvePayment(id, paymentId);
+      return true;
+    } catch (err: unknown) {
+      setError(toApprovePaymentError(err));
+      return false;
+    } finally {
+      setEjecutando(false);
+    }
+  };
+
+  return { ejecutando, error, actualizarEstado, cancelar, aprobarPago };
 }

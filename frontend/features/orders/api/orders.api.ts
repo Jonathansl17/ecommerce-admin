@@ -62,3 +62,14 @@ export async function cancelOrder(
     signal: signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 }
+
+export async function approvePayment(
+  id: string,
+  paymentId: string,
+  { signal }: FetchOptions = {},
+): Promise<unknown> {
+  return apiFetch(ORDERS_API.APPROVE_PAYMENT(id, paymentId), {
+    method: 'PATCH',
+    signal: signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+}

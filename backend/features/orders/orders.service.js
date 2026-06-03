@@ -7,6 +7,7 @@ import {
   getOrder as getOrderClient,
   updateOrderStatus as updateOrderStatusClient,
   cancelOrder as cancelOrderClient,
+  approvePayment as approvePaymentClient,
 } from '../../shared/clientApi/orders.client.js';
 import { ClientApiError } from '../../shared/clientApi/client-api.errors.js';
 import { CLIENT_API_ERROR_CODES } from '../../shared/clientApi/client-api.constants.js';
@@ -129,6 +130,16 @@ export const actualizarEstadoPedido = async (id, status) => {
 export const cancelarPedido = async (id) => {
   try {
     const response = await cancelOrderClient(id);
+    return unwrapOrder(response);
+  } catch (error) {
+    throw mapClientApiError(error, { notFoundMessage: ORDER_MESSAGES.NO_ENCONTRADO });
+  }
+};
+
+export const aprobarPago = async (id, paymentId) => {
+  try {
+    await approvePaymentClient(id, paymentId);
+    const response = await updateOrderStatusClient(id, { status: 'confirmed' });
     return unwrapOrder(response);
   } catch (error) {
     throw mapClientApiError(error, { notFoundMessage: ORDER_MESSAGES.NO_ENCONTRADO });
