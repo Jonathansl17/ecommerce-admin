@@ -42,6 +42,7 @@ export function SupplyFormModal({ onClose, onSubmit, serverError }: SupplyFormMo
       onClose={onClose}
       footer={footer}
       size="sm"
+      disableBackdropClose
     >
       <form id="supply-form" onSubmit={handleSubmit} className="space-y-4">
         <FormField id="modal-name" label={strings.nameLabel} error={errors.name?.message}>
