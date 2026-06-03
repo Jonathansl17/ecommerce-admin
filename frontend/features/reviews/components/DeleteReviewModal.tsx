@@ -2,23 +2,13 @@
 
 import { useState, type FormEvent } from 'react';
 import { Modal } from '@/components/ui/Modal';
-import type { Review, ModerationReason } from '../types/reviews.types';
-import {
-  MODERATION_REASON_LABELS,
-  REVIEWS_STRINGS,
-} from '../constants/reviews.constants';
-import { StarRating } from './StarRating';
+import type { ModerationReason, DeleteReviewModalProps } from '../types/reviews.types';
+import { REVIEW_FORM_LIMITS, REVIEWS_STRINGS } from '../constants/reviews.constants';
+import { ReviewSummary } from './ReviewSummary';
+import { ModerationReasonSelect } from './ModerationReasonSelect';
 
 const strings = REVIEWS_STRINGS.modals;
-const MODERATION_REASONS = Object.keys(MODERATION_REASON_LABELS) as ModerationReason[];
-const MAX_DETAIL_LENGTH = 500;
-
-interface DeleteReviewModalProps {
-  review: Review;
-  onConfirm: (reason: ModerationReason, detail?: string) => void;
-  onClose: () => void;
-  isLoading: boolean;
-}
+const MAX_DETAIL_LENGTH = REVIEW_FORM_LIMITS.deleteDetailMax;
 
 export function DeleteReviewModal({
   review,
@@ -36,8 +26,6 @@ export function DeleteReviewModal({
   };
 
   const detailRemaining = MAX_DETAIL_LENGTH - detail.length;
-  const productName = review.product?.name ?? '';
-  const clientName = review.clientUser?.fullName ?? '';
 
   return (
     <Modal
@@ -69,46 +57,16 @@ export function DeleteReviewModal({
       }
     >
       <form id="delete-review-form" onSubmit={handleSubmit} className="space-y-4">
-        {/* Review summary */}
-        <div className="space-y-1.5 rounded-md border border-border bg-muted/50 p-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {strings.deleteSummaryLabel}
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium text-foreground">{productName}</span>
-            <span className="text-xs text-muted-foreground">·</span>
-            <StarRating rating={review.rating} />
-            <span className="text-xs text-muted-foreground">·</span>
-            <span className="text-xs text-muted-foreground">{clientName}</span>
-          </div>
-          <p className="line-clamp-2 text-sm text-foreground/80">{review.comment}</p>
-        </div>
+        <ReviewSummary review={review} label={strings.deleteSummaryLabel} />
 
-        <div className="space-y-1.5">
-          <label
-            htmlFor="delete-reason"
-            className="block text-sm font-medium text-foreground"
-          >
-            {strings.deleteReasonLabel}
-          </label>
-          <select
-            id="delete-reason"
-            value={reason}
-            onChange={(e) => setReason(e.target.value as ModerationReason)}
-            required
-            disabled={isLoading}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-          >
-            <option value="" disabled>
-              {strings.deleteReasonPlaceholder}
-            </option>
-            {MODERATION_REASONS.map((r) => (
-              <option key={r} value={r}>
-                {MODERATION_REASON_LABELS[r]}
-              </option>
-            ))}
-          </select>
-        </div>
+        <ModerationReasonSelect
+          id="delete-reason"
+          label={strings.deleteReasonLabel}
+          value={reason}
+          onChange={setReason}
+          disabled={isLoading}
+          placeholder={strings.deleteReasonPlaceholder}
+        />
 
         <div className="space-y-1.5">
           <label

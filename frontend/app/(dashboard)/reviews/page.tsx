@@ -10,8 +10,19 @@ import { REVIEWS_STRINGS } from '@/features/reviews/constants/reviews.constants'
 const strings = REVIEWS_STRINGS;
 
 export default function ReviewsPage() {
-  const { reviews, isLoading, error, statusFilter, setStatusFilter, refetch } =
-    useReviews();
+  const {
+    reviews,
+    stats,
+    total,
+    page,
+    pageSize,
+    setPage,
+    isLoading,
+    error,
+    statusFilter,
+    setStatusFilter,
+    refetch,
+  } = useReviews();
   const { approve, reject, respond, remove, loadingId, actionError } =
     useReviewActions();
 
@@ -71,7 +82,7 @@ export default function ReviewsPage() {
 
       {/* Loading skeleton */}
       {isLoading ? (
-        <div className="space-y-3" aria-busy="true" aria-label="Cargando reseñas">
+        <div className="space-y-3" aria-busy="true" aria-label={strings.a11y.loading}>
           {Array.from({ length: 4 }, (_, i) => (
             <div
               key={i}
@@ -83,12 +94,17 @@ export default function ReviewsPage() {
       ) : (
         <ReviewModerationPanel
           reviews={reviews}
+          counts={stats}
           statusFilter={statusFilter}
           onFilterChange={setStatusFilter}
           onApprove={handleApprove}
           onReject={handleReject}
           onRespond={handleRespond}
           onDelete={handleDelete}
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
           loadingId={loadingId}
           errorId={actionError}
         />

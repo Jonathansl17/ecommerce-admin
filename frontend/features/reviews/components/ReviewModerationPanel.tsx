@@ -1,60 +1,43 @@
 'use client';
 
-import { MessageSquare } from 'lucide-react';
-import type { Review, ReviewStatus, ModerationReason } from '../types/reviews.types';
-import { REVIEWS_STRINGS } from '../constants/reviews.constants';
+import { MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
+import type {
+  ReviewModerationPanelProps,
+  ReviewStatusFilter,
+} from '../types/reviews.types';
+import {
+  REVIEW_STATUS_FILTER_ALL,
+  REVIEW_TAB_KEYS,
+  REVIEWS_STRINGS,
+} from '../constants/reviews.constants';
 import { ReviewModerationCard } from './ReviewModerationCard';
-
-type StatusFilter = ReviewStatus | 'all';
 
 const strings = REVIEWS_STRINGS;
 
-interface Tab {
-  key: StatusFilter;
-  label: string;
-}
-
-const TABS: Tab[] = [
-  { key: 'pending', label: strings.tabs.pending },
-  { key: 'approved', label: strings.tabs.approved },
-  { key: 'rejected', label: strings.tabs.rejected },
-  { key: 'all', label: strings.tabs.all },
-];
-
-interface ReviewModerationPanelProps {
-  reviews: Review[];
-  statusFilter: StatusFilter;
-  onFilterChange: (filter: StatusFilter) => void;
-  onApprove: (id: string) => void;
-  onReject: (id: string, reason: ModerationReason, notes?: string) => void;
-  onRespond: (id: string, responseText: string) => void;
-  onDelete: (id: string, reason: ModerationReason, detail?: string) => void;
-  loadingId: string | null;
-  errorId: string | null;
-}
-
-function countForStatus(reviews: Review[], status: StatusFilter): number {
-  if (status === 'all') return reviews.length;
-  return reviews.filter((r) => r.status === status).length;
-}
+const emptyMessages: Record<ReviewStatusFilter, string> = {
+  all: strings.empty.all,
+  pending: strings.empty.pending,
+  approved: strings.empty.approved,
+  rejected: strings.empty.rejected,
+};
 
 export function ReviewModerationPanel({
   reviews,
+  counts,
   statusFilter,
   onFilterChange,
   onApprove,
   onReject,
   onRespond,
   onDelete,
+  page,
+  pageSize,
+  total,
+  onPageChange,
   loadingId,
   errorId,
 }: ReviewModerationPanelProps) {
-  const emptyMessages: Record<StatusFilter, string> = {
-    all: strings.empty.all,
-    pending: strings.empty.pending,
-    approved: strings.empty.approved,
-    rejected: strings.empty.rejected,
-  };
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <div className="space-y-4">
@@ -62,10 +45,10 @@ export function ReviewModerationPanel({
       <div
         className="flex flex-wrap gap-1 rounded-lg border border-border bg-muted p-1"
         role="tablist"
-        aria-label="Filtrar reseñas por estado"
+        aria-label={strings.a11y.filterTabs}
       >
-        {TABS.map(({ key, label }) => {
-          const count = countForStatus(reviews, key);
+        {REVIEW_TAB_KEYS.map((key) => {
+          const count = key === REVIEW_STATUS_FILTER_ALL ? counts.total : counts[key];
           const isActive = statusFilter === key;
 
           return (
@@ -82,13 +65,13 @@ export function ReviewModerationPanel({
                   : 'text-muted-foreground hover:text-foreground',
               ].join(' ')}
             >
-              {label}
+              {strings.tabs[key]}
               <span
                 className={[
                   'rounded-full px-1.5 py-0.5 text-xs font-medium',
                   isActive ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground',
                 ].join(' ')}
-                aria-label={`${count} reseñas`}
+                aria-label={strings.a11y.countLabel(count)}
               >
                 {count}
               </span>
@@ -107,7 +90,7 @@ export function ReviewModerationPanel({
           <p className="text-sm font-medium text-foreground">{emptyMessages[statusFilter]}</p>
         </div>
       ) : (
-        <ul className="space-y-3" aria-label="Lista de reseñas">
+        <ul className="space-y-3" aria-label={strings.a11y.list}>
           {reviews.map((review) => (
             <li key={review.id}>
               <ReviewModerationCard
@@ -122,6 +105,44 @@ export function ReviewModerationPanel({
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Pagination */}
+      {total > 0 && (
+        <nav
+          className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3"
+          aria-label={strings.a11y.pagination}
+        >
+          <p className="text-xs text-muted-foreground">{strings.pagination.totalItems(total)}</p>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onPageChange(page - 1)}
+              disabled={page <= 1}
+              className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label={strings.pagination.previous}
+            >
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              {strings.pagination.previous}
+            </button>
+
+            <span className="text-xs font-medium text-muted-foreground" aria-current="page">
+              {strings.pagination.pageInfo(page, totalPages)}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => onPageChange(page + 1)}
+              disabled={page >= totalPages}
+              className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label={strings.pagination.next}
+            >
+              {strings.pagination.next}
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+          </div>
+        </nav>
       )}
     </div>
   );
