@@ -21,7 +21,7 @@ const rethrowErrorBody = (err: unknown): never => {
 };
 
 export async function getReviews(status?: ReviewStatus): Promise<Review[]> {
-  const params = status ? `?status=${status}` : '';
+  const params = status ? '?' + new URLSearchParams({ status }).toString() : '';
   try {
     const result = await unwrap(
       apiFetch<{ data: ReviewListResponse }>(`/reviews${params}`, {

@@ -36,6 +36,11 @@ export const REPORT_CONFIG = {
 
 export const UNIT_OF_MEASURE = ['grams', 'kilograms', 'milliliters', 'liters', 'units'];
 
+export const MOVEMENT_TYPES = {
+  ENTRY: 'entry',
+  CONSUMPTION: 'consumption',
+};
+
 export const UNIT_OF_MEASURE_LABELS = {
   grams: 'gramos',
   kilograms: 'kilogramos',

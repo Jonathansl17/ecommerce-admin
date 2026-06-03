@@ -5,12 +5,17 @@ import type { Review, ModerationReason } from '../types/reviews.types';
 import { approveReview, rejectReview, respondToReview } from '../shared/reviews.api';
 
 interface UseReviewActionsReturn {
-  approve: (id: string, onSuccess: (updated: Review) => void) => Promise<void>;
+  approve: (
+    id: string,
+    onSuccess: (updated: Review) => void,
+    onError?: () => void
+  ) => Promise<void>;
   reject: (
     id: string,
     reason: ModerationReason,
     notes: string | undefined,
-    onSuccess: (updated: Review) => void
+    onSuccess: (updated: Review) => void,
+    onError?: () => void
   ) => Promise<void>;
   respond: (
     id: string,
@@ -29,7 +34,11 @@ export function useReviewActions(): UseReviewActionsReturn {
   const clearError = useCallback(() => setActionError(null), []);
 
   const approve = useCallback(
-    async (id: string, onSuccess: (updated: Review) => void) => {
+    async (
+      id: string,
+      onSuccess: (updated: Review) => void,
+      onError?: () => void
+    ) => {
       setLoadingId(id);
       setActionError(null);
       try {
@@ -37,6 +46,7 @@ export function useReviewActions(): UseReviewActionsReturn {
         onSuccess(updated);
       } catch {
         setActionError(id);
+        onError?.();
       } finally {
         setLoadingId(null);
       }
@@ -49,7 +59,8 @@ export function useReviewActions(): UseReviewActionsReturn {
       id: string,
       reason: ModerationReason,
       notes: string | undefined,
-      onSuccess: (updated: Review) => void
+      onSuccess: (updated: Review) => void,
+      onError?: () => void
     ) => {
       setLoadingId(id);
       setActionError(null);
@@ -58,6 +69,7 @@ export function useReviewActions(): UseReviewActionsReturn {
         onSuccess(updated);
       } catch {
         setActionError(id);
+        onError?.();
       } finally {
         setLoadingId(null);
       }

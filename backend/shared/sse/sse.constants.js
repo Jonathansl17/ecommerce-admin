@@ -1,0 +1,3 @@
+export const SSE_CONFIG = {
+  MAX_CONNECTIONS_PER_ADMIN: 5,
+};
