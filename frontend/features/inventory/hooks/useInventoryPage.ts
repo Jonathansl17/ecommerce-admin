@@ -5,15 +5,17 @@ import {
   getSupplies,
   createSupply,
   updateSupply,
+  deleteSupply,
+  registerEntries,
+  registerConsumption,
 } from '@/features/inventory/shared/inventory.api';
 import { INVENTORY_STRINGS, INVENTORY_CONFIG } from '@/features/inventory/constants/inventory.constants';
-import { useDeleteSupply } from './useDeleteSupply';
-import { useEntryModal } from './useEntryModal';
-import { useConsumptionModal } from './useConsumptionModal';
 import type {
   Supply,
   CreateSupplyForm,
   UpdateSupplyForm,
+  CreateSupplyEntriesForm,
+  CreateConsumptionForm,
 } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS;
@@ -23,9 +25,19 @@ export function useInventoryPage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   const [supplyFormOpen, setSupplyFormOpen] = useState(false);
+  const [entryOpen, setEntryOpen] = useState(false);
+  const [consumptionOpen, setConsumptionOpen] = useState(false);
   const [editingSupply, setEditingSupply] = useState<Supply | null>(null);
+  const [deletingSupply, setDeletingSupply] = useState<Supply | null>(null);
+  const [quickEntrySupplyId, setQuickEntrySupplyId] = useState<string | undefined>(undefined);
+
   const [supplyFormError, setSupplyFormError] = useState<string | null>(null);
+  const [entryError, setEntryError] = useState<string | null>(null);
+  const [consumptionError, setConsumptionError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [showCreationHint, setShowCreationHint] = useState(false);
   const [createdSupply, setCreatedSupply] = useState<Supply | null>(null);
 
@@ -58,31 +70,24 @@ export function useInventoryPage() {
     };
   }, [loadSupplies]);
 
-  const deleteModal = useDeleteSupply((id) => {
-    setSupplies((prev) => prev.filter((s) => s.id !== id));
-  });
-
-  const entryModal = useEntryModal((updatedSupplies) => {
-    setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
-  });
-
-  const consumptionModal = useConsumptionModal((updatedSupplies) => {
-    setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
-  });
-
-  // --- Supply form ---
+  // --- Open handlers ---
   const openSupplyForm = () => { setSupplyFormError(null); setSupplyFormOpen(true); };
+  const openEntry = (supplyId?: string) => { setEntryError(null); setQuickEntrySupplyId(supplyId); setEntryOpen(true); };
+  const openConsumption = () => { setConsumptionError(null); setConsumptionOpen(true); };
+
+  // --- Close handlers ---
   const closeSupplyForm = () => { setSupplyFormOpen(false); setSupplyFormError(null); };
-
-  // --- Edit ---
-  const openEdit = (supply: Supply) => { setEditError(null); setEditingSupply(supply); };
+  const closeEntry = () => { setEntryOpen(false); setEntryError(null); setQuickEntrySupplyId(undefined); };
+  const closeConsumption = () => { setConsumptionOpen(false); setConsumptionError(null); };
   const closeEdit = () => { setEditingSupply(null); setEditError(null); };
+  const openDelete = (supply: Supply) => { setDeleteError(null); setDeletingSupply(supply); };
+  const closeDelete = () => { setDeletingSupply(null); setDeleteError(null); };
 
-  // --- Creation hint ---
+  // --- Creation hint actions ---
   const dismissCreationHint = () => { setShowCreationHint(false); setCreatedSupply(null); };
   const editFromHint = () => { setEditingSupply(createdSupply); dismissCreationHint(); };
 
-  // --- CRUD ---
+  // --- CRUD handlers ---
   const handleCreate = async (data: CreateSupplyForm) => {
     try {
       setSupplyFormError(null);
@@ -97,6 +102,34 @@ export function useInventoryPage() {
         error?.error === strings.errors.duplicateName
           ? strings.errors.duplicateName
           : strings.errors.createError
+      );
+    }
+  };
+
+  const handleCreateEntry = async (data: CreateSupplyEntriesForm) => {
+    try {
+      setEntryError(null);
+      const updatedSupplies = await registerEntries(data);
+      setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
+      setEntryOpen(false);
+      setQuickEntrySupplyId(undefined);
+    } catch {
+      setEntryError(strings.errors.entryError);
+    }
+  };
+
+  const handleConsumption = async (data: CreateConsumptionForm) => {
+    try {
+      setConsumptionError(null);
+      const updatedSupplies = await registerConsumption(data);
+      setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
+      setConsumptionOpen(false);
+    } catch (err: unknown) {
+      const error = err as { error?: string };
+      setConsumptionError(
+        error?.error === strings.errors.stockInsufficient
+          ? strings.errors.stockInsufficient
+          : strings.errors.consumptionError
       );
     }
   };
@@ -117,32 +150,64 @@ export function useInventoryPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!deletingSupply) return;
+    try {
+      setIsDeleting(true);
+      setDeleteError(null);
+      await deleteSupply(deletingSupply.id);
+      setSupplies((prev) => prev.filter((s) => s.id !== deletingSupply.id));
+      setDeletingSupply(null);
+    } catch {
+      setDeleteError(INVENTORY_STRINGS.delete.deleteError);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const openEdit = (supply: Supply) => { setEditError(null); setEditingSupply(supply); };
+  const handleQuickEntry = (supplyId: string) => openEntry(supplyId);
+
   return {
     // data
     supplies,
     fetchError,
-    // supply form
+    // modal open state
     supplyFormOpen,
-    supplyFormError,
-    openSupplyForm,
-    closeSupplyForm,
-    handleCreate,
-    // edit
+    entryOpen,
+    consumptionOpen,
     editingSupply,
+    deletingSupply,
+    quickEntrySupplyId,
+    // server errors
+    supplyFormError,
+    entryError,
+    consumptionError,
     editError,
-    openEdit,
-    closeEdit,
-    handleUpdate,
+    deleteError,
+    isDeleting,
     // creation hint
     showCreationHint,
+    // open/close actions
+    openSupplyForm,
+    openEntry,
+    openEdit,
+    openDelete,
+    openConsumption,
+    closeSupplyForm,
+    closeEntry,
+    closeConsumption,
+    closeEdit,
+    closeDelete,
+    // hint actions
     editFromHint,
     dismissCreationHint,
-    // delete modal
-    ...deleteModal,
-    // entry modal
-    ...entryModal,
-    handleQuickEntry: entryModal.openEntry,
-    // consumption modal
-    ...consumptionModal,
+    // CRUD
+    handleCreate,
+    handleCreateEntry,
+    handleConsumption,
+    handleUpdate,
+    handleDelete,
+    handleQuickEntry,
   };
 }
