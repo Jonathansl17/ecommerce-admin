@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import prisma from '../db/prisma.js';
 import { SUPPLY_ALERT_TYPES } from './supplyAlert.constants.js';
 import { EMAIL_CONFIG, EMAIL_SUBJECTS, EMAIL_BODY } from './email.constants.js';
+import { UNIT_OF_MEASURE_LABELS } from '../../features/inventory/inventory.constants.js';
 
 const escHtml = (s) =>
   String(s)
@@ -20,14 +21,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
-
-const UNIT_LABELS = {
-  grams: 'gramos',
-  kilograms: 'kilogramos',
-  milliliters: 'mililitros',
-  liters: 'litros',
-  units: 'unidades',
-};
 
 const EMAIL_COLOR = {
   OUT_OF_STOCK: '#dc2626',
@@ -51,7 +44,7 @@ export const sendLowStockAlert = async ({
 
   if (admins.length === 0) return;
 
-  const unit = UNIT_LABELS[unitOfMeasure] ?? unitOfMeasure;
+  const unit = UNIT_OF_MEASURE_LABELS[unitOfMeasure] ?? unitOfMeasure;
   const isOutOfStock = alertType === SUPPLY_ALERT_TYPES.OUT_OF_STOCK;
   const safeSupplyName = escHtml(supplyName);
 
