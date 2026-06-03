@@ -4,15 +4,12 @@ import type {
   Supply,
   CreateSupplyForm,
   UpdateSupplyForm,
-  CreateSupplyEntryForm,
   CreateSupplyEntriesForm,
   CreateConsumptionForm,
   SupplyHistory,
   PaginationMeta,
   InventoryReport,
 } from '@/lib/types/inventory.types';
-
-const TIMEOUT = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
 
 const unwrap = async <T>(promise: Promise<{ data: T }>): Promise<T> => {
   const body = await promise;
@@ -29,7 +26,7 @@ const rethrowErrorBody = (err: unknown): never => {
 export async function getSupplies(): Promise<Supply[]> {
   try {
     return await unwrap(
-      apiFetch<{ data: Supply[] }>('/inventory/supplies', { signal: TIMEOUT })
+      apiFetch<{ data: Supply[] }>('/inventory/supplies', { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
     );
   } catch {
     throw new Error('fetch_error');
@@ -85,20 +82,6 @@ export async function getSupplyMovements(
     return { data: body.data, meta: body.meta };
   } catch {
     throw new Error('fetch_error');
-  }
-}
-
-export async function createSupplyEntry(data: CreateSupplyEntryForm): Promise<Supply> {
-  try {
-    return await unwrap(
-      apiFetch<{ data: Supply }>(`/inventory/supplies/${data.supplyId}/entries`, {
-        method: 'POST',
-        body: { quantity: data.quantity, date: data.date },
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      })
-    );
-  } catch (err) {
-    return rethrowErrorBody(err);
   }
 }
 
