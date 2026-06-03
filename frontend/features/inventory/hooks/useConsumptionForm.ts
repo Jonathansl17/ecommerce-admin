@@ -19,7 +19,7 @@ const schema = z.object({
       })
     )
     .min(1, v.itemsRequired),
-  reference: z.string().max(200).optional().or(z.literal('')),
+  reference: z.string().max(200, v.referenceMax).optional().or(z.literal('')),
   date: z.string().min(1, v.dateRequired),
 });
 
@@ -39,7 +39,7 @@ export function useConsumptionForm(
   } = useForm<CreateConsumptionForm>({
     resolver: zodResolver(schema),
     defaultValues: {
-      items: [{ supplyId: '', quantity: undefined as unknown as number }],
+      items: [{ supplyId: '', quantity: NaN }],
       reference: '',
       date: today(),
     },
@@ -58,7 +58,7 @@ export function useConsumptionForm(
   const onFormSubmit = async (data: CreateConsumptionForm) => {
     await onSubmit(data);
     reset({
-      items: [{ supplyId: '', quantity: undefined as unknown as number }],
+      items: [{ supplyId: '', quantity: NaN }],
       reference: '',
       date: today(),
     });
@@ -71,7 +71,9 @@ export function useConsumptionForm(
     append,
     remove,
     availableSupplies,
+    watchedItems,
     errors,
     isSubmitting,
+    suppliesCount: supplies.length,
   };
 }
