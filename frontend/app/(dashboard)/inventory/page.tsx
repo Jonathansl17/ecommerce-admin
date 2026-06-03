@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { SupplyList } from '@/features/inventory/components/SupplyList';
 import { EditSupplyModal } from '@/features/inventory/components/EditSupplyModal';
@@ -8,115 +7,27 @@ import { SupplyFormModal } from '@/features/inventory/components/SupplyFormModal
 import { SupplyEntryModal } from '@/features/inventory/components/SupplyEntryModal';
 import { ConsumptionModal } from '@/features/inventory/components/ConsumptionModal';
 import { InventoryAlerts } from '@/features/inventory/components/InventoryAlerts';
-import { getSupplies, createSupply, updateSupply, registerEntries, registerConsumption } from '@/features/inventory/shared/inventory.api';
+import { CreationHintBanner } from '@/features/inventory/components/CreationHintBanner';
+import { useInventoryPage } from '@/features/inventory/hooks/useInventoryPage';
 import { INVENTORY_STRINGS } from '@/features/inventory/constants/inventory.constants';
-import type { Supply, CreateSupplyForm, UpdateSupplyForm, CreateSupplyEntriesForm, CreateConsumptionForm } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS;
 
 export default function InventoryPage() {
-  const [supplies, setSupplies] = useState<Supply[]>([]);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-
-  // Modal open states
-  const [supplyFormOpen, setSupplyFormOpen] = useState(false);
-  const [entryOpen, setEntryOpen] = useState(false);
-  const [consumptionOpen, setConsumptionOpen] = useState(false);
-  const [editingSupply, setEditingSupply] = useState<Supply | null>(null);
-
-  // Server errors per modal
-  const [supplyFormError, setSupplyFormError] = useState<string | null>(null);
-  const [entryError, setEntryError] = useState<string | null>(null);
-  const [consumptionError, setConsumptionError] = useState<string | null>(null);
-  const [editError, setEditError] = useState<string | null>(null);
-
-  // Pre-selected supply for quick entry from alerts
-  const [quickEntrySupplyId, setQuickEntrySupplyId] = useState<string | undefined>(undefined);
-
-  const loadSupplies = useCallback(async () => {
-    try {
-      const data = await getSupplies();
-      setSupplies(data);
-      setFetchError(null);
-    } catch {
-      setFetchError(strings.errors.fetchError);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadSupplies();
-  }, [loadSupplies]);
-
-  const handleCreate = async (data: CreateSupplyForm) => {
-    try {
-      setSupplyFormError(null);
-      const newSupply = await createSupply(data);
-      setSupplies((prev) => [...prev, newSupply]);
-      setSupplyFormOpen(false);
-    } catch (err: unknown) {
-      const error = err as { error?: string };
-      setSupplyFormError(
-        error?.error === strings.errors.duplicateName
-          ? strings.errors.duplicateName
-          : strings.errors.createError
-      );
-    }
-  };
-
-  const handleCreateEntry = async (data: CreateSupplyEntriesForm) => {
-    try {
-      setEntryError(null);
-      const updatedSupplies = await registerEntries(data);
-      setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
-      setEntryOpen(false);
-      setQuickEntrySupplyId(undefined);
-    } catch {
-      setEntryError(strings.errors.entryError);
-    }
-  };
-
-  const handleConsumption = async (data: CreateConsumptionForm) => {
-    try {
-      setConsumptionError(null);
-      const updatedSupplies = await registerConsumption(data);
-      setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
-      setConsumptionOpen(false);
-    } catch (err: unknown) {
-      const error = err as { error?: string };
-      setConsumptionError(
-        error?.error === strings.errors.stockInsufficient
-          ? strings.errors.stockInsufficient
-          : strings.errors.consumptionError
-      );
-    }
-  };
-
-  const handleUpdate = async (id: string, data: UpdateSupplyForm) => {
-    try {
-      setEditError(null);
-      const updated = await updateSupply(id, data);
-      setSupplies((prev) => prev.map((s) => (s.id === id ? updated : s)));
-      setEditingSupply(null);
-    } catch (err: unknown) {
-      const error = err as { error?: string };
-      setEditError(
-        error?.error === strings.errors.duplicateName
-          ? strings.errors.duplicateName
-          : strings.errors.updateError
-      );
-    }
-  };
-
-  const handleQuickEntry = (supplyId: string) => {
-    setQuickEntrySupplyId(supplyId);
-    setEntryError(null);
-    setEntryOpen(true);
-  };
+  const {
+    supplies, fetchError,
+    supplyFormOpen, entryOpen, consumptionOpen, editingSupply, quickEntrySupplyId,
+    supplyFormError, entryError, consumptionError, editError,
+    showCreationHint,
+    openSupplyForm, openEntry, openEdit, openConsumption,
+    closeSupplyForm, closeEntry, closeConsumption, closeEdit,
+    editFromHint, dismissCreationHint,
+    handleCreate, handleCreateEntry, handleConsumption, handleUpdate, handleQuickEntry,
+  } = useInventoryPage();
 
   return (
     <>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">{strings.page.title}</h1>
@@ -130,15 +41,17 @@ export default function InventoryPage() {
           </Link>
         </div>
 
-        {/* Alertas */}
+        {showCreationHint && (
+          <CreationHintBanner onEditNow={editFromHint} onDismiss={dismissCreationHint} />
+        )}
+
         <InventoryAlerts supplies={supplies} onQuickEntry={handleQuickEntry} />
 
-        {/* Botones de acción */}
         <div className="flex flex-wrap gap-3">
           {[
-            { label: strings.form.openButton, onClick: () => { setSupplyFormError(null); setSupplyFormOpen(true); } },
-            { label: strings.entry.openButton, onClick: () => { setEntryError(null); setQuickEntrySupplyId(undefined); setEntryOpen(true); } },
-            { label: strings.consumption.openButton, onClick: () => { setConsumptionError(null); setConsumptionOpen(true); } },
+            { label: strings.form.openButton, onClick: openSupplyForm },
+            { label: strings.entry.openButton, onClick: () => openEntry() },
+            { label: strings.consumption.openButton, onClick: openConsumption },
           ].map(({ label, onClick }) => (
             <button
               key={label}
@@ -150,18 +63,16 @@ export default function InventoryPage() {
           ))}
         </div>
 
-        {/* Tabla */}
         {fetchError ? (
           <p role="alert" className="text-sm text-red-500">{fetchError}</p>
         ) : (
-          <SupplyList supplies={supplies} onEdit={setEditingSupply} />
+          <SupplyList supplies={supplies} onEdit={openEdit} />
         )}
       </div>
 
-      {/* Modales */}
       {supplyFormOpen && (
         <SupplyFormModal
-          onClose={() => { setSupplyFormOpen(false); setSupplyFormError(null); }}
+          onClose={closeSupplyForm}
           onSubmit={handleCreate}
           serverError={supplyFormError}
         />
@@ -170,7 +81,7 @@ export default function InventoryPage() {
       {entryOpen && (
         <SupplyEntryModal
           supplies={supplies}
-          onClose={() => { setEntryOpen(false); setEntryError(null); setQuickEntrySupplyId(undefined); }}
+          onClose={closeEntry}
           onSubmit={handleCreateEntry}
           serverError={entryError}
           defaultSupplyId={quickEntrySupplyId}
@@ -180,7 +91,7 @@ export default function InventoryPage() {
       {consumptionOpen && (
         <ConsumptionModal
           supplies={supplies}
-          onClose={() => { setConsumptionOpen(false); setConsumptionError(null); }}
+          onClose={closeConsumption}
           onSubmit={handleConsumption}
           serverError={consumptionError}
         />
@@ -188,7 +99,7 @@ export default function InventoryPage() {
 
       <EditSupplyModal
         supply={editingSupply}
-        onClose={() => { setEditingSupply(null); setEditError(null); }}
+        onClose={closeEdit}
         onSave={handleUpdate}
         serverError={editError}
       />

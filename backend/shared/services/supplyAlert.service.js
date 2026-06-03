@@ -87,7 +87,7 @@ export async function limpiarAlertaStockBajo(tx, supplyId, newStock, minThreshol
 }
 
 export async function sincronizarAlertaTrasCambioUmbral(tx, itemId, currentStock, minThreshold) {
-  const shouldAlert = minThreshold > 0 && currentStock <= minThreshold;
+  const shouldAlert = currentStock <= 0 || (minThreshold > 0 && currentStock <= minThreshold);
 
   if (shouldAlert) {
     const alertType =
