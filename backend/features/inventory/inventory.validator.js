@@ -112,6 +112,13 @@ const movementsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1, MSG.LIMIT_MIN).max(PAGINATION_CONFIG.MAX_LIMIT, MSG.LIMIT_MAX).optional().default(PAGINATION_CONFIG.DEFAULT_LIMIT),
 });
 
+export const validateSupplyId = (req, res, next) => {
+  if (!/^\d+$/.test(req.params.id)) {
+    return res.status(400).json({ data: null, error: 'ID de insumo inválido', meta: null });
+  }
+  next();
+};
+
 export const validateCreateSupply = (req, res, next) => {
   const resultado = createSupplySchema.safeParse(req.body);
   if (!resultado.success) return responderErrores(res, resultado.error);
