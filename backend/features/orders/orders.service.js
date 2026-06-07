@@ -65,6 +65,13 @@ const extractBadResponseMessage = (body, fallback) => {
  * suitable for the admin error handler. Non-ClientApiError errors are re-thrown
  * untouched so they bubble up as 500s through the default handler.
  */
+const SAFE_STATUS_MESSAGES = {
+  [HTTP_STATUS.BAD_REQUEST]: 'La solicitud al servicio del cliente es inválida',
+  [HTTP_STATUS.NOT_FOUND]: ORDER_MESSAGES.NO_ENCONTRADO,
+  [HTTP_STATUS.CONFLICT]: 'Conflicto con el estado actual del pedido',
+  [HTTP_STATUS.UNPROCESSABLE_ENTITY]: 'El pedido no puede procesarse en este momento',
+};
+
 const mapClientApiError = (error, { notFoundMessage } = {}) => {
   if (!(error instanceof ClientApiError)) return error;
 
@@ -72,12 +79,12 @@ const mapClientApiError = (error, { notFoundMessage } = {}) => {
     const status = error.status ?? HTTP_STATUS.INTERNAL_ERROR;
     if (status === HTTP_STATUS.NOT_FOUND) {
       return crearError(
-        notFoundMessage ?? extractBadResponseMessage(error.body, ORDER_MESSAGES.NO_ENCONTRADO),
+        notFoundMessage ?? ORDER_MESSAGES.NO_ENCONTRADO,
         HTTP_STATUS.NOT_FOUND,
       );
     }
-    const message = extractBadResponseMessage(error.body, ORDER_MESSAGES.ERROR_DESCONOCIDO);
-    return crearError(message, status);
+    const safeMessage = SAFE_STATUS_MESSAGES[status] ?? ORDER_MESSAGES.ERROR_DESCONOCIDO;
+    return crearError(safeMessage, status);
   }
 
   if (
