@@ -56,6 +56,7 @@ export const NOTIFICATION_VALIDATION_MESSAGES = {
   AT_LEAST_ONE_PREFERENCE: 'Debe incluir al menos un campo de preferencia para actualizar',
   CUSTOMIZATION_STATUS_INVALID: 'El estado debe ser "accepted" o "rejected"',
   REJECTION_REASON_MAX: 'La razón no puede superar 500 caracteres',
+  REJECTION_REASON_REQUIRED: 'La razón de rechazo es obligatoria al rechazar una personalización',
 };
 
 export const NOTIFICATION_VALIDATION_LIMITS = {
