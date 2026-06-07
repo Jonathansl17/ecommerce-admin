@@ -7,39 +7,40 @@ import { UserSearchBar } from '@/features/users/components/UserSearchBar';
 import { UserSortSelect } from '@/features/users/components/UserSortSelect';
 import { UserPagination } from '@/features/users/components/UserPagination';
 import { USERS_PAGE_SIZE } from '@/features/users/constants/api';
-import { SORT_OPTIONS } from '@/features/users/constants/users.constants';
+import { DEFAULT_SEARCH_FIELD, INITIAL_USERS_QUERY, SORT_OPTIONS } from '@/features/users/constants/users.constants';
 import { USERS_MESSAGES } from '@/features/users/constants/messages';
-import type { SearchField } from '@/features/users/types/users.types';
 
 const strings = USERS_MESSAGES;
 
 export default function UsersPage() {
   const [inputValue, setInputValue] = useState('');
-  const [field, setField] = useState<SearchField>('name');
-  const [submittedSearch, setSubmittedSearch] = useState('');
-  const [submittedField, setSubmittedField] = useState<SearchField>('name');
-  const [offset, setOffset] = useState(0);
-  const [sortIndex, setSortIndex] = useState(0);
+  const [field, setField] = useState(DEFAULT_SEARCH_FIELD);
+  const [query, setQuery] = useState(INITIAL_USERS_QUERY);
 
-  const { sortBy, sortOrder } = SORT_OPTIONS[sortIndex];
+  const { sortBy, sortOrder } = SORT_OPTIONS[query.sortIndex];
 
   const { users, total, loading, error, statusError, updateStatus } = useUsers({
-    search: submittedSearch,
-    field: submittedField,
-    offset,
+    search: query.search,
+    field: query.field,
+    offset: query.offset,
     sortBy,
     sortOrder,
   });
 
   const handleSearch = () => {
-    setOffset(0);
-    setSubmittedSearch(inputValue);
-    setSubmittedField(field);
+    setQuery((q) => ({ ...q, search: inputValue, field, offset: 0 }));
   };
 
   const handleSortChange = (index: number) => {
-    setSortIndex(index);
-    setOffset(0);
+    setQuery((q) => ({ ...q, sortIndex: index, offset: 0 }));
+  };
+
+  const handlePrevPage = () => {
+    setQuery((q) => ({ ...q, offset: Math.max(0, q.offset - USERS_PAGE_SIZE) }));
+  };
+
+  const handleNextPage = () => {
+    setQuery((q) => ({ ...q, offset: q.offset + USERS_PAGE_SIZE }));
   };
 
   return (
@@ -58,7 +59,7 @@ export default function UsersPage() {
           onSearch={handleSearch}
         />
         <UserSortSelect
-          sortIndex={sortIndex}
+          sortIndex={query.sortIndex}
           sortOptions={SORT_OPTIONS}
           onSortChange={handleSortChange}
         />
@@ -78,11 +79,11 @@ export default function UsersPage() {
 
       {!loading && (
         <UserPagination
-          offset={offset}
+          offset={query.offset}
           total={total}
           pageSize={USERS_PAGE_SIZE}
-          onPrev={() => setOffset((o) => Math.max(0, o - USERS_PAGE_SIZE))}
-          onNext={() => setOffset((o) => o + USERS_PAGE_SIZE)}
+          onPrev={handlePrevPage}
+          onNext={handleNextPage}
         />
       )}
     </div>

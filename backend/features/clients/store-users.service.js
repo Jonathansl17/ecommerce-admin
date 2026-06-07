@@ -11,32 +11,23 @@ export const getStoreUsers = async ({ search, field, limit = 30, offset = 0, sor
   const sortColumn = SORT_COLUMNS[sortBy] ?? 'created_at';
   const order = sortOrder === 'ASC' ? 'ASC' : 'DESC';
 
-  const params = [];
-  let whereClause = '';
-
-  if (search) {
-    params.push(`%${search}%`);
-    const filterColumn = field === 'email' ? 'email' : 'full_name';
-    whereClause = ` WHERE ${filterColumn} ILIKE $1`;
-  }
+  const filterColumn = field === 'email' ? 'email' : 'full_name';
+  const pattern = search ? `%${search}%` : null;
 
   const { rows: countRows } = await clientPool.query(
-    `SELECT COUNT(*) FROM client_users${whereClause}`,
-    params,
+    `SELECT COUNT(*) FROM client_users WHERE $1::text IS NULL OR ${filterColumn} ILIKE $1`,
+    [pattern],
   );
   const total = parseInt(countRows[0].count, 10);
-
-  const limitIdx = params.length + 1;
-  const offsetIdx = params.length + 2;
 
   const { rows: users } = await clientPool.query(
     `SELECT id::text, full_name AS "fullName", email, account_status AS "accountStatus",
             created_at AS "createdAt", updated_at AS "updatedAt"
      FROM client_users
-     ${whereClause}
+     WHERE $1::text IS NULL OR ${filterColumn} ILIKE $1
      ORDER BY ${sortColumn} ${order}
-     LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
-    [...params, limit, offset],
+     LIMIT $2 OFFSET $3`,
+    [pattern, limit, offset],
   );
 
   return { users, total };

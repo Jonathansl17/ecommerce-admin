@@ -31,6 +31,13 @@ export interface SortOption {
   sortOrder: SortOrder;
 }
 
+export interface UsersQuery {
+  search: string;
+  field: SearchField;
+  sortIndex: number;
+  offset: number;
+}
+
 export interface UseUsersParams {
   search: string;
   field: SearchField;

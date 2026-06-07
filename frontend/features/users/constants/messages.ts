@@ -2,6 +2,7 @@ export const USERS_MESSAGES = {
   page: {
     title: 'Usuarios administradores',
     subtitle: 'Gestiona las cuentas de acceso al panel de administración.',
+    loading: 'Cargando usuarios...',
   },
   search: {
     fieldName: 'Nombre',
