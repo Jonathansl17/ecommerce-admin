@@ -2,11 +2,14 @@ import { z } from 'zod/v4';
 import { INVENTORY_VALIDATION, UNIT_OF_MEASURE } from './inventory.constants.js';
 import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
+const supplyNameSchema = z
+  .string({ required_error: 'El nombre del insumo es requerido' })
+  .min(INVENTORY_VALIDATION.NAME_MIN, 'El nombre no puede estar vacío')
+  .max(INVENTORY_VALIDATION.NAME_MAX, `El nombre no puede superar ${INVENTORY_VALIDATION.NAME_MAX} caracteres`)
+  .regex(/^[^\r\n]+$/, 'El nombre no puede contener saltos de línea');
+
 const createSupplySchema = z.object({
-  name: z
-    .string({ required_error: 'El nombre del insumo es requerido' })
-    .min(INVENTORY_VALIDATION.NAME_MIN, 'El nombre no puede estar vacío')
-    .max(INVENTORY_VALIDATION.NAME_MAX, `El nombre no puede superar ${INVENTORY_VALIDATION.NAME_MAX} caracteres`),
+  name: supplyNameSchema,
   unitOfMeasure: z.enum(UNIT_OF_MEASURE, {
     error: `La unidad de medida debe ser una de: ${UNIT_OF_MEASURE.join(', ')}`,
   }),
@@ -16,10 +19,7 @@ const createSupplySchema = z.object({
 });
 
 const updateSupplySchema = z.object({
-  name: z
-    .string({ required_error: 'El nombre del insumo es requerido' })
-    .min(INVENTORY_VALIDATION.NAME_MIN, 'El nombre no puede estar vacío')
-    .max(INVENTORY_VALIDATION.NAME_MAX, `El nombre no puede superar ${INVENTORY_VALIDATION.NAME_MAX} caracteres`),
+  name: supplyNameSchema,
   unitOfMeasure: z.enum(UNIT_OF_MEASURE, {
     error: `La unidad de medida debe ser una de: ${UNIT_OF_MEASURE.join(', ')}`,
   }),
