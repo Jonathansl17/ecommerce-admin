@@ -102,7 +102,7 @@ const listOrdersQuerySchema = z.object({
   }),
   offset: optionalIntFromQuery({
     min: ORDER_LIST_LIMITS.MIN_OFFSET,
-    max: Number.MAX_SAFE_INTEGER,
+    max: ORDER_LIST_LIMITS.MAX_OFFSET,
     label: 'offset',
   }),
 });
