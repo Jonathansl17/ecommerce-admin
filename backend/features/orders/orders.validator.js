@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { ORDER_LIST_LIMITS, ORDER_VALIDATION, ORDER_VALIDATION_MESSAGES } from './orders.constants.js';
+import { ORDER_LIST_LIMITS, ORDER_STATUSES, ORDER_VALIDATION, ORDER_VALIDATION_MESSAGES } from './orders.constants.js';
 import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
 const orderProductSchema = z.object({
@@ -84,7 +84,7 @@ const optionalIntFromQuery = ({ min, max, label }) =>
     );
 
 const listOrdersQuerySchema = z.object({
-  status: optionalTrimmedString(ORDER_VALIDATION.STATUS_MIN, ORDER_VALIDATION.STATUS_MAX, 'status'),
+  status: z.enum(ORDER_STATUSES).optional(),
   clientUserId: optionalTrimmedString(
     ORDER_VALIDATION.CLIENT_USER_ID_MIN,
     ORDER_VALIDATION.CLIENT_USER_ID_MAX,
@@ -120,11 +120,10 @@ export const validateListOrdersQuery = (req, res, next) => {
 };
 
 const updateOrderStatusSchema = z.object({
-  status: z
-    .string({ required_error: ORDER_VALIDATION_MESSAGES.STATUS_REQUIRED })
-    .trim()
-    .min(ORDER_VALIDATION.STATUS_MIN, ORDER_VALIDATION_MESSAGES.STATUS_EMPTY)
-    .max(ORDER_VALIDATION.STATUS_MAX, ORDER_VALIDATION_MESSAGES.STATUS_MAX),
+  status: z.enum(ORDER_STATUSES, {
+    required_error: ORDER_VALIDATION_MESSAGES.STATUS_REQUIRED,
+    error: `Estado inválido. Valores permitidos: ${ORDER_STATUSES.join(', ')}`,
+  }),
 });
 
 export const validateUpdateOrderStatus = (req, res, next) => {
