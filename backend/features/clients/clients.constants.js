@@ -8,6 +8,6 @@ export const CLIENTS_MESSAGES = {
 };
 
 export const CLIENTS_CONFIG = {
-  SALT_ROUNDS: 10,
+  SALT_ROUNDS: 12,
   ESTADO_CUENTA_INICIAL: 'active',
 };
