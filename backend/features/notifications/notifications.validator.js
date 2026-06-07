@@ -22,16 +22,22 @@ const updatePreferencesSchema = z
     { message: NOTIFICATION_VALIDATION_MESSAGES.AT_LEAST_ONE_PREFERENCE },
   );
 
-const updateCustomizationStatusSchema = z.object({
-  status: z.enum([CUSTOMIZATION_STATUS.ACCEPTED, CUSTOMIZATION_STATUS.REJECTED], {
-    error: NOTIFICATION_VALIDATION_MESSAGES.CUSTOMIZATION_STATUS_INVALID,
-  }),
-  rejectionReason: z
-    .string()
-    .trim()
-    .max(NOTIFICATION_VALIDATION_LIMITS.REJECTION_REASON_MAX, NOTIFICATION_VALIDATION_MESSAGES.REJECTION_REASON_MAX)
-    .optional(),
-});
+const updateCustomizationStatusSchema = z
+  .object({
+    status: z.enum([CUSTOMIZATION_STATUS.ACCEPTED, CUSTOMIZATION_STATUS.REJECTED], {
+      error: NOTIFICATION_VALIDATION_MESSAGES.CUSTOMIZATION_STATUS_INVALID,
+    }),
+    rejectionReason: z
+      .string()
+      .trim()
+      .min(1, NOTIFICATION_VALIDATION_MESSAGES.REJECTION_REASON_REQUIRED)
+      .max(NOTIFICATION_VALIDATION_LIMITS.REJECTION_REASON_MAX, NOTIFICATION_VALIDATION_MESSAGES.REJECTION_REASON_MAX)
+      .optional(),
+  })
+  .refine(
+    (data) => data.status !== CUSTOMIZATION_STATUS.REJECTED || Boolean(data.rejectionReason),
+    { message: NOTIFICATION_VALIDATION_MESSAGES.REJECTION_REASON_REQUIRED, path: ['rejectionReason'] },
+  );
 
 export const validateUpdateCustomizationStatus = (req, res, next) => {
   const result = updateCustomizationStatusSchema.safeParse(req.body);
