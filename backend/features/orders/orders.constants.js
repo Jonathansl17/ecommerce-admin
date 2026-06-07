@@ -27,6 +27,7 @@ export const ORDER_LIST_LIMITS = {
   MAX_LIMIT: 100,
   MIN_LIMIT: 1,
   MIN_OFFSET: 0,
+  MAX_OFFSET: 100_000,
 };
 
 export const ORDER_BAD_RESPONSE_FIELDS = {
