@@ -4,6 +4,13 @@ import { CLIENTS_MESSAGES, CLIENTS_CONFIG } from './clients.constants.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 
+const parseId = (id) => {
+  if (!/^\d+$/.test(String(id))) {
+    throw crearError(CLIENTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+  }
+  return parseId(id);
+};
+
 const seleccionarCamposPublicos = {
   id: true,
   fullName: true,
@@ -21,7 +28,7 @@ export const getAll = async () => {
 
 export const getById = async (id) => {
   const adminUser = await prisma.adminUser.findUnique({
-    where: { id: BigInt(id) },
+    where: { id: parseId(id) },
     select: seleccionarCamposPublicos,
   });
 
@@ -66,7 +73,7 @@ export const update = async (id, data) => {
 
   try {
     return await prisma.adminUser.update({
-      where: { id: BigInt(id) },
+      where: { id: parseId(id) },
       data: datosActualizados,
       select: seleccionarCamposPublicos,
     });
@@ -84,7 +91,7 @@ export const update = async (id, data) => {
 export const remove = async (id) => {
   try {
     return await prisma.adminUser.delete({
-      where: { id: BigInt(id) },
+      where: { id: parseId(id) },
       select: seleccionarCamposPublicos,
     });
   } catch (error) {
