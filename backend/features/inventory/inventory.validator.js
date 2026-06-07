@@ -89,6 +89,8 @@ const dateRangeQuerySchema = z.object({
   dateTo: z
     .string({ required_error: MSG.DATE_TO_REQUIRED })
     .regex(DATE_REGEX, MSG.DATE_TO_FORMAT),
+}).refine(({ dateFrom, dateTo }) => new Date(dateFrom) <= new Date(dateTo), {
+  message: MSG.DATE_RANGE_ORDER,
 }).refine(({ dateFrom, dateTo }) => {
   const diff = (new Date(dateTo) - new Date(dateFrom)) / (1000 * 60 * 60 * 24);
   return diff <= REPORT_CONFIG.MAX_DATE_RANGE_DAYS;
@@ -148,6 +150,7 @@ export const validateCreateConsumption = (req, res, next) => {
 export const validateReportQuery = (req, res, next) => {
   const resultado = dateRangeQuerySchema.safeParse(req.query);
   if (!resultado.success) return responderErrores(res, resultado.error);
+  Object.assign(req.query, resultado.data);
   next();
 };
 

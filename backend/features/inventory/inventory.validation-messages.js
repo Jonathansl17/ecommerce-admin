@@ -48,5 +48,6 @@ export const INVENTORY_VALIDATION_MESSAGES = {
   LIMIT_MAX: `El límite no puede superar ${PAGINATION_CONFIG.MAX_LIMIT} registros`,
 
   // Date range
+  DATE_RANGE_ORDER: 'dateFrom no puede ser posterior a dateTo',
   DATE_RANGE_MAX: `El rango de fechas no puede superar ${REPORT_CONFIG.MAX_DATE_RANGE_DAYS} días`,
 };
