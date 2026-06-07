@@ -16,7 +16,10 @@ const orderProductSchema = z.object({
     .nonnegative(ORDER_VALIDATION_MESSAGES.UNIT_PRICE_NONNEGATIVE),
   isCustomizable: z.boolean().optional().default(false),
   customizationDetails: z
-    .record(z.string().max(100), z.string().max(500))
+    .record(
+      z.string().regex(/^[a-zA-Z0-9_-]+$/, 'Las claves de customizationDetails solo pueden contener letras, números, _ y -').max(100),
+      z.string().max(500),
+    )
     .refine((val) => Object.keys(val).length <= 50, {
       message: 'customizationDetails no puede tener más de 50 entradas',
     })
