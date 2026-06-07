@@ -1,7 +1,8 @@
 import { HTTP_STATUS } from '../constants/http.constants.js';
 
 export const responderErrores = (res, error) => {
-  const errores = error.errors.map((err) => ({
+  const issues = error.issues ?? error.errors ?? [];
+  const errores = issues.map((err) => ({
     field: err.path.join('.'),
     message: err.message,
   }));
