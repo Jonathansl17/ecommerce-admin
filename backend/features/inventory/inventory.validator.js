@@ -15,7 +15,8 @@ const createSupplySchema = z.object({
   }),
   initialStock: z
     .number({ required_error: MSG.STOCK_REQUIRED })
-    .min(INVENTORY_VALIDATION.STOCK_MIN, MSG.STOCK_MIN),
+    .min(INVENTORY_VALIDATION.STOCK_MIN, MSG.STOCK_MIN)
+    .max(INVENTORY_VALIDATION.STOCK_MAX, MSG.STOCK_MAX),
 });
 
 const updateSupplySchema = z.object({
@@ -29,6 +30,7 @@ const updateSupplySchema = z.object({
   minThreshold: z
     .number()
     .min(INVENTORY_VALIDATION.STOCK_MIN, MSG.THRESHOLD_MIN)
+    .max(INVENTORY_VALIDATION.THRESHOLD_MAX, MSG.THRESHOLD_MAX)
     .optional()
     .default(0),
 });
@@ -36,7 +38,8 @@ const updateSupplySchema = z.object({
 const createEntrySchema = z.object({
   quantity: z
     .number({ required_error: MSG.QUANTITY_REQUIRED })
-    .min(INVENTORY_VALIDATION.QUANTITY_MIN, MSG.QUANTITY_MIN),
+    .min(INVENTORY_VALIDATION.QUANTITY_MIN, MSG.QUANTITY_MIN)
+    .max(INVENTORY_VALIDATION.QUANTITY_MAX, MSG.QUANTITY_MAX),
   date: z
     .string()
     .regex(DATE_REGEX, MSG.DATE_FORMAT)
@@ -49,13 +52,15 @@ const itemSchema = z.object({
     .min(INVENTORY_VALIDATION.SUPPLY_ID_MIN, MSG.SUPPLY_ID_EMPTY),
   quantity: z
     .number({ required_error: MSG.QUANTITY_REQUIRED })
-    .min(INVENTORY_VALIDATION.QUANTITY_MIN, MSG.QUANTITY_MIN),
+    .min(INVENTORY_VALIDATION.QUANTITY_MIN, MSG.QUANTITY_MIN)
+    .max(INVENTORY_VALIDATION.QUANTITY_MAX, MSG.QUANTITY_MAX),
 });
 
 const createEntriesSchema = z.object({
   items: z
     .array(itemSchema)
-    .min(INVENTORY_VALIDATION.ITEMS_MIN, MSG.ITEMS_MIN),
+    .min(INVENTORY_VALIDATION.ITEMS_MIN, MSG.ITEMS_MIN)
+    .max(INVENTORY_VALIDATION.ITEMS_MAX, MSG.ITEMS_MAX),
   date: z
     .string()
     .regex(DATE_REGEX, MSG.DATE_FORMAT)
@@ -65,7 +70,8 @@ const createEntriesSchema = z.object({
 const createConsumptionSchema = z.object({
   items: z
     .array(itemSchema)
-    .min(INVENTORY_VALIDATION.ITEMS_MIN, MSG.ITEMS_MIN),
+    .min(INVENTORY_VALIDATION.ITEMS_MIN, MSG.ITEMS_MIN)
+    .max(INVENTORY_VALIDATION.ITEMS_MAX, MSG.ITEMS_MAX),
   reference: z
     .string()
     .max(INVENTORY_VALIDATION.REFERENCE_MAX, MSG.REFERENCE_MAX)

@@ -12,11 +12,14 @@ export const INVENTORY_VALIDATION_MESSAGES = {
   // Stock / threshold
   STOCK_REQUIRED: 'El stock inicial es requerido',
   STOCK_MIN: 'El stock inicial no puede ser negativo',
+  STOCK_MAX: `El stock inicial no puede superar ${INVENTORY_VALIDATION.STOCK_MAX}`,
   THRESHOLD_MIN: 'El umbral mínimo no puede ser negativo',
+  THRESHOLD_MAX: `El umbral mínimo no puede superar ${INVENTORY_VALIDATION.THRESHOLD_MAX}`,
 
   // Quantity
   QUANTITY_REQUIRED: 'La cantidad es requerida',
   QUANTITY_MIN: 'La cantidad debe ser mayor a cero',
+  QUANTITY_MAX: `La cantidad no puede superar ${INVENTORY_VALIDATION.QUANTITY_MAX}`,
 
   // Supply ID
   SUPPLY_ID_REQUIRED: 'El ID del insumo es requerido',
@@ -24,6 +27,7 @@ export const INVENTORY_VALIDATION_MESSAGES = {
 
   // Items array
   ITEMS_MIN: 'Debe incluir al menos un insumo',
+  ITEMS_MAX: `No se pueden incluir más de ${INVENTORY_VALIDATION.ITEMS_MAX} insumos por operación`,
 
   // Reference
   REFERENCE_MAX: `La referencia no puede superar ${INVENTORY_VALIDATION.REFERENCE_MAX} caracteres`,
