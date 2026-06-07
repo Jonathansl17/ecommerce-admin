@@ -32,7 +32,7 @@ export const getById = async (id) => {
   return adminUser;
 };
 
-export const create = async ({ fullName, email, password, accountStatus }) => {
+export const create = async ({ fullName, email, password }) => {
   const passwordHash = await bcrypt.hash(password, CLIENTS_CONFIG.SALT_ROUNDS);
 
   try {
@@ -41,7 +41,7 @@ export const create = async ({ fullName, email, password, accountStatus }) => {
         fullName,
         email,
         passwordHash,
-        accountStatus: accountStatus ?? CLIENTS_CONFIG.ESTADO_CUENTA_INICIAL,
+        accountStatus: CLIENTS_CONFIG.ESTADO_CUENTA_INICIAL,
       },
       select: seleccionarCamposPublicos,
     });
@@ -54,9 +54,12 @@ export const create = async ({ fullName, email, password, accountStatus }) => {
 };
 
 export const update = async (id, data) => {
-  const { password, ...camposRestantes } = data;
-  const datosActualizados = { ...camposRestantes };
+  const { fullName, email, password, accountStatus } = data;
+  const datosActualizados = {};
 
+  if (fullName !== undefined) datosActualizados.fullName = fullName;
+  if (email !== undefined) datosActualizados.email = email;
+  if (accountStatus !== undefined) datosActualizados.accountStatus = accountStatus;
   if (password) {
     datosActualizados.passwordHash = await bcrypt.hash(password, CLIENTS_CONFIG.SALT_ROUNDS);
   }
