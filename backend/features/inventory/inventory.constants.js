@@ -7,6 +7,7 @@ export const INVENTORY_MESSAGES = {
   STOCK_INSUFICIENTE: 'Stock insuficiente para uno o más insumos',
   INSUMO_DUPLICADO_EN_OPERACION: 'No se puede incluir el mismo insumo más de una vez',
   ELIMINADO_EXITOSO: 'Insumo eliminado correctamente',
+  UNIDAD_NO_MODIFICABLE: 'No se puede cambiar la unidad de medida de un insumo que ya tiene movimientos registrados',
 };
 
 export const INVENTORY_CONFIG = {

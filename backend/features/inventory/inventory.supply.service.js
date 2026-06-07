@@ -115,10 +115,18 @@ export const update = async (id, { name, unitOfMeasure, minThreshold = 0 }) => {
 
   const item = await prisma.item.findFirst({
     where: { id: itemId, itemType: INVENTORY_CONFIG.ITEM_TYPE },
+    include: { supply: true },
   });
 
   if (!item) {
     throw crearError(INVENTORY_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+  }
+
+  if (item.supply && item.supply.unitOfMeasure !== unitOfMeasure) {
+    const movementCount = await prisma.inventoryMovement.count({ where: { supplyId: itemId } });
+    if (movementCount > 0) {
+      throw crearError(INVENTORY_MESSAGES.UNIDAD_NO_MODIFICABLE, HTTP_STATUS.CONFLICT);
+    }
   }
 
   const duplicate = await prisma.item.findFirst({
