@@ -24,9 +24,9 @@ export const reviewsWebhookRouter = Router();
 reviewsWebhookRouter.post('/notify', webhookRateLimit, requireApiKey, validateNotifyNewReview, notifyNewReview);
 
 export const reviewsAdminRouter = Router();
-reviewsAdminRouter.get('/', requireAuth, validateListReviewsQuery, getReviews);
-reviewsAdminRouter.get('/stats', requireAuth, getStats);
-reviewsAdminRouter.get('/:id', requireAuth, getReview);
+reviewsAdminRouter.get('/', requireAuth, requireRole(ADMIN_ROLES), validateListReviewsQuery, getReviews);
+reviewsAdminRouter.get('/stats', requireAuth, requireRole(ADMIN_ROLES), getStats);
+reviewsAdminRouter.get('/:id', requireAuth, requireRole(ADMIN_ROLES), getReview);
 reviewsAdminRouter.patch('/:id/approve', requireAuth, requireRole(ADMIN_ROLES), approveReview);
 reviewsAdminRouter.patch('/:id/reject', requireAuth, requireRole(ADMIN_ROLES), validateRejectReview, rejectReview);
 reviewsAdminRouter.post('/:id/respond', requireAuth, requireRole(ADMIN_ROLES), validateRespondToReview, respondToReview);
