@@ -135,15 +135,18 @@ export const remove = async (id) => {
 export const adjustProductStock = async (productId, { newStock, reason, note }, adminId) => {
   const id = BigInt(productId);
 
-  const product = await prisma.product.findUnique({ where: { id } });
-  if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
-
-  const previousQuantity = product.currentStock;
-  if (previousQuantity === newStock) {
-    throw crearError(PRODUCTS_MESSAGES.MISMO_STOCK, HTTP_STATUS.CONFLICT);
-  }
-
+  // Read and write inside the same Serializable transaction to prevent TOCTOU:
+  // two concurrent adjustments on the same product would otherwise both capture
+  // the same previousQuantity and produce a corrupted audit trail.
   return prisma.$transaction(async (tx) => {
+    const product = await tx.product.findUnique({ where: { id } });
+    if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+
+    const previousQuantity = product.currentStock;
+    if (previousQuantity === newStock) {
+      throw crearError(PRODUCTS_MESSAGES.MISMO_STOCK, HTTP_STATUS.CONFLICT);
+    }
+
     await tx.productStockMovement.create({
       data: {
         productId: id,
@@ -163,7 +166,7 @@ export const adjustProductStock = async (productId, { newStock, reason, note }, 
     });
 
     return serializeProduct(updated);
-  });
+  }, { isolationLevel: 'Serializable' });
 };
 
 export const getProductMovements = async (productId, { reason, startDate, endDate, page = 1, limit = 20 }) => {
@@ -219,51 +222,46 @@ export const getProductMovements = async (productId, { reason, startDate, endDat
 };
 
 export const bulkAdjustProductStock = async (adjustments, reason, note, adminId) => {
-  const results = await Promise.allSettled(
-    adjustments.map(async ({ productId, newStock }) => {
+  const adminBigId = BigInt(adminId);
+
+  // Single Serializable transaction: all-or-nothing atomicity + prevents TOCTOU
+  // on concurrent bulk adjustments touching the same products.
+  const updatedItems = await prisma.$transaction(async (tx) => {
+    const results = [];
+
+    for (const { productId, newStock } of adjustments) {
       const id = BigInt(productId);
 
-      const product = await prisma.product.findUnique({ where: { id } });
-      if (!product) throw new Error(`Producto ${productId} no encontrado`);
+      const product = await tx.product.findUnique({ where: { id } });
+      if (!product) throw crearError(`Producto no encontrado`, HTTP_STATUS.NOT_FOUND);
 
       const previousQuantity = product.currentStock;
 
-      await prisma.$transaction(async (tx) => {
-        await tx.productStockMovement.create({
-          data: {
-            productId: id,
-            adminId: BigInt(adminId),
-            type: 'manual_adjustment',
-            previousQuantity,
-            newQuantity: newStock,
-            reason,
-            note: note ?? null,
-          },
-        });
-        await tx.product.update({
-          where: { id },
-          data: { currentStock: newStock },
-        });
+      await tx.productStockMovement.create({
+        data: {
+          productId: id,
+          adminId: adminBigId,
+          type: 'manual_adjustment',
+          previousQuantity,
+          newQuantity: newStock,
+          reason,
+          note: note ?? null,
+        },
       });
 
-      return { productId, success: true, newStock };
-    })
-  );
+      await tx.product.update({
+        where: { id },
+        data: { currentStock: newStock },
+      });
 
-  const processedResults = results.map((result, index) => {
-    if (result.status === 'fulfilled') return result.value;
-    return {
-      productId: adjustments[index].productId,
-      success: false,
-      error: result.reason?.message ?? 'Error desconocido',
-    };
-  });
+      results.push({ productId, newStock });
+    }
 
-  const successful = processedResults.filter((r) => r.success).length;
-  const failed = processedResults.filter((r) => !r.success).length;
+    return results;
+  }, { isolationLevel: 'Serializable' });
 
   return {
-    results: processedResults,
-    summary: { total: adjustments.length, successful, failed },
+    results: updatedItems.map((r) => ({ ...r, success: true })),
+    summary: { total: adjustments.length, successful: adjustments.length, failed: 0 },
   };
 };
