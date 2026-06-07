@@ -20,10 +20,19 @@ const seleccionarCamposPublicos = {
   updatedAt: true,
 };
 
-export const getAll = async () => {
-  return prisma.adminUser.findMany({
-    select: seleccionarCamposPublicos,
-  });
+export const getAll = async ({ page = 1, limit = CLIENTS_CONFIG.DEFAULT_PAGE_SIZE } = {}) => {
+  const pageNum = Math.max(1, Number(page));
+  const limitNum = Math.min(Math.max(1, Number(limit)), CLIENTS_CONFIG.MAX_PAGE_SIZE);
+  const [total, adminUsers] = await Promise.all([
+    prisma.adminUser.count(),
+    prisma.adminUser.findMany({
+      select: seleccionarCamposPublicos,
+      orderBy: { createdAt: 'desc' },
+      skip: (pageNum - 1) * limitNum,
+      take: limitNum,
+    }),
+  ]);
+  return { data: adminUsers, pagination: { page: pageNum, limit: limitNum, total } };
 };
 
 export const getById = async (id) => {

@@ -10,7 +10,7 @@ import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 
 export const getAll = async (req, res, next) => {
   try {
-    const adminUsers = await getAllService();
+    const adminUsers = await getAllService({ page: req.query.page, limit: req.query.limit });
     return res.status(HTTP_STATUS.OK).json(adminUsers);
   } catch (error) {
     next(error);
