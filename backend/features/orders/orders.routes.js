@@ -13,9 +13,10 @@ import {
 } from './orders.validator.js';
 import { requireAuth } from '../../shared/middleware/authMiddleware.js';
 import { requireApiKey } from '../../shared/middleware/apiKeyMiddleware.js';
+import { webhookRateLimit } from '../../shared/middleware/rateLimitMiddleware.js';
 
 export const ordersWebhookRouter = Router();
-ordersWebhookRouter.post('/notify', requireApiKey, validateNotifyNewOrder, notifyNewOrder);
+ordersWebhookRouter.post('/notify', webhookRateLimit, requireApiKey, validateNotifyNewOrder, notifyNewOrder);
 
 // Admin-facing proxy routes over the client backend's /api/internal/orders.
 // All require an authenticated admin (existing JWT cookie auth) and are mounted
