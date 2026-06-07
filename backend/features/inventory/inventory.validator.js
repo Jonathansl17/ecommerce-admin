@@ -1,9 +1,21 @@
 import { z } from 'zod/v4';
-import { INVENTORY_VALIDATION, UNIT_OF_MEASURE, PAGINATION_CONFIG, REPORT_CONFIG } from './inventory.constants.js';
+import { INVENTORY_VALIDATION, UNIT_OF_MEASURE, PAGINATION_CONFIG, REPORT_CONFIG, MOVEMENT_DATE_CONFIG } from './inventory.constants.js';
 import { INVENTORY_VALIDATION_MESSAGES as MSG } from './inventory.validation-messages.js';
 import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+const movementDateSchema = z
+  .string()
+  .regex(DATE_REGEX, MSG.DATE_FORMAT)
+  .refine((d) => new Date(d) <= new Date(), { message: MSG.DATE_FUTURE })
+  .refine((d) => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - MOVEMENT_DATE_CONFIG.MAX_PAST_DAYS);
+    cutoff.setHours(0, 0, 0, 0);
+    return new Date(d) >= cutoff;
+  }, { message: MSG.DATE_TOO_OLD })
+  .optional();
 
 const createSupplySchema = z.object({
   name: z
@@ -40,10 +52,7 @@ const createEntrySchema = z.object({
     .number({ required_error: MSG.QUANTITY_REQUIRED })
     .min(INVENTORY_VALIDATION.QUANTITY_MIN, MSG.QUANTITY_MIN)
     .max(INVENTORY_VALIDATION.QUANTITY_MAX, MSG.QUANTITY_MAX),
-  date: z
-    .string()
-    .regex(DATE_REGEX, MSG.DATE_FORMAT)
-    .optional(),
+  date: movementDateSchema,
 });
 
 const itemSchema = z.object({
@@ -61,10 +70,7 @@ const createEntriesSchema = z.object({
     .array(itemSchema)
     .min(INVENTORY_VALIDATION.ITEMS_MIN, MSG.ITEMS_MIN)
     .max(INVENTORY_VALIDATION.ITEMS_MAX, MSG.ITEMS_MAX),
-  date: z
-    .string()
-    .regex(DATE_REGEX, MSG.DATE_FORMAT)
-    .optional(),
+  date: movementDateSchema,
 });
 
 const createConsumptionSchema = z.object({
@@ -76,10 +82,7 @@ const createConsumptionSchema = z.object({
     .string()
     .max(INVENTORY_VALIDATION.REFERENCE_MAX, MSG.REFERENCE_MAX)
     .optional(),
-  date: z
-    .string()
-    .regex(DATE_REGEX, MSG.DATE_FORMAT)
-    .optional(),
+  date: movementDateSchema,
 });
 
 const dateRangeQuerySchema = z.object({

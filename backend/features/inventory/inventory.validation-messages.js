@@ -1,4 +1,4 @@
-import { INVENTORY_VALIDATION, UNIT_OF_MEASURE, PAGINATION_CONFIG, REPORT_CONFIG } from './inventory.constants.js';
+import { INVENTORY_VALIDATION, UNIT_OF_MEASURE, PAGINATION_CONFIG, REPORT_CONFIG, MOVEMENT_DATE_CONFIG } from './inventory.constants.js';
 
 export const INVENTORY_VALIDATION_MESSAGES = {
   // Name
@@ -34,6 +34,8 @@ export const INVENTORY_VALIDATION_MESSAGES = {
 
   // Date
   DATE_FORMAT: 'La fecha debe tener el formato YYYY-MM-DD',
+  DATE_FUTURE: 'La fecha del movimiento no puede ser futura',
+  DATE_TOO_OLD: `La fecha del movimiento no puede ser anterior a ${MOVEMENT_DATE_CONFIG.MAX_PAST_DAYS} días`,
   DATE_FROM_REQUIRED: 'El parámetro dateFrom es requerido',
   DATE_FROM_FORMAT: 'dateFrom debe tener el formato YYYY-MM-DD',
   DATE_TO_REQUIRED: 'El parámetro dateTo es requerido',

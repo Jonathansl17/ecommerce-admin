@@ -38,6 +38,10 @@ export const REPORT_CONFIG = {
   MAX_DATE_RANGE_DAYS: 365,
 };
 
+export const MOVEMENT_DATE_CONFIG = {
+  MAX_PAST_DAYS: 90,
+};
+
 export const UNIT_OF_MEASURE = ['grams', 'kilograms', 'milliliters', 'liters', 'units'];
 
 export const MOVEMENT_TYPES = {
