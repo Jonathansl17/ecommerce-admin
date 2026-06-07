@@ -22,8 +22,15 @@ async function findAndAssertOwnership(notificationId, adminId) {
 }
 
 function applyCustomizationStatus(content, status, rejectionReason) {
-  let parsed = {};
-  try { parsed = content ? JSON.parse(content) : {}; } catch { parsed = {}; }
+  let parsed;
+  try {
+    parsed = content ? JSON.parse(content) : {};
+  } catch {
+    throw crearError(NOTIFICATION_MESSAGES.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
+  }
+  if (parsed[CONTENT_KEYS.CUSTOMIZATION_STATUS]) {
+    throw crearError(NOTIFICATION_MESSAGES.ALREADY_PROCESSED, HTTP_STATUS.CONFLICT);
+  }
   parsed[CONTENT_KEYS.CUSTOMIZATION_STATUS] = status;
   if (status === CUSTOMIZATION_STATUS.REJECTED && rejectionReason) {
     parsed[CONTENT_KEYS.CUSTOMIZATION_REJECTION_REASON] = rejectionReason;
@@ -73,6 +80,10 @@ export const getUnreadCount = async (adminId) => {
 
 export const updateCustomizationStatus = async (notificationId, adminId, status, rejectionReason) => {
   const { notification, id } = await findAndAssertOwnership(notificationId, adminId);
+
+  if (notification.entityType !== NOTIFICATION_CONFIG.DEFAULT_ORDER_ENTITY_TYPE) {
+    throw crearError(NOTIFICATION_MESSAGES.WRONG_TYPE, HTTP_STATUS.UNPROCESSABLE_ENTITY);
+  }
 
   const updatedContent = applyCustomizationStatus(notification.content, status, rejectionReason);
 

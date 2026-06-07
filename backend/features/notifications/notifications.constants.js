@@ -2,6 +2,8 @@ export const NOTIFICATION_MESSAGES = {
   NOT_FOUND: 'Notificación no encontrada',
   ACCESS_DENIED: 'No tienes permiso para acceder a esta notificación',
   PREFERENCES_UPDATED: 'Preferencias actualizadas correctamente',
+  WRONG_TYPE: 'Esta operación solo aplica a notificaciones de pedidos con personalización',
+  ALREADY_PROCESSED: 'Esta notificación ya fue procesada',
 };
 
 export const NOTIFICATION_EVENTS = {
