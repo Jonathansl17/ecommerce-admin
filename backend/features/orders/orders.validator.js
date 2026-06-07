@@ -133,3 +133,17 @@ export const validateUpdateOrderStatus = (req, res, next) => {
   req.body = result.data;
   next();
 };
+
+const orderIdParamSchema = z.object({
+  id: z
+    .string()
+    .trim()
+    .min(1, 'El ID del pedido es requerido')
+    .max(ORDER_VALIDATION.ORDER_ID_MAX, ORDER_VALIDATION_MESSAGES.ORDER_ID_MAX),
+});
+
+export const validateOrderIdParam = (req, res, next) => {
+  const result = orderIdParamSchema.safeParse(req.params);
+  if (!result.success) return responderErrores(res, result.error);
+  next();
+};
