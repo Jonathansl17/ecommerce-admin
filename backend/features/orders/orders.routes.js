@@ -11,7 +11,7 @@ import {
   validateListOrdersQuery,
   validateUpdateOrderStatus,
 } from './orders.validator.js';
-import { requireAuth } from '../../shared/middleware/authMiddleware.js';
+import { requireAuth, requireRole } from '../../shared/middleware/authMiddleware.js';
 import { requireApiKey } from '../../shared/middleware/apiKeyMiddleware.js';
 
 export const ordersWebhookRouter = Router();
@@ -20,11 +20,14 @@ ordersWebhookRouter.post('/notify', requireApiKey, validateNotifyNewOrder, notif
 // Admin-facing proxy routes over the client backend's /api/internal/orders.
 // All require an authenticated admin (existing JWT cookie auth) and are mounted
 // after the CSRF header check in server.js.
+const ADMIN_ROLES = ['administrador'];
+
 export const ordersAdminRouter = Router();
-ordersAdminRouter.get('/', requireAuth, validateListOrdersQuery, listar);
-ordersAdminRouter.get('/:id', requireAuth, obtenerPorId);
-ordersAdminRouter.patch('/:id/status', requireAuth, validateUpdateOrderStatus, actualizarEstado);
-ordersAdminRouter.post('/:id/cancel', requireAuth, cancelar);
+ordersAdminRouter.use(requireAuth, requireRole(ADMIN_ROLES));
+ordersAdminRouter.get('/', validateListOrdersQuery, listar);
+ordersAdminRouter.get('/:id', obtenerPorId);
+ordersAdminRouter.patch('/:id/status', validateUpdateOrderStatus, actualizarEstado);
+ordersAdminRouter.post('/:id/cancel', cancelar);
 
 // Default export preserves the legacy import shape: the webhook router (which
 // is what server.js mounted before this split).
