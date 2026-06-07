@@ -49,6 +49,7 @@ async function calcProductAvgDailySales(productId) {
 
 export const getAll = async () => {
   const products = await prisma.product.findMany({
+    where: { deletedAt: null },
     include: { variants: true },
     orderBy: { name: 'asc' },
   });
@@ -72,8 +73,8 @@ export const getAll = async () => {
 };
 
 export const getById = async (id) => {
-  const product = await prisma.product.findUnique({
-    where: { id: BigInt(id) },
+  const product = await prisma.product.findFirst({
+    where: { id: BigInt(id), deletedAt: null },
     include: { variants: true },
   });
   if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
@@ -94,39 +95,37 @@ export const create = async ({ name, description, price, status }) => {
 };
 
 export const update = async (id, data) => {
+  const bigId = BigInt(id);
+  const existing = await prisma.product.findFirst({ where: { id: bigId, deletedAt: null } });
+  if (!existing) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+
   const { name, description, price, status, minThreshold } = data;
-  try {
-    const product = await prisma.product.update({
-      where: { id: BigInt(id) },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(description !== undefined && { description }),
-        ...(price !== undefined && { price }),
-        ...(status !== undefined && { status }),
-        ...('minThreshold' in data && { minThreshold: minThreshold ?? null }),
-      },
-      include: { variants: true },
-    });
-    return serializeProduct(product);
-  } catch (error) {
-    if (error.code === 'P2025') throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
-    throw error;
-  }
+  const product = await prisma.product.update({
+    where: { id: bigId },
+    data: {
+      ...(name !== undefined && { name }),
+      ...(description !== undefined && { description }),
+      ...(price !== undefined && { price }),
+      ...(status !== undefined && { status }),
+      ...('minThreshold' in data && { minThreshold: minThreshold ?? null }),
+    },
+    include: { variants: true },
+  });
+  return serializeProduct(product);
 };
 
 export const remove = async (id) => {
   const bigId = BigInt(id);
 
-  const product = await prisma.product.findUnique({
-    where: { id: bigId },
+  const product = await prisma.product.findFirst({
+    where: { id: bigId, deletedAt: null },
     include: { variants: true },
   });
   if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
 
-  await prisma.$transaction(async (tx) => {
-    await tx.productStockMovement.deleteMany({ where: { productId: bigId } });
-    await tx.productVariant.deleteMany({ where: { productId: bigId } });
-    await tx.product.delete({ where: { id: bigId } });
+  await prisma.product.update({
+    where: { id: bigId },
+    data: { deletedAt: new Date() },
   });
 
   return serializeProduct(product);
@@ -139,7 +138,7 @@ export const adjustProductStock = async (productId, { newStock, reason, note }, 
   // two concurrent adjustments on the same product would otherwise both capture
   // the same previousQuantity and produce a corrupted audit trail.
   return prisma.$transaction(async (tx) => {
-    const product = await tx.product.findUnique({ where: { id } });
+    const product = await tx.product.findFirst({ where: { id, deletedAt: null } });
     if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
 
     const previousQuantity = product.currentStock;
@@ -172,7 +171,7 @@ export const adjustProductStock = async (productId, { newStock, reason, note }, 
 export const getProductMovements = async (productId, { reason, startDate, endDate, page = 1, limit = 20 }) => {
   const id = BigInt(productId);
 
-  const product = await prisma.product.findUnique({ where: { id } });
+  const product = await prisma.product.findFirst({ where: { id, deletedAt: null } });
   if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
 
   const where = { productId: id };
@@ -232,7 +231,7 @@ export const bulkAdjustProductStock = async (adjustments, reason, note, adminId)
     for (const { productId, newStock } of adjustments) {
       const id = BigInt(productId);
 
-      const product = await tx.product.findUnique({ where: { id } });
+      const product = await tx.product.findFirst({ where: { id, deletedAt: null } });
       if (!product) throw crearError(`Producto no encontrado`, HTTP_STATUS.NOT_FOUND);
 
       const previousQuantity = product.currentStock;
