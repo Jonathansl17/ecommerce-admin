@@ -12,9 +12,10 @@ const API_KEY_ERRORS = {
 };
 
 export const requireApiKey = (req, _res, next) => {
-  const provided = req.headers['x-api-key'];
+  const raw = req.headers['x-api-key'];
+  const provided = Array.isArray(raw) ? null : raw;
 
-  if (!provided) {
+  if (!provided || typeof provided !== 'string') {
     return next(crearError(API_KEY_ERRORS.MISSING, HTTP_STATUS.UNAUTHORIZED));
   }
 
