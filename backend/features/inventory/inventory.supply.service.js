@@ -46,15 +46,15 @@ export const getAll = async () => {
 };
 
 export const create = async ({ name, unitOfMeasure, initialStock }) => {
-  const existing = await prisma.item.findFirst({
-    where: { name: { equals: name, mode: 'insensitive' }, itemType: INVENTORY_CONFIG.ITEM_TYPE },
-  });
-
-  if (existing) {
-    throw crearError(INVENTORY_MESSAGES.NOMBRE_DUPLICADO, HTTP_STATUS.CONFLICT);
-  }
-
   return prisma.$transaction(async (tx) => {
+    const existing = await tx.item.findFirst({
+      where: { name: { equals: name, mode: 'insensitive' }, itemType: INVENTORY_CONFIG.ITEM_TYPE },
+    });
+
+    if (existing) {
+      throw crearError(INVENTORY_MESSAGES.NOMBRE_DUPLICADO, HTTP_STATUS.CONFLICT);
+    }
+
     const item = await tx.item.create({
       data: {
         name,
