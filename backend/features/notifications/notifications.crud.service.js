@@ -14,9 +14,10 @@ async function findAndAssertOwnership(notificationId, adminId) {
     throw crearError(NOTIFICATION_MESSAGES.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
   }
   const id = BigInt(notificationId);
+  const ownerAdminId = BigInt(adminId);
   const notification = await prisma.adminNotification.findUnique({ where: { id } });
   if (!notification) throw crearError(NOTIFICATION_MESSAGES.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
-  if (notification.adminId !== adminId) throw crearError(NOTIFICATION_MESSAGES.ACCESS_DENIED, HTTP_STATUS.FORBIDDEN);
+  if (notification.adminId !== ownerAdminId) throw crearError(NOTIFICATION_MESSAGES.ACCESS_DENIED, HTTP_STATUS.FORBIDDEN);
   return { notification, id };
 }
 
@@ -34,7 +35,7 @@ function applyCustomizationStatus(content, status, rejectionReason) {
 
 export const getNotifications = async (adminId) => {
   const notifications = await prisma.adminNotification.findMany({
-    where: { adminId },
+    where: { adminId: BigInt(adminId) },
     orderBy: { createdAt: 'desc' },
     take: NOTIFICATION_CONFIG.FETCH_LIMIT,
   });
@@ -55,7 +56,7 @@ export const markAsRead = async (notificationId, adminId) => {
 
 export const markAllAsRead = async (adminId) => {
   const result = await prisma.adminNotification.updateMany({
-    where: { adminId, read: false },
+    where: { adminId: BigInt(adminId), read: false },
     data: { read: true },
   });
 
@@ -64,7 +65,7 @@ export const markAllAsRead = async (adminId) => {
 
 export const getUnreadCount = async (adminId) => {
   const count = await prisma.adminNotification.count({
-    where: { adminId, read: false },
+    where: { adminId: BigInt(adminId), read: false },
   });
 
   return { count };
@@ -84,10 +85,11 @@ export const updateCustomizationStatus = async (notificationId, adminId, status,
 };
 
 export const getPreferences = async (adminId) => {
+  const id = BigInt(adminId);
   const prefs = await prisma.notificationPreference.upsert({
-    where: { adminUserId: adminId },
+    where: { adminUserId: id },
     create: {
-      adminUserId: adminId,
+      adminUserId: id,
       receiveOrderNotifications: true,
       receiveReviewNotifications: true,
     },
@@ -98,6 +100,7 @@ export const getPreferences = async (adminId) => {
 };
 
 export const updatePreferences = async (adminId, data) => {
+  const id = BigInt(adminId);
   const updatePayload = {};
   if (data.receiveOrderNotifications !== undefined) {
     updatePayload.receiveOrderNotifications = data.receiveOrderNotifications;
@@ -107,9 +110,9 @@ export const updatePreferences = async (adminId, data) => {
   }
 
   const prefs = await prisma.notificationPreference.upsert({
-    where: { adminUserId: adminId },
+    where: { adminUserId: id },
     create: {
-      adminUserId: adminId,
+      adminUserId: id,
       receiveOrderNotifications: data.receiveOrderNotifications ?? true,
       receiveReviewNotifications: data.receiveReviewNotifications ?? true,
     },
