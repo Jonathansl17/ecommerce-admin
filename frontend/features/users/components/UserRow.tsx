@@ -1,19 +1,8 @@
 import { USERS_MESSAGES } from '@/features/users/constants/messages';
+import { STATUS_CLASSES, STATUS_LABELS } from '@/features/users/constants/users.constants';
 import type { UserRowProps } from '@/features/users/types/users.types';
 
 const strings = USERS_MESSAGES.table;
-
-const STATUS_LABELS: Record<string, string> = {
-  active: strings.statusActive,
-  inactive: strings.statusInactive,
-  deleted: strings.statusDeleted,
-};
-
-const STATUS_CLASSES: Record<string, string> = {
-  active: 'bg-green-100 text-green-700',
-  inactive: 'bg-gray-100 text-gray-600',
-  deleted: 'bg-red-100 text-red-600',
-};
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-ES', {
