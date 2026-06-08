@@ -4,15 +4,17 @@ export const USERS_API = {
   GET_ALL: (params: {
     search?: string;
     field?: string;
+    status?: string;
     limit?: number;
     offset?: number;
     sortBy?: string;
     sortOrder?: string;
   }) => {
-    const { search, field, limit, offset, sortBy, sortOrder } = params;
+    const { search, field, status, limit, offset, sortBy, sortOrder } = params;
     const query = new URLSearchParams();
     if (search) query.set('search', search);
     if (field) query.set('field', field);
+    if (status && status !== 'all') query.set('status', status);
     if (limit !== undefined) query.set('limit', String(limit));
     if (offset !== undefined) query.set('offset', String(offset));
     if (sortBy) query.set('sortBy', sortBy);

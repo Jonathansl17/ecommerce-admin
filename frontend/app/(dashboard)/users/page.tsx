@@ -4,9 +4,10 @@ import { useUsersPage } from '@/features/users/hooks/useUsersPage';
 import { UserTable } from '@/features/users/components/UserTable';
 import { UserSearchBar } from '@/features/users/components/UserSearchBar';
 import { UserSortSelect } from '@/features/users/components/UserSortSelect';
+import { UserStatusFilter } from '@/features/users/components/UserStatusFilter';
 import { UserPagination } from '@/features/users/components/UserPagination';
 import { USERS_PAGE_SIZE } from '@/features/users/constants/api';
-import { SORT_OPTIONS } from '@/features/users/constants/users.constants';
+import { SORT_OPTIONS, STATUS_FILTER_OPTIONS } from '@/features/users/constants/users.constants';
 import { USERS_MESSAGES } from '@/features/users/constants/messages';
 
 const strings = USERS_MESSAGES;
@@ -17,6 +18,7 @@ export default function UsersPage() {
     setInputValue,
     field,
     setField,
+    status,
     sortIndex,
     offset,
     users,
@@ -26,6 +28,7 @@ export default function UsersPage() {
     statusError,
     updateStatus,
     handleSearch,
+    handleStatusChange,
     handleSortChange,
     handlePrevPage,
     handleNextPage,
@@ -45,6 +48,11 @@ export default function UsersPage() {
           onFieldChange={setField}
           onInputChange={setInputValue}
           onSearch={handleSearch}
+        />
+        <UserStatusFilter
+          status={status}
+          statusOptions={STATUS_FILTER_OPTIONS}
+          onStatusChange={handleStatusChange}
         />
         <UserSortSelect
           sortIndex={sortIndex}
