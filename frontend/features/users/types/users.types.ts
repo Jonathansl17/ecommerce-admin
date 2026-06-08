@@ -1,4 +1,5 @@
 export type AccountStatus = 'active' | 'inactive' | 'deleted';
+export type AccountStatusFilter = 'all' | 'active' | 'inactive';
 export type SearchField = 'name' | 'email';
 export type SortField = 'fullName' | 'createdAt' | 'accountStatus' | 'email';
 export type SortOrder = 'ASC' | 'DESC';
@@ -34,6 +35,7 @@ export interface SortOption {
 export interface UsersQuery {
   search: string;
   field: SearchField;
+  status: AccountStatusFilter;
   sortIndex: number;
   offset: number;
 }
@@ -41,6 +43,7 @@ export interface UsersQuery {
 export interface UseUsersParams {
   search: string;
   field: SearchField;
+  status: AccountStatusFilter;
   offset: number;
   sortBy: SortField;
   sortOrder: SortOrder;
@@ -70,10 +73,27 @@ export interface UserSortSelectProps {
   onSortChange: (index: number) => void;
 }
 
+export interface StatusFilterOption {
+  label: string;
+  value: AccountStatusFilter;
+}
+
+export interface UserStatusFilterProps {
+  status: AccountStatusFilter;
+  statusOptions: StatusFilterOption[];
+  onStatusChange: (status: AccountStatusFilter) => void;
+}
+
 export interface UserPaginationProps {
   offset: number;
   total: number;
   pageSize: number;
   onPrev: () => void;
   onNext: () => void;
+}
+
+export interface ConfirmDeactivateUserModalProps {
+  userName: string;
+  onClose: () => void;
+  onConfirm: () => void;
 }

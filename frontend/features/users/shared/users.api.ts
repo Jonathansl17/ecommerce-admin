@@ -6,6 +6,7 @@ import type { AdminUser, AccountStatus, UsersResponse } from '@/features/users/t
 export async function fetchUsers(params: {
   search?: string;
   field?: string;
+  status?: string;
   limit?: number;
   offset?: number;
   sortBy?: string;
