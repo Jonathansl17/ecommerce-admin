@@ -17,11 +17,23 @@ export default function SupplyHistoryPage({
   const { supplyId } = use(params);
 
   const {
+<<<<<<< HEAD
     history, meta, fetchError, isLoading,
     typeFilter, setTypeFilter,
     dateFrom, setDateFrom,
     dateTo, setDateTo,
     page, setPage,
+=======
+    history,
+    fetchError,
+    isLoading,
+    typeFilter,
+    setTypeFilter,
+    dateFrom,
+    setDateFrom,
+    dateTo,
+    setDateTo,
+>>>>>>> origin/develop
   } = useSupplyHistory(supplyId);
 
   return (
@@ -107,6 +119,15 @@ export default function SupplyHistoryPage({
         <p className="text-sm text-foreground/50">{strings.loadingMessage}</p>
       )}
 
+<<<<<<< HEAD
+=======
+      {/* Cargando */}
+      {isLoading && !history && (
+        <p className="text-sm text-foreground/50">{strings.loadingMessage}</p>
+      )}
+
+      {/* Tabla de movimientos */}
+>>>>>>> origin/develop
       {history && (
         history.movements.length === 0 ? (
           <p className="text-sm text-foreground/60">{strings.emptyMessage}</p>
