@@ -53,7 +53,8 @@ const notifyNewReviewSchema = z.object({
     .max(REVIEW_VALIDATION.PRODUCT_NAME_MAX, `El nombre del producto no puede superar ${REVIEW_VALIDATION.PRODUCT_NAME_MAX} caracteres`),
   productId: z
     .string({ required_error: 'El ID del producto es requerido' })
-    .min(REVIEW_VALIDATION.PRODUCT_ID_MIN, 'El ID del producto no puede estar vacío'),
+    .min(REVIEW_VALIDATION.PRODUCT_ID_MIN, 'El ID del producto no puede estar vacío')
+    .max(100, 'El ID del producto no puede superar 100 caracteres'),
   clientName: z
     .string({ required_error: 'El nombre del cliente es requerido' })
     .min(REVIEW_VALIDATION.CLIENT_NAME_MIN, 'El nombre del cliente no puede estar vacío')

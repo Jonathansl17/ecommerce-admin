@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import { limpiarTokensExpirados } from './features/auth/auth.tokens.service.js';
 import productsRoutes from './features/products/products.routes.js';
 import clientsRoutes from './features/clients/clients.routes.js';
+import storeUsersRoutes from './features/clients/store-users.routes.js';
 import authRoutes from './features/auth/auth.routes.js';
 import passwordRecoveryRoutes from './features/password-recovery/password-recovery.routes.js';
 import inventoryRoutes from './features/inventory/inventory.routes.js';
@@ -26,7 +27,7 @@ app.use(cors({
   origin: FRONTEND_ORIGIN,
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: '50kb' }));
 app.use(cookieParser());
 
 // Routes exempt from CSRF header check are registered before requireFetchHeader.
@@ -44,6 +45,7 @@ app.use(requireFetchHeader);
 app.use('/api/orders', ordersAdminRouter);
 app.use('/api/products', productsRoutes);
 app.use('/api/clients', clientsRoutes);
+app.use('/api/store-users', storeUsersRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/password-recovery', passwordRecoveryRoutes);
 app.use('/api/inventory', inventoryRoutes);

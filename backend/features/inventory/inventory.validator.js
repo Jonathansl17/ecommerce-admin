@@ -17,11 +17,14 @@ const movementDateSchema = z
   }, { message: MSG.DATE_TOO_OLD })
   .optional();
 
+const supplyNameSchema = z
+  .string({ required_error: MSG.NAME_REQUIRED })
+  .min(INVENTORY_VALIDATION.NAME_MIN, MSG.NAME_EMPTY)
+  .max(INVENTORY_VALIDATION.NAME_MAX, MSG.NAME_MAX)
+  .regex(/^[^\r\n]+$/, MSG.NAME_NO_NEWLINE);
+
 const createSupplySchema = z.object({
-  name: z
-    .string({ required_error: MSG.NAME_REQUIRED })
-    .min(INVENTORY_VALIDATION.NAME_MIN, MSG.NAME_EMPTY)
-    .max(INVENTORY_VALIDATION.NAME_MAX, MSG.NAME_MAX),
+  name: supplyNameSchema,
   unitOfMeasure: z.enum(UNIT_OF_MEASURE, {
     error: MSG.UNIT_INVALID,
   }),
@@ -32,10 +35,7 @@ const createSupplySchema = z.object({
 });
 
 const updateSupplySchema = z.object({
-  name: z
-    .string({ required_error: MSG.NAME_REQUIRED })
-    .min(INVENTORY_VALIDATION.NAME_MIN, MSG.NAME_EMPTY)
-    .max(INVENTORY_VALIDATION.NAME_MAX, MSG.NAME_MAX),
+  name: supplyNameSchema,
   unitOfMeasure: z.enum(UNIT_OF_MEASURE, {
     error: MSG.UNIT_INVALID,
   }),

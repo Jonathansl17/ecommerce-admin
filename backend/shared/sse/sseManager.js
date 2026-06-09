@@ -2,7 +2,18 @@ import { SSE_CONFIG } from './sse.constants.js';
 
 const clients = new Map();
 
+function getTotalConnections() {
+  let total = 0;
+  for (const set of clients.values()) total += set.size;
+  return total;
+}
+
 export function addClient(adminId, res) {
+  if (getTotalConnections() >= SSE_CONFIG.MAX_TOTAL_CONNECTIONS) {
+    res.status(503).end();
+    return;
+  }
+
   const key = String(adminId);
   if (!clients.has(key)) {
     clients.set(key, new Set());

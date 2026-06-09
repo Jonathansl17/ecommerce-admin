@@ -1,5 +1,6 @@
 const ENV_CONFIG = {
   JWT_SECRET_MIN_LENGTH: 32,
+  API_KEY_MIN_LENGTH: 32,
 };
 
 const REQUIRED_VARS = [
@@ -24,5 +25,15 @@ export function validateEnv() {
 
   if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < ENV_CONFIG.JWT_SECRET_MIN_LENGTH) {
     throw new Error(`JWT_SECRET must be at least ${ENV_CONFIG.JWT_SECRET_MIN_LENGTH} characters`);
+  }
+
+  for (const key of ['ADMIN_API_KEY', 'CLIENT_API_KEY']) {
+    if (process.env[key] && process.env[key].length < ENV_CONFIG.API_KEY_MIN_LENGTH) {
+      throw new Error(`${key} must be at least ${ENV_CONFIG.API_KEY_MIN_LENGTH} characters`);
+    }
+  }
+
+  if (process.env.NODE_ENV === 'production' && process.env.EMAIL_SECURE !== 'true') {
+    throw new Error('EMAIL_SECURE must be "true" in production to enforce TLS for SMTP');
   }
 }
