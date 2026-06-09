@@ -24,3 +24,9 @@ export const updateOrderStatus = (id, { status }, { signal } = {}) =>
 
 export const cancelOrder = (id, { signal } = {}) =>
   clientApiFetch(`${orderPath(id)}/cancel`, { method: HTTP_METHODS.POST, signal });
+
+export const approvePayment = (id, paymentId, { signal } = {}) =>
+  clientApiFetch(`${orderPath(id)}/payments/${encodeURIComponent(paymentId)}/approve`, {
+    method: HTTP_METHODS.PATCH,
+    signal,
+  });
