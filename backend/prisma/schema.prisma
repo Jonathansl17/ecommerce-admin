@@ -349,6 +349,7 @@ model Product {
   isCustomizable Boolean                @default(false) @map("is_customizable")
   createdAt      DateTime               @default(now()) @map("created_at")
   updatedAt      DateTime               @updatedAt @map("updated_at")
+  deletedAt      DateTime?              @map("deleted_at")
   variants       ProductVariant[]
   stockMovements ProductStockMovement[]
 
