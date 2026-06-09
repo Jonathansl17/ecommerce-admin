@@ -1,4 +1,4 @@
-import { timingSafeEqual } from 'node:crypto';
+import { timingSafeEqual, createHash } from 'node:crypto';
 import { crearError } from './errorHandler.js';
 import { HTTP_STATUS } from '../constants/http.constants.js';
 
@@ -11,20 +11,19 @@ const API_KEY_ERRORS = {
   INVALID: 'API key inválida',
 };
 
+const digest = (s) => createHash('sha256').update(s).digest();
+const expectedDigest = digest(process.env.ADMIN_API_KEY);
+
 export const requireApiKey = (req, _res, next) => {
   const raw = req.headers['x-api-key'];
   const provided = Array.isArray(raw) ? null : raw;
+
 
   if (!provided || typeof provided !== 'string') {
     return next(crearError(API_KEY_ERRORS.MISSING, HTTP_STATUS.UNAUTHORIZED));
   }
 
-  const expected = process.env.ADMIN_API_KEY;
-
-  if (
-    provided.length !== expected.length ||
-    !timingSafeEqual(Buffer.from(provided), Buffer.from(expected))
-  ) {
+  if (!timingSafeEqual(digest(provided), expectedDigest)) {
     return next(crearError(API_KEY_ERRORS.INVALID, HTTP_STATUS.UNAUTHORIZED));
   }
 

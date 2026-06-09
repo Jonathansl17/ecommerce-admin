@@ -33,7 +33,6 @@ export const getMovements = async (supplyId, { type, dateFrom, dateTo, page = PA
     prisma.inventoryMovement.count({ where }),
     prisma.inventoryMovement.findMany({
       where,
-      include: { admin: { include: { adminUser: true } } },
       orderBy: { createdAt: 'desc' },
       skip,
       take: limit,
@@ -57,7 +56,7 @@ export const getMovements = async (supplyId, { type, dateFrom, dateTo, page = PA
       newStock: Number(m.newStock),
       reference: m.reference,
       createdAt: m.createdAt.toISOString(),
-      adminName: m.admin.adminUser.fullName,
+      adminId: m.adminId.toString(),
     })),
     meta: {
       total,
