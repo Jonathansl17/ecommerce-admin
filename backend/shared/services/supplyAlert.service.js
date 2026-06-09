@@ -1,11 +1,9 @@
 import { sendLowStockAlert } from './email.service.js';
-import { SUPPLY_ALERT_TYPES, INVENTORY_MOVEMENT_TYPES } from './supplyAlert.constants.js';
-
-const DAILY_SALES_WINDOW_DAYS = 30;
+import { SUPPLY_ALERT_TYPES, INVENTORY_MOVEMENT_TYPES, SUPPLY_ALERT_CONFIG } from './supplyAlert.constants.js';
 
 export async function calcAvgDailyConsumption(db, supplyId) {
   const since = new Date();
-  since.setDate(since.getDate() - DAILY_SALES_WINDOW_DAYS);
+  since.setDate(since.getDate() - SUPPLY_ALERT_CONFIG.AVG_DAILY_WINDOW);
   since.setHours(0, 0, 0, 0);
 
   const movements = await db.inventoryMovement.findMany({
@@ -20,7 +18,7 @@ export async function calcAvgDailyConsumption(db, supplyId) {
   if (movements.length === 0) return 0;
 
   const totalConsumed = movements.reduce((sum, m) => sum + Number(m.quantity), 0);
-  return totalConsumed / DAILY_SALES_WINDOW_DAYS;
+  return totalConsumed / SUPPLY_ALERT_CONFIG.AVG_DAILY_WINDOW;
 }
 
 export async function procesarAlertaStockBajo(tx, { itemId, newStock, updatedSupply }) {
@@ -87,7 +85,7 @@ export async function limpiarAlertaStockBajo(tx, supplyId, newStock, minThreshol
 }
 
 export async function sincronizarAlertaTrasCambioUmbral(tx, itemId, currentStock, minThreshold) {
-  const shouldAlert = minThreshold > 0 && currentStock <= minThreshold;
+  const shouldAlert = currentStock <= 0 || (minThreshold > 0 && currentStock <= minThreshold);
 
   if (shouldAlert) {
     const alertType =

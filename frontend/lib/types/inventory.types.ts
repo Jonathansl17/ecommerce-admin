@@ -2,6 +2,8 @@ export type UnitOfMeasure = 'grams' | 'kilograms' | 'milliliters' | 'liters' | '
 
 export type ItemStatus = 'active' | 'inactive';
 
+export type MovementTypeFilter = '' | 'entry' | 'consumption';
+
 export interface Supply {
   id: string;
   name: string;
@@ -23,12 +25,6 @@ export interface UpdateSupplyForm {
   name: string;
   unitOfMeasure: UnitOfMeasure;
   minThreshold: number;
-}
-
-export interface CreateSupplyEntryForm {
-  supplyId: string;
-  quantity: number;
-  date: string; // YYYY-MM-DD
 }
 
 export interface EntryItem {
@@ -63,6 +59,13 @@ export interface InventoryMovement {
   adminName: string;
 }
 
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
+
 export interface SupplyHistory {
   supply: Supply;
   movements: InventoryMovement[];
@@ -94,4 +97,5 @@ export interface InventoryReport {
   supplies: SupplyReportRow[];
   rendimiento: RendimientoGroup[];
 }
+
 

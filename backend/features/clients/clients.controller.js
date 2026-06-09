@@ -4,14 +4,26 @@ import {
   create as createService,
   update as updateService,
   remove as removeService,
+  changeStatus as changeStatusService,
 } from './clients.service.js';
 import { CLIENTS_MESSAGES } from './clients.constants.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 
 export const getAll = async (req, res, next) => {
   try {
-    const adminUsers = await getAllService();
+    const { page, limit, search } = req.query;
+    const adminUsers = await getAllService({ page, limit, search });
     return res.status(HTTP_STATUS.OK).json(adminUsers);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changeStatus = async (req, res, next) => {
+  try {
+    const { accountStatus } = req.body;
+    const adminUser = await changeStatusService(req.params.id, accountStatus);
+    return res.status(HTTP_STATUS.OK).json(adminUser);
   } catch (error) {
     next(error);
   }

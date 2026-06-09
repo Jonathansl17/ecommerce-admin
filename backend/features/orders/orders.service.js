@@ -7,12 +7,18 @@ import {
   getOrder as getOrderClient,
   updateOrderStatus as updateOrderStatusClient,
   cancelOrder as cancelOrderClient,
+  approvePayment as approvePaymentClient,
 } from '../../shared/clientApi/orders.client.js';
 import { ClientApiError } from '../../shared/clientApi/client-api.errors.js';
 import { CLIENT_API_ERROR_CODES } from '../../shared/clientApi/client-api.constants.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
-import { ORDER_BAD_RESPONSE_FIELDS, ORDER_MESSAGES } from './orders.constants.js';
+import {
+  ORDER_BAD_RESPONSE_FIELDS,
+  ORDER_MESSAGES,
+  ORDER_RESPONSE_FIELDS,
+  ORDER_CLIENT_STATUS,
+} from './orders.constants.js';
 import { ACCOUNT_STATUS } from '../../shared/constants/app.constants.js';
 
 /**
@@ -44,10 +50,8 @@ export const createOrderNotification = async (orderData) => {
 
   const notifications = await persistOrderNotifications(orderData, targetAdminIds);
 
-  for (let i = 0; i < targetAdminIds.length; i++) {
-    const adminId = String(targetAdminIds[i]);
-    const notification = notifications[i];
-    broadcast([adminId], NOTIFICATION_EVENTS.NEW_ORDER, { notification });
+  for (const notification of notifications) {
+    broadcast([notification.adminId], NOTIFICATION_EVENTS.NEW_ORDER, { notification });
   }
 
   return { notifiedCount: notifications.length };
@@ -65,6 +69,13 @@ const extractBadResponseMessage = (body, fallback) => {
  * suitable for the admin error handler. Non-ClientApiError errors are re-thrown
  * untouched so they bubble up as 500s through the default handler.
  */
+const SAFE_STATUS_MESSAGES = {
+  [HTTP_STATUS.BAD_REQUEST]: 'La solicitud al servicio del cliente es inválida',
+  [HTTP_STATUS.NOT_FOUND]: ORDER_MESSAGES.NO_ENCONTRADO,
+  [HTTP_STATUS.CONFLICT]: 'Conflicto con el estado actual del pedido',
+  [HTTP_STATUS.UNPROCESSABLE_ENTITY]: 'El pedido no puede procesarse en este momento',
+};
+
 const mapClientApiError = (error, { notFoundMessage } = {}) => {
   if (!(error instanceof ClientApiError)) return error;
 
@@ -72,12 +83,12 @@ const mapClientApiError = (error, { notFoundMessage } = {}) => {
     const status = error.status ?? HTTP_STATUS.INTERNAL_ERROR;
     if (status === HTTP_STATUS.NOT_FOUND) {
       return crearError(
-        notFoundMessage ?? extractBadResponseMessage(error.body, ORDER_MESSAGES.NO_ENCONTRADO),
+        notFoundMessage ?? ORDER_MESSAGES.NO_ENCONTRADO,
         HTTP_STATUS.NOT_FOUND,
       );
     }
-    const message = extractBadResponseMessage(error.body, ORDER_MESSAGES.ERROR_DESCONOCIDO);
-    return crearError(message, status);
+    const safeMessage = SAFE_STATUS_MESSAGES[status] ?? ORDER_MESSAGES.ERROR_DESCONOCIDO;
+    return crearError(safeMessage, status);
   }
 
   if (
@@ -111,8 +122,8 @@ export const obtenerPedidoPorId = async (id) => {
 };
 
 function unwrapOrder(response) {
-  if (response != null && typeof response === 'object' && 'order' in response) {
-    return response.order;
+  if (response != null && typeof response === 'object' && ORDER_RESPONSE_FIELDS.ORDER in response) {
+    return response[ORDER_RESPONSE_FIELDS.ORDER];
   }
   return response;
 }
@@ -129,6 +140,16 @@ export const actualizarEstadoPedido = async (id, status) => {
 export const cancelarPedido = async (id) => {
   try {
     const response = await cancelOrderClient(id);
+    return unwrapOrder(response);
+  } catch (error) {
+    throw mapClientApiError(error, { notFoundMessage: ORDER_MESSAGES.NO_ENCONTRADO });
+  }
+};
+
+export const aprobarPago = async (id, paymentId) => {
+  try {
+    await approvePaymentClient(id, paymentId);
+    const response = await updateOrderStatusClient(id, { status: ORDER_CLIENT_STATUS.CONFIRMED });
     return unwrapOrder(response);
   } catch (error) {
     throw mapClientApiError(error, { notFoundMessage: ORDER_MESSAGES.NO_ENCONTRADO });

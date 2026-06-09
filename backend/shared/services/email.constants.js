@@ -1,3 +1,7 @@
+export const EMAIL_CONFIG = {
+  DEFAULT_PORT: 587,
+};
+
 export const EMAIL_SUBJECTS = {
   LOW_STOCK_ALERT: (supplyName) => `[ALERTA] Stock bajo: ${supplyName}`,
   OUT_OF_STOCK_ALERT: (supplyName) => `[ALERTA] Insumo agotado: ${supplyName}`,

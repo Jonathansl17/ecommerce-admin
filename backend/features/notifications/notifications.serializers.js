@@ -13,6 +13,10 @@ export function serializeNotification(n) {
   };
 }
 
+export function toPublicNotification({ adminId: _adminId, ...rest }) {
+  return rest;
+}
+
 export function serializePreferences(p) {
   return {
     adminUserId: p.adminUserId.toString(),

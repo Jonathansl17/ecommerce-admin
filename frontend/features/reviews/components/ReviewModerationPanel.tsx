@@ -68,7 +68,7 @@ export function ReviewModerationPanel({
           role="status"
         >
           <MessageSquare className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground">{emptyMessages[statusFilter]}</p>
+          <p className="text-sm font-medium text-foreground">{emptyMessage}</p>
         </div>
       ) : (
         <ul className="space-y-3" aria-label={strings.a11y.list}>
