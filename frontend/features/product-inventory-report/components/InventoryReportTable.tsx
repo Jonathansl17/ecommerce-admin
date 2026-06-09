@@ -13,13 +13,18 @@ const STOCK_STATUS_STYLES: Record<StockStatus, string> = {
 export function InventoryReportTable({
   rows,
   emptyMessage = strings.table.emptyMessage,
+  embedded = false,
 }: InventoryReportTableProps) {
   if (rows.length === 0) {
-    return <p className="text-sm text-foreground/60">{emptyMessage}</p>;
+    return (
+      <p className={`text-sm text-foreground/60 ${embedded ? 'px-4 py-3' : ''}`}>{emptyMessage}</p>
+    );
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-foreground/10">
+    <div
+      className={embedded ? 'overflow-x-auto' : 'overflow-x-auto rounded-lg border border-foreground/10'}
+    >
       <table className="w-full text-sm">
         <thead className="bg-foreground/5 text-left text-foreground/70">
           <tr>
