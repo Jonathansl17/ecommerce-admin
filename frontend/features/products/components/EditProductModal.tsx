@@ -50,6 +50,7 @@ export function EditProductModal({ product, onClose, onSave, serverError }: Edit
       onClose={onClose}
       footer={footer}
       size="md"
+      disableBackdropClose
     >
       <form id="edit-product-form" onSubmit={handleSubmit} className="space-y-4">
         <FormField id="edit-name" label={strings.nameLabel} error={errors.name?.message}>
