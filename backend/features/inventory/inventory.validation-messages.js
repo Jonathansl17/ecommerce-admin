@@ -5,6 +5,7 @@ export const INVENTORY_VALIDATION_MESSAGES = {
   NAME_REQUIRED: 'El nombre del insumo es requerido',
   NAME_EMPTY: 'El nombre no puede estar vacío',
   NAME_MAX: `El nombre no puede superar ${INVENTORY_VALIDATION.NAME_MAX} caracteres`,
+  NAME_NO_NEWLINE: 'El nombre no puede contener saltos de línea',
 
   // Unit of measure
   UNIT_INVALID: `La unidad de medida debe ser una de: ${UNIT_OF_MEASURE.join(', ')}`,

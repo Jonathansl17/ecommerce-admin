@@ -50,10 +50,8 @@ export const createOrderNotification = async (orderData) => {
 
   const notifications = await persistOrderNotifications(orderData, targetAdminIds);
 
-  for (let i = 0; i < targetAdminIds.length; i++) {
-    const adminId = String(targetAdminIds[i]);
-    const notification = notifications[i];
-    broadcast([adminId], NOTIFICATION_EVENTS.NEW_ORDER, { notification });
+  for (const notification of notifications) {
+    broadcast([notification.adminId], NOTIFICATION_EVENTS.NEW_ORDER, { notification });
   }
 
   return { notifiedCount: notifications.length };
