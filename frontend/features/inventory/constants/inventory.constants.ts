@@ -121,7 +121,6 @@ export const INVENTORY_STRINGS = {
     typeConsumption: 'Consumo',
     emptyMessage: 'No hay movimientos que coincidan con los filtros.',
     historyButton: 'Historial',
-    loadingMessage: 'Cargando...',
     paginationPrev: 'Anterior',
     paginationNext: 'Siguiente',
     paginationInfo: (page: number, total: number) => `Página ${page} · ${total} movimientos`,
@@ -192,6 +191,7 @@ export const INVENTORY_STRINGS = {
     consumptionQuantityMin: 'La cantidad debe ser mayor a cero',
     dateRequired: 'La fecha es obligatoria',
     itemsRequired: 'Agrega al menos un insumo',
+    referenceMax: 'La referencia no puede superar los 200 caracteres',
   },
   errors: {
     duplicateName: 'Ya existe un insumo con ese nombre',

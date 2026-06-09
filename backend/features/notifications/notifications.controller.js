@@ -10,6 +10,7 @@ import {
   updateCustomizationStatus as updateCustomizationStatusService,
 } from './notifications.crud.service.js';
 import { NOTIFICATION_CONFIG, SSE_CONFIG } from './notifications.constants.js';
+import { toPublicNotification } from './notifications.serializers.js';
 
 const ok = (res, data) => res.status(HTTP_STATUS.OK).json({ data, error: null, meta: null });
 
@@ -41,7 +42,7 @@ export const stream = (req, res) => {
 export const getAll = async (req, res, next) => {
   try {
     const notifications = await getNotificationsService(req.user.id);
-    return ok(res, notifications);
+    return ok(res, notifications.map(toPublicNotification));
   } catch (error) {
     next(error);
   }
@@ -59,7 +60,7 @@ export const getUnreadCount = async (req, res, next) => {
 export const markRead = async (req, res, next) => {
   try {
     const notification = await markAsReadService(req.params.id, req.user.id);
-    return ok(res, notification);
+    return ok(res, toPublicNotification(notification));
   } catch (error) {
     next(error);
   }
@@ -82,7 +83,7 @@ export const updateCustomizationStatus = async (req, res, next) => {
       req.body.status,
       req.body.rejectionReason,
     );
-    return ok(res, notification);
+    return ok(res, toPublicNotification(notification));
   } catch (error) {
     next(error);
   }

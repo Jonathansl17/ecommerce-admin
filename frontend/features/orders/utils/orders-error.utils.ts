@@ -31,3 +31,10 @@ export function toCancelError(err: unknown): string {
   }
   return errors.cancel;
 }
+
+export function toApprovePaymentError(err: unknown): string {
+  if (err instanceof ApiError) {
+    if (err.status >= 400 && err.status < 500) return errors.approvePayment;
+  }
+  return errors.approvePayment;
+}

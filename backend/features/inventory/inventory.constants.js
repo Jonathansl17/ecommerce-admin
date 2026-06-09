@@ -7,6 +7,7 @@ export const INVENTORY_MESSAGES = {
   STOCK_INSUFICIENTE: 'Stock insuficiente para uno o más insumos',
   INSUMO_DUPLICADO_EN_OPERACION: 'No se puede incluir el mismo insumo más de una vez',
   ELIMINADO_EXITOSO: 'Insumo eliminado correctamente',
+  UNIDAD_NO_MODIFICABLE: 'No se puede cambiar la unidad de medida de un insumo que ya tiene movimientos registrados',
 };
 
 export const INVENTORY_CONFIG = {
@@ -18,10 +19,14 @@ export const INVENTORY_VALIDATION = {
   NAME_MIN: 1,
   NAME_MAX: 100,
   STOCK_MIN: 0,
+  STOCK_MAX: 999999.99,
   QUANTITY_MIN: 0.01,
+  QUANTITY_MAX: 99999.99,
+  THRESHOLD_MAX: 999999.99,
   REFERENCE_MAX: 200,
   SUPPLY_ID_MIN: 1,
   ITEMS_MIN: 1,
+  ITEMS_MAX: 50,
 };
 
 export const PAGINATION_CONFIG = {
@@ -32,6 +37,10 @@ export const PAGINATION_CONFIG = {
 
 export const REPORT_CONFIG = {
   MAX_DATE_RANGE_DAYS: 365,
+};
+
+export const MOVEMENT_DATE_CONFIG = {
+  MAX_PAST_DAYS: 90,
 };
 
 export const UNIT_OF_MEASURE = ['grams', 'kilograms', 'milliliters', 'liters', 'units'];

@@ -80,3 +80,61 @@ export interface OrderFilters {
   limit?: number;
   offset?: number;
 }
+
+export interface FetchOptions {
+  signal?: AbortSignal;
+}
+
+export interface UseOrderMutationsReturn {
+  ejecutando: boolean;
+  error: string | null;
+  actualizarEstado: (id: string, status: OrderStatus) => Promise<AdminOrder | null>;
+  cancelar: (id: string) => Promise<AdminOrder | null>;
+  aprobarPago: (id: string, paymentId: string) => Promise<boolean>;
+}
+
+export interface ApprovePaymentButtonProps {
+  currentStatus: OrderStatus;
+  paymentStatus: string;
+  disabled: boolean;
+  onApprove: () => void;
+}
+
+export interface ConfirmApproveDialogProps {
+  disabled: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+export interface OrderDetailErrorProps {
+  error: string | null;
+}
+
+export interface OrderDetailHeaderProps {
+  pedido: AdminOrder;
+  ejecutando: boolean;
+  mutationError: string | null;
+  onStatusChange: (status: OrderStatus) => void;
+  onCancel: () => void;
+  onApprovePayment: () => void;
+}
+
+export interface OrderClientInfoProps {
+  clientUser: AdminOrderClientUser | undefined;
+}
+
+export interface OrderShippingAddressProps {
+  address: string;
+}
+
+export interface OrderItemsSectionProps {
+  items: AdminOrderItem[];
+}
+
+export interface OrderPaymentsSectionProps {
+  payments: AdminOrderPayment[];
+}
+
+export interface OrderStatusTimelineProps {
+  notifications: AdminOrderStatusNotification[];
+}
