@@ -193,6 +193,21 @@ async function sembrarAdmins(role) {
   });
   admins.push(principal);
 
+  // Cuenta de prueba adicional con credenciales fijas.
+  const yarield = await prisma.adminUser.create({
+    data: {
+      fullName: 'Yarield',
+      email: 'yarield252@gmail.com',
+      passwordHash: await bcrypt.hash('Cliente12345', SALT_ROUNDS),
+      accountStatus: 'active',
+    },
+  });
+  await prisma.admin.create({ data: { adminUserId: yarield.id, roleId: role.id } });
+  await prisma.notificationPreference.create({
+    data: { adminUserId: yarield.id, receiveOrderNotifications: true, receiveReviewNotifications: true },
+  });
+  admins.push(yarield);
+
   for (let i = 0; i < RECORDS_PER_TABLE - 1; i++) {
     const fullName = `${FIRST_NAMES[i]} ${LAST_NAMES[i]}`;
     const email = `admin${i + 1}@example.com`;
@@ -839,8 +854,8 @@ async function main() {
     `- ${reviewsStats.creadas} reseñas (${reviewsStats.respuestas} respuestas, ${reviewsStats.moderaciones} registros de moderación)`,
   );
 
-  await sembrarAuthSecurity(admins);
-  console.log('- Tokens de seguridad');
+  await sembrarRevokedTokens();
+  console.log('- Revoked tokens');
 
   console.log(`\nSeed completado. Credenciales de prueba: ${TEST_ADMIN.email} / ${TEST_ADMIN.password}`);
 }

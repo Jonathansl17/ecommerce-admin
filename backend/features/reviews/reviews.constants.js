@@ -45,15 +45,6 @@ export const REVIEW_VALIDATION = {
   DELETE_DETAIL_MAX: 500,
 };
 
-export const REVIEW_LIST_LIMITS = {
-  MIN_LIMIT: 1,
-  MAX_LIMIT: 100,
-  DEFAULT_LIMIT: 20,
-  MIN_OFFSET: 0,
-};
-
-export const REVIEW_LIST_STATUSES = ['pending', 'approved', 'rejected'];
-
 export const REVIEW_VALIDATION_MESSAGES = {
   RESPONSE_REQUIRED: 'La respuesta es obligatoria',
   RESPONSE_MIN: `La respuesta debe tener al menos ${REVIEW_VALIDATION.RESPONSE_TEXT_MIN} caracteres`,

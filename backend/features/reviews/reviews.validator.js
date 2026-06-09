@@ -8,44 +8,6 @@ import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
 const MODERATION_REASONS = MODERATION_REASON_CODES;
 
-const optionalIntFromQuery = ({ min, max, label }) =>
-  z.preprocess(
-    (v) => {
-      if (v === undefined || v === null || v === '') return undefined;
-      const n = Number(v);
-      return Number.isFinite(n) ? n : v;
-    },
-    z.number({ invalid_type_error: `${label} debe ser un número` })
-      .int(`${label} debe ser un entero`)
-      .min(min, `${label} no puede ser menor a ${min}`)
-      .max(max, `${label} no puede ser mayor a ${max}`)
-      .optional()
-  );
-
-const listReviewsQuerySchema = z.object({
-  status: z.enum(REVIEW_LIST_STATUSES).optional(),
-  productId: z.string().trim().min(1).max(100).optional(),
-  clientUserId: z.string().trim().min(1).max(100).optional(),
-  rating: optionalIntFromQuery({ min: REVIEW_VALIDATION.RATING_MIN, max: REVIEW_VALIDATION.RATING_MAX, label: 'rating' }),
-  limit: optionalIntFromQuery({ min: REVIEW_LIST_LIMITS.MIN_LIMIT, max: REVIEW_LIST_LIMITS.MAX_LIMIT, label: 'limit' }),
-  offset: optionalIntFromQuery({ min: REVIEW_LIST_LIMITS.MIN_OFFSET, max: Number.MAX_SAFE_INTEGER, label: 'offset' }),
-});
-
-export const validateListReviewsQuery = (req, res, next) => {
-  const result = listReviewsQuerySchema.safeParse(req.query);
-  if (!result.success) return responderErrores(res, result.error);
-  const data = result.data;
-  req.validatedQuery = {
-    status: data.status,
-    productId: data.productId,
-    clientUserId: data.clientUserId,
-    rating: data.rating,
-    limit: data.limit ?? REVIEW_LIST_LIMITS.DEFAULT_LIMIT,
-    offset: data.offset ?? REVIEW_LIST_LIMITS.MIN_OFFSET,
-  };
-  next();
-};
-
 const notifyNewReviewSchema = z.object({
   reviewId: z
     .string({ required_error: 'El ID de la reseña es requerido' })
@@ -57,8 +19,7 @@ const notifyNewReviewSchema = z.object({
     .max(REVIEW_VALIDATION.PRODUCT_NAME_MAX, `El nombre del producto no puede superar ${REVIEW_VALIDATION.PRODUCT_NAME_MAX} caracteres`),
   productId: z
     .string({ required_error: 'El ID del producto es requerido' })
-    .min(REVIEW_VALIDATION.PRODUCT_ID_MIN, 'El ID del producto no puede estar vacío')
-    .max(100, 'El ID del producto no puede superar 100 caracteres'),
+    .min(REVIEW_VALIDATION.PRODUCT_ID_MIN, 'El ID del producto no puede estar vacío'),
   clientName: z
     .string({ required_error: 'El nombre del cliente es requerido' })
     .min(REVIEW_VALIDATION.CLIENT_NAME_MIN, 'El nombre del cliente no puede estar vacío')
