@@ -6,6 +6,8 @@ export const ORDER_MESSAGES = {
   ERROR_DESCONOCIDO: 'Error inesperado al comunicarse con el servicio del cliente',
 };
 
+export const ORDER_STATUSES = ['received', 'in_process', 'ready', 'sold', 'rejected'];
+
 export const ORDER_VALIDATION = {
   ORDER_ID_MIN: 1,
   ORDER_ID_MAX: 100,
@@ -16,8 +18,6 @@ export const ORDER_VALIDATION = {
   PRODUCT_NAME_MAX: 150,
   SHIPPING_ADDRESS_MIN: 1,
   SHIPPING_ADDRESS_MAX: 300,
-  STATUS_MIN: 1,
-  STATUS_MAX: 50,
   CLIENT_USER_ID_MIN: 1,
   CLIENT_USER_ID_MAX: 100,
 };
@@ -27,6 +27,7 @@ export const ORDER_LIST_LIMITS = {
   MAX_LIMIT: 100,
   MIN_LIMIT: 1,
   MIN_OFFSET: 0,
+  MAX_OFFSET: 100_000,
 };
 
 export const ORDER_BAD_RESPONSE_FIELDS = {
@@ -77,6 +78,4 @@ export const ORDER_VALIDATION_MESSAGES = {
   SHIPPING_ADDRESS_MAX: `La dirección de envío no puede superar ${ORDER_VALIDATION.SHIPPING_ADDRESS_MAX} caracteres`,
   HAS_CUSTOMIZATION_REQUIRED: 'El campo hasCustomization es requerido',
   STATUS_REQUIRED: 'El campo status es requerido',
-  STATUS_EMPTY: 'El campo status no puede estar vacío',
-  STATUS_MAX: `El campo status no puede superar ${ORDER_VALIDATION.STATUS_MAX} caracteres`,
 };
