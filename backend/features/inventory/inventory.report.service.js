@@ -1,9 +1,9 @@
 import prisma from '../../shared/db/prisma.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
-import { INVENTORY_MESSAGES, INVENTORY_CONFIG } from './inventory.constants.js';
+import { INVENTORY_MESSAGES, INVENTORY_CONFIG, PAGINATION_CONFIG } from './inventory.constants.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 
-export const getMovements = async (supplyId, { type, dateFrom, dateTo }) => {
+export const getMovements = async (supplyId, { type, dateFrom, dateTo, page = PAGINATION_CONFIG.DEFAULT_PAGE, limit = PAGINATION_CONFIG.DEFAULT_LIMIT }) => {
   const itemId = BigInt(supplyId);
 
   const supply = await prisma.supply.findUnique({
@@ -27,11 +27,17 @@ export const getMovements = async (supplyId, { type, dateFrom, dateTo }) => {
     }
   }
 
-  const movements = await prisma.inventoryMovement.findMany({
-    where,
-    include: { admin: { include: { adminUser: true } } },
-    orderBy: { createdAt: 'desc' },
-  });
+  const skip = (page - 1) * limit;
+
+  const [total, movements] = await Promise.all([
+    prisma.inventoryMovement.count({ where }),
+    prisma.inventoryMovement.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+  ]);
 
   return {
     supply: {
@@ -50,8 +56,14 @@ export const getMovements = async (supplyId, { type, dateFrom, dateTo }) => {
       newStock: Number(m.newStock),
       reference: m.reference,
       createdAt: m.createdAt.toISOString(),
-      adminName: m.admin.adminUser.fullName,
+      adminId: m.adminId.toString(),
     })),
+    meta: {
+      total,
+      page,
+      limit,
+      hasMore: skip + movements.length < total,
+    },
   };
 };
 

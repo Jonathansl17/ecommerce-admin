@@ -1,4 +1,13 @@
-import type { UnitOfMeasure } from '@/lib/types/inventory.types';
+import type { UnitOfMeasure, ItemStatus } from '@/lib/types/inventory.types';
+
+export const INVENTORY_CONFIG = {
+  POLL_INTERVAL_MS: 60_000,
+};
+
+export const ITEM_STATUS: Record<string, ItemStatus> = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+};
 
 export const UNIT_OF_MEASURE_LABELS: Record<UnitOfMeasure, string> = {
   grams: 'Gramos',
@@ -7,6 +16,14 @@ export const UNIT_OF_MEASURE_LABELS: Record<UnitOfMeasure, string> = {
   liters: 'Litros',
   units: 'Unidades',
 };
+
+export const UNIT_OF_MEASURE_VALUES = [
+  'grams',
+  'kilograms',
+  'milliliters',
+  'liters',
+  'units',
+] as const satisfies readonly UnitOfMeasure[];
 
 export const UNIT_OF_MEASURE_OPTIONS = (
   Object.entries(UNIT_OF_MEASURE_LABELS) as [UnitOfMeasure, string][]
@@ -38,7 +55,7 @@ export const INVENTORY_STRINGS = {
     stockLabel: 'Stock actual (solo lectura)',
     thresholdLabel: 'Umbral mínimo de alerta',
     thresholdPlaceholder: '0',
-    thresholdHint: 'El sistema alertará cuando el stock llegue a esta cantidad. Usa 0 para desactivar.',
+    thresholdHint: 'El sistema alertará cuando el stock llegue a esta cantidad. Con 0, solo recibirás alerta si el insumo se agota por completo.',
     saveButton: 'Guardar cambios',
     savingButton: 'Guardando...',
     cancelButton: 'Cancelar',
@@ -68,6 +85,7 @@ export const INVENTORY_STRINGS = {
     colQty: 'Cantidad consumida',
     noRendimiento: 'No hay consumos con referencia de producto en este período.',
     dateRequired: 'Selecciona un rango de fechas para generar el reporte.',
+    dateRangeInvalid: 'La fecha de inicio debe ser anterior o igual a la fecha de fin.',
   },
   alerts: {
     sectionTitle: 'Alertas de stock',
@@ -91,6 +109,7 @@ export const INVENTORY_STRINGS = {
     filterTypeConsumption: 'Solo consumos',
     filterDateFrom: 'Desde',
     filterDateTo: 'Hasta',
+    loadingMessage: 'Cargando...',
     colDate: 'Fecha y hora',
     colType: 'Tipo',
     colQuantity: 'Cantidad',
@@ -102,6 +121,9 @@ export const INVENTORY_STRINGS = {
     typeConsumption: 'Consumo',
     emptyMessage: 'No hay movimientos que coincidan con los filtros.',
     historyButton: 'Historial',
+    paginationPrev: 'Anterior',
+    paginationNext: 'Siguiente',
+    paginationInfo: (page: number, total: number) => `Página ${page} · ${total} movimientos`,
   },
   consumption: {
     title: 'Registrar consumo de insumos',
@@ -118,6 +140,7 @@ export const INVENTORY_STRINGS = {
     submitButton: 'Registrar consumo',
     submittingButton: 'Registrando...',
     cancelButton: 'Cancelar',
+    stockAvailableLabel: 'Stock disponible:',
   },
   entry: {
     openButton: 'Registrar entrada',
@@ -141,8 +164,18 @@ export const INVENTORY_STRINGS = {
     colStatus: 'Estado',
     colActions: 'Acciones',
     editButton: 'Editar',
+    deleteButton: 'Eliminar',
     statusActive: 'Activo',
     statusInactive: 'Inactivo',
+  },
+  delete: {
+    title: 'Eliminar insumo',
+    confirmMessage: (name: string) =>
+      `¿Estás seguro de que deseas eliminar "${name}"? Esta acción no se puede deshacer.`,
+    deleteButton: 'Eliminar',
+    deletingButton: 'Eliminando...',
+    cancelButton: 'Cancelar',
+    deleteError: 'No se pudo eliminar el insumo.',
   },
   shared: {
     itemLabel: 'Insumo',
@@ -158,6 +191,7 @@ export const INVENTORY_STRINGS = {
     consumptionQuantityMin: 'La cantidad debe ser mayor a cero',
     dateRequired: 'La fecha es obligatoria',
     itemsRequired: 'Agrega al menos un insumo',
+    referenceMax: 'La referencia no puede superar los 200 caracteres',
   },
   errors: {
     duplicateName: 'Ya existe un insumo con ese nombre',
@@ -173,5 +207,11 @@ export const INVENTORY_STRINGS = {
   success: {
     created: 'Insumo registrado correctamente',
     entryCreated: 'Entrada registrada correctamente',
+  },
+  creationHint: {
+    title: 'Insumo registrado correctamente.',
+    body: 'Te recomendamos configurar un umbral mínimo de alerta desde la opción Editar del insumo. Si lo dejás en 0, el sistema solo te avisará cuando el stock llegue exactamente a cero — no antes.',
+    editNow: 'Editar ahora',
+    dismiss: 'Entendido',
   },
 } as const;

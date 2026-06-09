@@ -15,11 +15,14 @@ import {
   validateRejectReview,
   validateDeleteReview,
 } from './reviews.validator.js';
-import { requireAuth } from '../../shared/middleware/authMiddleware.js';
+import { requireAuth, requireRole } from '../../shared/middleware/authMiddleware.js';
 import { requireApiKey } from '../../shared/middleware/apiKeyMiddleware.js';
+import { webhookRateLimit } from '../../shared/middleware/rateLimitMiddleware.js';
+
+const ADMIN_ROLES = ['administrador'];
 
 export const reviewsWebhookRouter = Router();
-reviewsWebhookRouter.post('/notify', requireApiKey, validateNotifyNewReview, notifyNewReview);
+reviewsWebhookRouter.post('/notify', webhookRateLimit, requireApiKey, validateNotifyNewReview, notifyNewReview);
 
 export const reviewsAdminRouter = Router();
 reviewsAdminRouter.get('/', requireAuth, getReviews);

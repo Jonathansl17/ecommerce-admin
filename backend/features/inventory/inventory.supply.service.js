@@ -7,8 +7,6 @@ import {
   calcAvgDailyConsumption,
 } from '../../shared/services/supplyAlert.service.js';
 
-const DAILY_WINDOW = 30;
-
 export const getAll = async () => {
   const items = await prisma.item.findMany({
     where: { itemType: INVENTORY_CONFIG.ITEM_TYPE },
@@ -48,15 +46,15 @@ export const getAll = async () => {
 };
 
 export const create = async ({ name, unitOfMeasure, initialStock }) => {
-  const existing = await prisma.item.findFirst({
-    where: { name: { equals: name, mode: 'insensitive' }, itemType: INVENTORY_CONFIG.ITEM_TYPE },
-  });
-
-  if (existing) {
-    throw crearError(INVENTORY_MESSAGES.NOMBRE_DUPLICADO, HTTP_STATUS.CONFLICT);
-  }
-
   return prisma.$transaction(async (tx) => {
+    const existing = await tx.item.findFirst({
+      where: { name: { equals: name, mode: 'insensitive' }, itemType: INVENTORY_CONFIG.ITEM_TYPE },
+    });
+
+    if (existing) {
+      throw crearError(INVENTORY_MESSAGES.NOMBRE_DUPLICADO, HTTP_STATUS.CONFLICT);
+    }
+
     const item = await tx.item.create({
       data: {
         name,
@@ -85,15 +83,50 @@ export const create = async ({ name, unitOfMeasure, initialStock }) => {
   });
 };
 
+export const remove = async (id) => {
+  const itemId = BigInt(id);
+
+  const item = await prisma.item.findFirst({
+    where: { id: itemId, itemType: INVENTORY_CONFIG.ITEM_TYPE },
+    include: { supply: true },
+  });
+
+  if (!item) throw crearError(INVENTORY_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.inventoryMovement.deleteMany({ where: { supplyId: itemId } });
+    await tx.supplyAlert.deleteMany({ where: { supplyId: itemId } });
+    await tx.supply.delete({ where: { itemId } });
+    await tx.item.delete({ where: { id: itemId } });
+  });
+
+  return {
+    id: item.id.toString(),
+    name: item.name,
+    status: item.status,
+    unitOfMeasure: item.supply?.unitOfMeasure ?? null,
+    currentStock: item.supply?.currentStock ?? null,
+    minThreshold: item.supply?.minThreshold ?? null,
+  };
+};
+
 export const update = async (id, { name, unitOfMeasure, minThreshold = 0 }) => {
   const itemId = BigInt(id);
 
   const item = await prisma.item.findFirst({
     where: { id: itemId, itemType: INVENTORY_CONFIG.ITEM_TYPE },
+    include: { supply: true },
   });
 
   if (!item) {
     throw crearError(INVENTORY_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+  }
+
+  if (item.supply && item.supply.unitOfMeasure !== unitOfMeasure) {
+    const movementCount = await prisma.inventoryMovement.count({ where: { supplyId: itemId } });
+    if (movementCount > 0) {
+      throw crearError(INVENTORY_MESSAGES.UNIDAD_NO_MODIFICABLE, HTTP_STATUS.CONFLICT);
+    }
   }
 
   const duplicate = await prisma.item.findFirst({

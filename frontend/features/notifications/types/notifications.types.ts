@@ -16,15 +16,19 @@ export interface OrderNotificationProduct {
   quantity: number;
   unitPrice: number;
   isCustomizable: boolean;
+  customizationDetails?: Record<string, string>;
 }
 
 export interface OrderNotificationContent {
   orderId: string;
   clientName: string;
+  clientEmail?: string;
   products: OrderNotificationProduct[];
   total: number;
   shippingAddress: string;
   hasCustomization: boolean;
+  customizationStatus?: 'accepted' | 'rejected';
+  customizationRejectionReason?: string;
 }
 
 export interface ReviewNotificationContent {
@@ -35,6 +39,45 @@ export interface ReviewNotificationContent {
   rating: number;
   reviewText: string;
   isPriority: boolean;
+}
+
+export interface NotificationCardProps {
+  notification: Notification;
+  onMarkRead: (id: string) => void;
+}
+
+export type SaveState = 'idle' | 'saving';
+
+export interface ToggleRowProps {
+  id: string;
+  label: string;
+  checked: boolean;
+  disabled: boolean;
+  onToggle: () => void;
+}
+
+export interface OrderNotificationContentProps {
+  content: OrderNotificationContent;
+}
+
+export interface ReviewNotificationContentProps {
+  content: ReviewNotificationContent;
+}
+
+export interface BadgeCountProps {
+  count: number;
+}
+
+export interface ToastItemProps {
+  toast: ToastNotification;
+  onDismiss: (id: string) => void;
+}
+
+export interface ToastNotification {
+  id: string;
+  notification: Notification;
+  orderContent: OrderNotificationContent | null;
+  reviewContent: ReviewNotificationContent | null;
 }
 
 export interface NotificationPreference {

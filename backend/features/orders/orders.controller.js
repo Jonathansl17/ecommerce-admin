@@ -5,6 +5,7 @@ import {
   obtenerPedidoPorId as obtenerPedidoPorIdService,
   actualizarEstadoPedido as actualizarEstadoPedidoService,
   cancelarPedido as cancelarPedidoService,
+  aprobarPago as aprobarPagoService,
 } from './orders.service.js';
 
 export const notifyNewOrder = async (req, res, next) => {
@@ -47,6 +48,15 @@ export const cancelar = async (req, res, next) => {
   try {
     const order = await cancelarPedidoService(req.params.id);
     return res.status(HTTP_STATUS.OK).json(order);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const aprobarPago = async (req, res, next) => {
+  try {
+    const result = await aprobarPagoService(req.params.id, req.params.paymentId);
+    return res.status(HTTP_STATUS.OK).json(result);
   } catch (error) {
     next(error);
   }

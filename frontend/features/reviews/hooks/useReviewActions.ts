@@ -20,7 +20,11 @@ export function useReviewActions(): UseReviewActionsReturn {
   const clearError = useCallback(() => setActionError(null), []);
 
   const approve = useCallback(
-    async (id: string, onSuccess: (updated: Review) => void) => {
+    async (
+      id: string,
+      onSuccess: (updated: Review) => void,
+      onError?: () => void
+    ) => {
       setLoadingId(id);
       setActionError(null);
       try {
@@ -28,6 +32,7 @@ export function useReviewActions(): UseReviewActionsReturn {
         onSuccess(updated);
       } catch {
         setActionError(id);
+        onError?.();
       } finally {
         setLoadingId(null);
       }
@@ -40,7 +45,8 @@ export function useReviewActions(): UseReviewActionsReturn {
       id: string,
       reason: ModerationReason,
       notes: string | undefined,
-      onSuccess: (updated: Review) => void
+      onSuccess: (updated: Review) => void,
+      onError?: () => void
     ) => {
       setLoadingId(id);
       setActionError(null);
@@ -49,6 +55,7 @@ export function useReviewActions(): UseReviewActionsReturn {
         onSuccess(updated);
       } catch {
         setActionError(id);
+        onError?.();
       } finally {
         setLoadingId(null);
       }
