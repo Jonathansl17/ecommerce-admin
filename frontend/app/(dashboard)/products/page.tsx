@@ -153,37 +153,21 @@ export default function ProductsPage() {
             </p>
           </div>
 
-          <div className="flex gap-2 shrink-0">
-            {isBulkMode ? (
-              <button
-                onClick={() => setIsBulkMode(false)}
-                className="px-4 py-2 text-sm rounded-md border border-foreground/20 text-foreground hover:bg-foreground/5 transition-colors"
-              >
-                {strings.bulk.backToList}
-              </button>
-            ) : (
-              <>
-                <Link
-                  href="/products/report"
-                  className="px-4 py-2 text-sm rounded-md border border-foreground/20 text-foreground hover:bg-foreground/5 transition-colors"
-                >
-                  {strings.report.button}
-                </Link>
-                <button
-                  onClick={handleOpenCreate}
-                  className="px-4 py-2 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors"
-                >
-                  {strings.create.addButton}
-                </button>
-                <button
-                  onClick={() => setIsBulkMode(true)}
-                  className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                >
-                  {strings.bulk.title}
-                </button>
-              </>
-            )}
-          </div>
+          {isBulkMode ? (
+            <button
+              onClick={() => setIsBulkMode(false)}
+              className="shrink-0 rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground/70 hover:bg-foreground/5 transition-colors"
+            >
+              {strings.bulk.backToList}
+            </button>
+          ) : (
+            <Link
+              href="/products/report"
+              className="shrink-0 rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground/70 hover:bg-foreground/5 transition-colors"
+            >
+              {strings.report.button}
+            </Link>
+          )}
         </div>
 
         {state.error ? (
@@ -201,6 +185,20 @@ export default function ProductsPage() {
                 setAdjustingProduct(product);
               }}
             />
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleOpenCreate}
+                className="rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground/70 hover:bg-foreground/5 transition-colors"
+              >
+                {strings.create.addButton}
+              </button>
+              <button
+                onClick={() => setIsBulkMode(true)}
+                className="rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground/70 hover:bg-foreground/5 transition-colors"
+              >
+                {strings.bulk.title}
+              </button>
+            </div>
             <ProductList
             products={state.products}
             onAdjust={(product) => {
