@@ -18,11 +18,25 @@ export const USERS_MESSAGES = {
     colCreated: 'Registro',
     colActions: 'Acciones',
     statusActive: 'Activo',
-    statusInactive: 'Inactivo',
+    statusInactive: 'Desactivado',
     statusDeleted: 'Eliminado',
     activateButton: 'Activar',
     deactivateButton: 'Desactivar',
     emptyMessage: 'No se encontraron usuarios.',
+  },
+  confirmDeactivate: {
+    title: 'Desactivar usuario',
+    message: (name: string) => `¿Seguro que deseas desactivar a ${name}? El usuario no podrá acceder a su cuenta hasta que vuelvas a activarla.`,
+    confirmButton: 'Sí, desactivar',
+    cancelButton: 'Cancelar',
+  },
+  filter: {
+    label: 'Estado',
+    options: {
+      all: 'Todos',
+      active: 'Activos',
+      inactive: 'Desactivados',
+    },
   },
   sort: {
     label: 'Ordenar por',
