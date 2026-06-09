@@ -2,71 +2,68 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronRight, Menu } from 'lucide-react';
+import { Menu, Home } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/AuthContext';
-import { NotificationBell } from '@/features/notifications/components/NotificationBell';
-
-const pageTitles: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/inventory': 'Inventario de insumos',
-  '/products': 'Stock de productos',
-  '/sales': 'Ventas',
-  '/custom-orders': 'Pedidos personalizados',
-  '/reviews': 'Moderación de reseñas',
-  '/users': 'Usuarios admin',
-  '/notifications': 'Notificaciones',
-};
+import { DASHBOARD_ROUTE, HEADER_CONFIG, PAGE_TITLES } from './constants/adminHeader.constants';
 
 interface AdminHeaderProps {
   onMenuOpen: () => void;
+}
+
+function buildInitials(fullName: string): string {
+  return fullName
+    .split(' ')
+    .map((n) => n[0])
+    .slice(0, HEADER_CONFIG.INITIALS_MAX_LENGTH)
+    .join('')
+    .toUpperCase();
 }
 
 export function AdminHeader({ onMenuOpen }: AdminHeaderProps) {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  const pageTitle = pageTitles[pathname] ?? 'Dashboard';
-  const isRoot = pathname === '/dashboard';
-
+  const isRoot = pathname === DASHBOARD_ROUTE;
   const initials = user?.fullName
-    ? user.fullName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
-    : 'AD';
+    ? buildInitials(user.fullName)
+    : HEADER_CONFIG.INITIALS_FALLBACK;
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur lg:px-6 relative">
-      {/* Izquierda — menú móvil + título */}
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur lg:px-6">
+      {/* Izquierda — menú móvil + home */}
+      <div className="flex items-center gap-3 min-w-0">
         <button
+          type="button"
           onClick={onMenuOpen}
-          className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground lg:hidden"
+          className="shrink-0 rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground lg:hidden"
+          aria-label="Abrir menú"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-5 w-5" aria-hidden="true" />
         </button>
 
-        <div className="flex flex-col">
-          {!isRoot && (
-            <nav className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Link href="/dashboard" className="hover:text-foreground transition-colors">
-                Admin
-              </Link>
-              <ChevronRight className="h-3 w-3" />
-              <span className="text-foreground">{pageTitle}</span>
-            </nav>
-          )}
-          <h1 className="text-lg font-semibold leading-tight text-foreground">{pageTitle}</h1>
-        </div>
+        {!isRoot && (
+          <Link
+            href={DASHBOARD_ROUTE}
+            className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Inicio"
+          >
+            <Home className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        )}
       </div>
 
-      {/* Centro — título del panel */}
-      <span className="absolute left-1/2 -translate-x-1/2 text-sm font-semibold text-foreground">
-        Panel Administrativo
-      </span>
-
-      {/* Derecha — acciones */}
-      <div className="flex items-center gap-2">
-        <NotificationBell />
-
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
+      {/* Derecha — usuario */}
+      <div className="flex shrink-0 items-center gap-3">
+        {user?.fullName && (
+          <span className="hidden text-sm text-muted-foreground sm:block truncate max-w-[160px]">
+            {user.fullName}
+          </span>
+        )}
+        <div
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground"
+          aria-label={user?.fullName ?? HEADER_CONFIG.INITIALS_FALLBACK}
+          title={user?.fullName}
+        >
           <span className="text-sm font-semibold">{initials}</span>
         </div>
       </div>

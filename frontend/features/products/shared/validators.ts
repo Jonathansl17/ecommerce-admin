@@ -25,8 +25,7 @@ export const createProductSchema = z.object({
     .max(CREATE_PRODUCT_VALIDATION.NAME.MAX_LENGTH, createValidation.nameMax),
   description: z
     .string()
-    .max(CREATE_PRODUCT_VALIDATION.DESCRIPTION.MAX_LENGTH, createValidation.descriptionMax)
-    .optional(),
+    .max(CREATE_PRODUCT_VALIDATION.DESCRIPTION.MAX_LENGTH, createValidation.descriptionMax),
   price: z
     .number({ error: createValidation.priceRequired })
     .min(CREATE_PRODUCT_VALIDATION.PRICE.MIN, createValidation.priceMin)

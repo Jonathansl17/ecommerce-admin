@@ -20,6 +20,7 @@ const serializeProduct = (product, avgDailySales = null, daysRemaining = null) =
   status: product.status,
   currentStock: product.currentStock,
   minThreshold: product.minThreshold ?? null,
+  isCustomizable: product.isCustomizable,
   createdAt: product.createdAt.toISOString(),
   updatedAt: product.updatedAt.toISOString(),
   variants: (product.variants ?? []).map(serializeVariant),
@@ -48,6 +49,7 @@ async function calcProductAvgDailySales(productId) {
 
 export const getAll = async () => {
   const products = await prisma.product.findMany({
+    where: { deletedAt: null },
     include: { variants: true },
     orderBy: { name: 'asc' },
   });
@@ -71,8 +73,8 @@ export const getAll = async () => {
 };
 
 export const getById = async (id) => {
-  const product = await prisma.product.findUnique({
-    where: { id: BigInt(id) },
+  const product = await prisma.product.findFirst({
+    where: { id: BigInt(id), deletedAt: null },
     include: { variants: true },
   });
   if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
@@ -93,39 +95,37 @@ export const create = async ({ name, description, price, status }) => {
 };
 
 export const update = async (id, data) => {
+  const bigId = BigInt(id);
+  const existing = await prisma.product.findFirst({ where: { id: bigId, deletedAt: null } });
+  if (!existing) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+
   const { name, description, price, status, minThreshold } = data;
-  try {
-    const product = await prisma.product.update({
-      where: { id: BigInt(id) },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(description !== undefined && { description }),
-        ...(price !== undefined && { price }),
-        ...(status !== undefined && { status }),
-        ...('minThreshold' in data && { minThreshold: minThreshold ?? null }),
-      },
-      include: { variants: true },
-    });
-    return serializeProduct(product);
-  } catch (error) {
-    if (error.code === 'P2025') throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
-    throw error;
-  }
+  const product = await prisma.product.update({
+    where: { id: bigId },
+    data: {
+      ...(name !== undefined && { name }),
+      ...(description !== undefined && { description }),
+      ...(price !== undefined && { price }),
+      ...(status !== undefined && { status }),
+      ...('minThreshold' in data && { minThreshold: minThreshold ?? null }),
+    },
+    include: { variants: true },
+  });
+  return serializeProduct(product);
 };
 
 export const remove = async (id) => {
   const bigId = BigInt(id);
 
-  const product = await prisma.product.findUnique({
-    where: { id: bigId },
+  const product = await prisma.product.findFirst({
+    where: { id: bigId, deletedAt: null },
     include: { variants: true },
   });
   if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
 
-  await prisma.$transaction(async (tx) => {
-    await tx.productStockMovement.deleteMany({ where: { productId: bigId } });
-    await tx.productVariant.deleteMany({ where: { productId: bigId } });
-    await tx.product.delete({ where: { id: bigId } });
+  await prisma.product.update({
+    where: { id: bigId },
+    data: { deletedAt: new Date() },
   });
 
   return serializeProduct(product);
@@ -134,15 +134,18 @@ export const remove = async (id) => {
 export const adjustProductStock = async (productId, { newStock, reason, note }, adminId) => {
   const id = BigInt(productId);
 
-  const product = await prisma.product.findUnique({ where: { id } });
-  if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
-
-  const previousQuantity = product.currentStock;
-  if (previousQuantity === newStock) {
-    throw crearError(PRODUCTS_MESSAGES.MISMO_STOCK, HTTP_STATUS.CONFLICT);
-  }
-
+  // Read and write inside the same Serializable transaction to prevent TOCTOU:
+  // two concurrent adjustments on the same product would otherwise both capture
+  // the same previousQuantity and produce a corrupted audit trail.
   return prisma.$transaction(async (tx) => {
+    const product = await tx.product.findFirst({ where: { id, deletedAt: null } });
+    if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+
+    const previousQuantity = product.currentStock;
+    if (previousQuantity === newStock) {
+      throw crearError(PRODUCTS_MESSAGES.MISMO_STOCK, HTTP_STATUS.CONFLICT);
+    }
+
     await tx.productStockMovement.create({
       data: {
         productId: id,
@@ -162,13 +165,13 @@ export const adjustProductStock = async (productId, { newStock, reason, note }, 
     });
 
     return serializeProduct(updated);
-  });
+  }, { isolationLevel: 'Serializable' });
 };
 
 export const getProductMovements = async (productId, { reason, startDate, endDate, page = 1, limit = 20 }) => {
   const id = BigInt(productId);
 
-  const product = await prisma.product.findUnique({ where: { id } });
+  const product = await prisma.product.findFirst({ where: { id, deletedAt: null } });
   if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
 
   const where = { productId: id };
@@ -218,51 +221,46 @@ export const getProductMovements = async (productId, { reason, startDate, endDat
 };
 
 export const bulkAdjustProductStock = async (adjustments, reason, note, adminId) => {
-  const results = await Promise.allSettled(
-    adjustments.map(async ({ productId, newStock }) => {
+  const adminBigId = BigInt(adminId);
+
+  // Single Serializable transaction: all-or-nothing atomicity + prevents TOCTOU
+  // on concurrent bulk adjustments touching the same products.
+  const updatedItems = await prisma.$transaction(async (tx) => {
+    const results = [];
+
+    for (const { productId, newStock } of adjustments) {
       const id = BigInt(productId);
 
-      const product = await prisma.product.findUnique({ where: { id } });
-      if (!product) throw new Error(`Producto ${productId} no encontrado`);
+      const product = await tx.product.findFirst({ where: { id, deletedAt: null } });
+      if (!product) throw crearError(`Producto no encontrado`, HTTP_STATUS.NOT_FOUND);
 
       const previousQuantity = product.currentStock;
 
-      await prisma.$transaction(async (tx) => {
-        await tx.productStockMovement.create({
-          data: {
-            productId: id,
-            adminId: BigInt(adminId),
-            type: 'manual_adjustment',
-            previousQuantity,
-            newQuantity: newStock,
-            reason,
-            note: note ?? null,
-          },
-        });
-        await tx.product.update({
-          where: { id },
-          data: { currentStock: newStock },
-        });
+      await tx.productStockMovement.create({
+        data: {
+          productId: id,
+          adminId: adminBigId,
+          type: 'manual_adjustment',
+          previousQuantity,
+          newQuantity: newStock,
+          reason,
+          note: note ?? null,
+        },
       });
 
-      return { productId, success: true, newStock };
-    })
-  );
+      await tx.product.update({
+        where: { id },
+        data: { currentStock: newStock },
+      });
 
-  const processedResults = results.map((result, index) => {
-    if (result.status === 'fulfilled') return result.value;
-    return {
-      productId: adjustments[index].productId,
-      success: false,
-      error: result.reason?.message ?? 'Error desconocido',
-    };
-  });
+      results.push({ productId, newStock });
+    }
 
-  const successful = processedResults.filter((r) => r.success).length;
-  const failed = processedResults.filter((r) => !r.success).length;
+    return results;
+  }, { isolationLevel: 'Serializable' });
 
   return {
-    results: processedResults,
-    summary: { total: adjustments.length, successful, failed },
+    results: updatedItems.map((r) => ({ ...r, success: true })),
+    summary: { total: adjustments.length, successful: adjustments.length, failed: 0 },
   };
 };

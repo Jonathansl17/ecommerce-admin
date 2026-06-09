@@ -1,33 +1,34 @@
-/**
- * In-process SSE client registry.
- * Tracks open Response streams per adminId so services can push
- * real-time events to connected browser clients without an external bus.
- *
- * Keys are adminId strings (BigInt serialised as string).
- * Values are Sets of Express Response objects.
- */
+import { SSE_CONFIG } from './sse.constants.js';
 
 const clients = new Map();
 
-/**
- * Register a new SSE response for a given admin.
- * @param {string} adminId
- * @param {import('express').Response} res
- */
+function getTotalConnections() {
+  let total = 0;
+  for (const set of clients.values()) total += set.size;
+  return total;
+}
+
 export function addClient(adminId, res) {
+  if (getTotalConnections() >= SSE_CONFIG.MAX_TOTAL_CONNECTIONS) {
+    res.status(503).end();
+    return;
+  }
+
   const key = String(adminId);
   if (!clients.has(key)) {
     clients.set(key, new Set());
   }
-  clients.get(key).add(res);
+  const set = clients.get(key);
+
+  if (set.size >= SSE_CONFIG.MAX_CONNECTIONS_PER_ADMIN) {
+    const oldest = set.values().next().value;
+    try { oldest.end(); } catch { /* already closed */ }
+    set.delete(oldest);
+  }
+
+  set.add(res);
 }
 
-/**
- * Remove a previously registered SSE response.
- * Cleans up the adminId entry when the set becomes empty.
- * @param {string} adminId
- * @param {import('express').Response} res
- */
 export function removeClient(adminId, res) {
   const key = String(adminId);
   const set = clients.get(key);
@@ -38,32 +39,24 @@ export function removeClient(adminId, res) {
   }
 }
 
-/**
- * Send an SSE event to specific admins.
- * @param {string[]} adminIds
- * @param {string} event
- * @param {unknown} data
- */
 export function broadcast(adminIds, event, data) {
   const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
   for (const adminId of adminIds) {
-    const set = clients.get(String(adminId));
+    const key = String(adminId);
+    const set = clients.get(key);
     if (!set) continue;
     for (const res of set) {
       try {
         res.write(payload);
       } catch (err) {
-        console.error(`[SSE] Error writing to client for adminId ${adminId}:`, err.message);
+        console.error(`[SSE] Removing dead client for adminId ${adminId}:`, err.message);
+        set.delete(res);
+        if (set.size === 0) clients.delete(key);
       }
     }
   }
 }
 
-/**
- * Send an SSE event to ALL currently connected clients.
- * @param {string} event
- * @param {unknown} data
- */
 export function broadcastAll(event, data) {
   const adminIds = Array.from(clients.keys());
   broadcast(adminIds, event, data);
