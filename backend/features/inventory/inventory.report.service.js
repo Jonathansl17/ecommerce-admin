@@ -3,55 +3,6 @@ import { crearError } from '../../shared/middleware/errorHandler.js';
 import { INVENTORY_MESSAGES, INVENTORY_CONFIG, PAGINATION_CONFIG } from './inventory.constants.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 
-// --- Private helpers ---
-
-const buildSupplyTotals = (movements) => {
-  const totals = new Map();
-  for (const m of movements) {
-    const key = m.supplyId.toString();
-    if (!totals.has(key)) totals.set(key, { supply: m.supply, entradas: 0, consumo: 0 });
-    const row = totals.get(key);
-    if (m.type === 'entry') row.entradas += Number(m.quantity);
-    else row.consumo += Number(m.quantity);
-  }
-  return totals;
-};
-
-const calculateStockFinal = async (supply, supplyId, isPeriodCurrent, endDate) => {
-  if (isPeriodCurrent) return Number(supply.currentStock);
-  const movementsAfter = await prisma.inventoryMovement.findMany({
-    where: { supplyId: BigInt(supplyId), createdAt: { gt: endDate } },
-  });
-  let stockFinal = Number(supply.currentStock);
-  for (const m of movementsAfter) {
-    if (m.type === 'entry') stockFinal -= Number(m.quantity);
-    else stockFinal += Number(m.quantity);
-  }
-  return stockFinal;
-};
-
-const buildRendimiento = (movements) => {
-  const rendimientoMap = new Map();
-  for (const m of movements) {
-    if (m.type !== 'consumption' || !m.reference) continue;
-    if (!rendimientoMap.has(m.reference)) rendimientoMap.set(m.reference, new Map());
-    const itemMap = rendimientoMap.get(m.reference);
-    const key = m.supply.item.name;
-    if (!itemMap.has(key)) itemMap.set(key, { quantity: 0, unitOfMeasure: m.supply.unitOfMeasure });
-    itemMap.get(key).quantity += Number(m.quantity);
-  }
-  return Array.from(rendimientoMap.entries()).map(([reference, itemMap]) => ({
-    reference,
-    items: Array.from(itemMap.entries()).map(([supplyName, data]) => ({
-      supplyName,
-      unitOfMeasure: data.unitOfMeasure,
-      quantity: data.quantity,
-    })),
-  }));
-};
-
-// --- Exports ---
-
 export const getMovements = async (supplyId, { type, dateFrom, dateTo, page = PAGINATION_CONFIG.DEFAULT_PAGE, limit = PAGINATION_CONFIG.DEFAULT_LIMIT }) => {
   const itemId = BigInt(supplyId);
 
@@ -132,15 +83,39 @@ export const getReport = async (dateFrom, dateTo) => {
     orderBy: { createdAt: 'asc' },
   });
 
-  const supplyTotals = buildSupplyTotals(movements);
+  // Group totals per supply
+  const supplyTotals = new Map();
+  for (const m of movements) {
+    const key = m.supplyId.toString();
+    if (!supplyTotals.has(key)) {
+      supplyTotals.set(key, { supply: m.supply, entradas: 0, consumo: 0 });
+    }
+    const row = supplyTotals.get(key);
+    if (m.type === 'entry') row.entradas += Number(m.quantity);
+    else row.consumo += Number(m.quantity);
+  }
 
+  // Calculate stock values per supply
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const isPeriodCurrent = endDate >= today;
 
   const supplies = await Promise.all(
     Array.from(supplyTotals.entries()).map(async ([supplyId, { supply, entradas, consumo }]) => {
-      const stockFinal = await calculateStockFinal(supply, supplyId, isPeriodCurrent, endDate);
+      let stockFinal;
+      if (isPeriodCurrent) {
+        stockFinal = Number(supply.currentStock);
+      } else {
+        const movementsAfter = await prisma.inventoryMovement.findMany({
+          where: { supplyId: BigInt(supplyId), createdAt: { gt: endDate } },
+        });
+        stockFinal = Number(supply.currentStock);
+        for (const m of movementsAfter) {
+          if (m.type === 'entry') stockFinal -= Number(m.quantity);
+          else stockFinal += Number(m.quantity);
+        }
+      }
+
       return {
         id: supply.item.id.toString(),
         name: supply.item.name,
@@ -153,9 +128,29 @@ export const getReport = async (dateFrom, dateTo) => {
     })
   );
 
+  // Build rendimiento from consumptions with reference
+  const rendimientoMap = new Map();
+  for (const m of movements) {
+    if (m.type !== 'consumption' || !m.reference) continue;
+    if (!rendimientoMap.has(m.reference)) rendimientoMap.set(m.reference, new Map());
+    const itemMap = rendimientoMap.get(m.reference);
+    const key = m.supply.item.name;
+    if (!itemMap.has(key)) itemMap.set(key, { quantity: 0, unitOfMeasure: m.supply.unitOfMeasure });
+    itemMap.get(key).quantity += Number(m.quantity);
+  }
+
+  const rendimiento = Array.from(rendimientoMap.entries()).map(([reference, itemMap]) => ({
+    reference,
+    items: Array.from(itemMap.entries()).map(([supplyName, data]) => ({
+      supplyName,
+      unitOfMeasure: data.unitOfMeasure,
+      quantity: data.quantity,
+    })),
+  }));
+
   return {
     period: { from: dateFrom, to: dateTo },
     supplies: supplies.sort((a, b) => a.name.localeCompare(b.name)),
-    rendimiento: buildRendimiento(movements),
+    rendimiento,
   };
 };
