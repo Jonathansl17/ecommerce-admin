@@ -144,6 +144,6 @@ export const PRODUCTS_MESSAGES = {
     paginationPrev: 'Anterior',
     paginationNext: 'Siguiente',
     expandNotes: 'Notas:',
-    viewHistory: 'Ver historial',
+    viewHistory: 'Historial',
   },
 } as const;
