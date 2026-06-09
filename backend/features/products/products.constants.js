@@ -16,4 +16,14 @@ export const PRODUCTS_CONFIG = {
   ESTADO_POR_DEFECTO: 'active',
   UMBRAL_MIN: 1,
   UMBRAL_MAX: 999999,
+  IMAGEN_POR_DEFECTO: 'https://placehold.co/600x400?text=Producto',
+  CATEGORIA_POR_DEFECTO: 'General',
+  IMAGEN_MAX_LENGTH: 300,
+  CATEGORIA_MAX_LENGTH: 80,
+  HOSTS_IMAGEN_PERMITIDOS: ['placehold.co', 'images.unsplash.com'],
+};
+
+export const PRODUCTS_SYNC = {
+  VARIANTE_COLOR_POR_DEFECTO: 'Único',
+  VARIANTE_TALLA_POR_DEFECTO: 'Único',
 };

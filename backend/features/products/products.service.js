@@ -2,6 +2,7 @@ import prisma from '../../shared/db/prisma.js';
 import { PRODUCTS_MESSAGES, PRODUCTS_CONFIG } from './products.constants.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
+import { syncProductCreated, syncProductUpdated, syncProductDeleted } from './products.sync.js';
 
 const serializeVariant = (variant) => ({
   id: variant.id.toString(),
@@ -21,6 +22,8 @@ const serializeProduct = (product, avgDailySales = null, daysRemaining = null) =
   currentStock: product.currentStock,
   minThreshold: product.minThreshold ?? null,
   isCustomizable: product.isCustomizable,
+  imageUrl: product.imageUrl ?? null,
+  category: product.category ?? null,
   createdAt: product.createdAt.toISOString(),
   updatedAt: product.updatedAt.toISOString(),
   variants: (product.variants ?? []).map(serializeVariant),
@@ -81,16 +84,19 @@ export const getById = async (id) => {
   return serializeProduct(product);
 };
 
-export const create = async ({ name, description, price, status }) => {
+export const create = async ({ name, description, price, status, imageUrl, category }) => {
   const product = await prisma.product.create({
     data: {
       name,
       description: description ?? null,
       price,
       status: status ?? PRODUCTS_CONFIG.ESTADO_POR_DEFECTO,
+      imageUrl: imageUrl ?? null,
+      category: category ?? null,
     },
     include: { variants: true },
   });
+  await syncProductCreated(product);
   return serializeProduct(product);
 };
 
@@ -99,7 +105,7 @@ export const update = async (id, data) => {
   const existing = await prisma.product.findFirst({ where: { id: bigId, deletedAt: null } });
   if (!existing) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
 
-  const { name, description, price, status, minThreshold } = data;
+  const { name, description, price, status, minThreshold, imageUrl, category } = data;
   const product = await prisma.product.update({
     where: { id: bigId },
     data: {
@@ -108,9 +114,12 @@ export const update = async (id, data) => {
       ...(price !== undefined && { price }),
       ...(status !== undefined && { status }),
       ...('minThreshold' in data && { minThreshold: minThreshold ?? null }),
+      ...('imageUrl' in data && { imageUrl: imageUrl ?? null }),
+      ...('category' in data && { category: category ?? null }),
     },
     include: { variants: true },
   });
+  await syncProductUpdated(product);
   return serializeProduct(product);
 };
 
@@ -127,6 +136,8 @@ export const remove = async (id) => {
     where: { id: bigId },
     data: { deletedAt: new Date() },
   });
+
+  await syncProductDeleted(product);
 
   return serializeProduct(product);
 };
