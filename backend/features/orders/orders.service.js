@@ -17,7 +17,7 @@ import {
   ORDER_BAD_RESPONSE_FIELDS,
   ORDER_MESSAGES,
   ORDER_RESPONSE_FIELDS,
-  ORDER_STATUSES,
+  ORDER_CLIENT_STATUS,
 } from './orders.constants.js';
 import { ACCOUNT_STATUS } from '../../shared/constants/app.constants.js';
 
@@ -149,7 +149,7 @@ export const cancelarPedido = async (id) => {
 export const aprobarPago = async (id, paymentId) => {
   try {
     await approvePaymentClient(id, paymentId);
-    const response = await updateOrderStatusClient(id, { status: ORDER_STATUSES.CONFIRMED });
+    const response = await updateOrderStatusClient(id, { status: ORDER_CLIENT_STATUS.CONFIRMED });
     return unwrapOrder(response);
   } catch (error) {
     throw mapClientApiError(error, { notFoundMessage: ORDER_MESSAGES.NO_ENCONTRADO });

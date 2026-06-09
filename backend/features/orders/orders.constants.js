@@ -38,7 +38,7 @@ export const ORDER_PARAM_NAMES = {
   ID: 'id',
 };
 
-export const ORDER_STATUSES = {
+export const ORDER_CLIENT_STATUS = {
   CONFIRMED: 'confirmed',
 };
 

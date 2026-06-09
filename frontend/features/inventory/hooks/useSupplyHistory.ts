@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type Dispatch, type SetStateAction } from 'react';
 import { getSupplyMovements } from '@/features/inventory/shared/inventory.api';
 import { INVENTORY_STRINGS } from '@/features/inventory/constants/inventory.constants';
 import type { SupplyHistory, PaginationMeta, MovementTypeFilter } from '@/lib/types/inventory.types';
@@ -38,7 +38,7 @@ export function useSupplyHistory(supplyId: string) {
     loadMovements();
   }, [loadMovements]);
 
-  const handleFilterChange = (setter: (v: string) => void) => (value: string) => {
+  const handleFilterChange = <T extends string>(setter: Dispatch<SetStateAction<T>>) => (value: T) => {
     setPage(1);
     setter(value);
   };

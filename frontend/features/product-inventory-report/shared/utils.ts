@@ -20,20 +20,19 @@ export const buildReportRows = (products: InventoryProduct[]): InventoryReportRo
     const stockStatus = computeStockStatus(product.currentStock, product.minThreshold);
 
     if (product.variants.length === 0) {
-      return [
-        {
-          productId: product.id,
-          productName: product.name,
-          variantName: null,
-          currentStock: product.currentStock,
-          minThreshold: product.minThreshold,
-          stockStatus,
-          isCustomizable: product.isCustomizable,
-        },
-      ];
+      const row: InventoryReportRow = {
+        productId: product.id,
+        productName: product.name,
+        variantName: null,
+        currentStock: product.currentStock,
+        minThreshold: product.minThreshold,
+        stockStatus,
+        isCustomizable: product.isCustomizable,
+      };
+      return [row];
     }
 
-    return product.variants.map((variant) => ({
+    return product.variants.map((variant): InventoryReportRow => ({
       productId: product.id,
       productName: product.name,
       variantName: variant.name,

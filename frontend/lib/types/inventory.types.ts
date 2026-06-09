@@ -59,8 +59,6 @@ export interface InventoryMovement {
   adminName: string;
 }
 
-export type MovementTypeFilter = '' | 'entry' | 'consumption';
-
 export interface PaginationMeta {
   total: number;
   page: number;
