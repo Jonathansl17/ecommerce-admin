@@ -27,7 +27,7 @@ app.use(cors({
   origin: FRONTEND_ORIGIN,
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: '50kb' }));
 app.use(cookieParser());
 
 // Routes exempt from CSRF header check are registered before requireFetchHeader.

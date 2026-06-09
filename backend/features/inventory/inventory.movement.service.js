@@ -6,21 +6,21 @@ import { procesarAlertaStockBajo, limpiarAlertaStockBajo } from '../../shared/se
 
 export const createEntry = async (supplyId, { quantity, date }, adminId) => {
   const itemId = BigInt(supplyId);
-
-  const supply = await prisma.supply.findUnique({
-    where: { itemId },
-    include: { item: true },
-  });
-
-  if (!supply || supply.item.itemType !== INVENTORY_CONFIG.ITEM_TYPE) {
-    throw crearError(INVENTORY_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
-  }
-
-  const previousStock = supply.currentStock;
-  const newStock = Number(previousStock) + quantity;
   const entryDate = date ? new Date(date) : new Date();
 
   return prisma.$transaction(async (tx) => {
+    const supply = await tx.supply.findUnique({
+      where: { itemId },
+      include: { item: true },
+    });
+
+    if (!supply || supply.item.itemType !== INVENTORY_CONFIG.ITEM_TYPE) {
+      throw crearError(INVENTORY_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+    }
+
+    const previousStock = supply.currentStock;
+    const newStock = Number(previousStock) + quantity;
+
     const updatedSupply = await tx.supply.update({
       where: { itemId },
       data: { currentStock: newStock },
@@ -55,24 +55,21 @@ export const createEntry = async (supplyId, { quantity, date }, adminId) => {
 export const createEntries = async (items, { date }, adminId) => {
   const entryDate = date ? new Date(date) : new Date();
   const adminBigId = BigInt(adminId);
-
-  const supplyData = await Promise.all(
-    items.map(async ({ supplyId, quantity }) => {
-      const itemId = BigInt(supplyId);
-      const supply = await prisma.supply.findUnique({
-        where: { itemId },
-        include: { item: true },
-      });
-      if (!supply || supply.item.itemType !== INVENTORY_CONFIG.ITEM_TYPE) {
-        throw crearError(INVENTORY_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
-      }
-      return { supply, itemId, quantity };
-    })
-  );
+  const itemEntries = items.map(({ supplyId, quantity }) => ({ itemId: BigInt(supplyId), quantity }));
 
   return prisma.$transaction(async (tx) => {
     const results = [];
-    for (const { supply, itemId, quantity } of supplyData) {
+
+    for (const { itemId, quantity } of itemEntries) {
+      const supply = await tx.supply.findUnique({
+        where: { itemId },
+        include: { item: true },
+      });
+
+      if (!supply || supply.item.itemType !== INVENTORY_CONFIG.ITEM_TYPE) {
+        throw crearError(INVENTORY_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
+      }
+
       const previousStock = supply.currentStock;
       const newStock = Number(previousStock) + quantity;
 
@@ -97,6 +94,7 @@ export const createEntries = async (items, { date }, adminId) => {
         minThreshold: updatedSupply.minThreshold,
       });
     }
+
     return results;
   });
 };
@@ -107,10 +105,18 @@ export const createConsumption = async (items, { reference, date }, adminId) => 
     throw crearError(INVENTORY_MESSAGES.INSUMO_DUPLICADO_EN_OPERACION, HTTP_STATUS.CONFLICT);
   }
 
-  const supplyData = await Promise.all(
-    items.map(async ({ supplyId, quantity }) => {
-      const itemId = BigInt(supplyId);
-      const supply = await prisma.supply.findUnique({
+  const entryDate = date ? new Date(date) : new Date();
+  const adminBigId = BigInt(adminId);
+  const itemEntries = items.map(({ supplyId, quantity }) => ({ itemId: BigInt(supplyId), quantity }));
+
+  // Serializable isolation ensures concurrent consumption requests on the same
+  // supply fail with a serialization error (Prisma P2034) rather than silently
+  // driving stock negative.
+  return prisma.$transaction(async (tx) => {
+    const updatedSupplies = [];
+
+    for (const { itemId, quantity } of itemEntries) {
+      const supply = await tx.supply.findUnique({
         where: { itemId },
         include: { item: true },
       });
@@ -119,23 +125,12 @@ export const createConsumption = async (items, { reference, date }, adminId) => 
         throw crearError(INVENTORY_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
       }
 
-      if (Number(supply.currentStock) < quantity) {
-        throw crearError(INVENTORY_MESSAGES.STOCK_INSUFICIENTE, HTTP_STATUS.CONFLICT);
-      }
-
-      return { supply, itemId, quantity };
-    })
-  );
-
-  const entryDate = date ? new Date(date) : new Date();
-  const adminBigId = BigInt(adminId);
-
-  return prisma.$transaction(async (tx) => {
-    const updatedSupplies = [];
-
-    for (const { supply, itemId, quantity } of supplyData) {
       const previousStock = supply.currentStock;
       const newStock = Number(previousStock) - quantity;
+
+      if (newStock < 0) {
+        throw crearError(INVENTORY_MESSAGES.STOCK_INSUFICIENTE, HTTP_STATUS.CONFLICT);
+      }
 
       const updatedSupply = await tx.supply.update({
         where: { itemId },
@@ -169,5 +164,5 @@ export const createConsumption = async (items, { reference, date }, adminId) => 
     }
 
     return updatedSupplies;
-  });
+  }, { isolationLevel: 'Serializable' });
 };

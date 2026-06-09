@@ -8,7 +8,7 @@ import type { AdminUser, UseUsersParams } from '@/features/users/types/users.typ
 
 const errorMsg = USERS_MESSAGES.errors.fetchError;
 
-export function useUsersList({ search, field, offset, sortBy, sortOrder }: UseUsersParams) {
+export function useUsersList({ search, field, status, offset, sortBy, sortOrder }: UseUsersParams) {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -23,6 +23,7 @@ export function useUsersList({ search, field, offset, sortBy, sortOrder }: UseUs
     fetchUsers({
       search: search || undefined,
       field: search ? field : undefined,
+      status,
       limit: USERS_PAGE_SIZE,
       offset,
       sortBy,
@@ -43,7 +44,7 @@ export function useUsersList({ search, field, offset, sortBy, sortOrder }: UseUs
     return () => {
       cancelled = true;
     };
-  }, [search, field, offset, sortBy, sortOrder]);
+  }, [search, field, status, offset, sortBy, sortOrder]);
 
   const replaceUser = useCallback((updated: AdminUser) => {
     setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));

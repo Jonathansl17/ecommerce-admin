@@ -15,6 +15,7 @@ export function useUsersPage() {
   const { users, total, loading, error, statusError, updateStatus } = useUsers({
     search: query.search,
     field: query.field,
+    status: query.status,
     offset: query.offset,
     sortBy,
     sortOrder,
@@ -22,6 +23,10 @@ export function useUsersPage() {
 
   const handleSearch = () => {
     setQuery((q) => ({ ...q, search: inputValue, field, offset: 0 }));
+  };
+
+  const handleStatusChange = (status: typeof query.status) => {
+    setQuery((q) => ({ ...q, status, offset: 0 }));
   };
 
   const handleSortChange = (index: number) => {
@@ -41,6 +46,7 @@ export function useUsersPage() {
     setInputValue,
     field,
     setField,
+    status: query.status,
     sortIndex: query.sortIndex,
     offset: query.offset,
     users,
@@ -50,6 +56,7 @@ export function useUsersPage() {
     statusError,
     updateStatus,
     handleSearch,
+    handleStatusChange,
     handleSortChange,
     handlePrevPage,
     handleNextPage,

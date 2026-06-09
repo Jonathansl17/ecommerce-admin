@@ -4,13 +4,10 @@ import { ORDERS_API } from '../constants/orders.constants';
 import type {
   AdminOrder,
   AdminOrdersListResponse,
+  FetchOptions,
   OrderFilters,
   OrderStatus,
 } from '../types/orders.types';
-
-interface FetchOptions {
-  signal?: AbortSignal;
-}
 
 export async function fetchOrders(
   filters: OrderFilters = {},
@@ -59,6 +56,17 @@ export async function cancelOrder(
 ): Promise<AdminOrder> {
   return apiFetch<AdminOrder>(ORDERS_API.CANCEL(id), {
     method: 'POST',
+    signal: signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+}
+
+export async function approvePayment(
+  id: string,
+  paymentId: string,
+  { signal }: FetchOptions = {},
+): Promise<unknown> {
+  return apiFetch(ORDERS_API.APPROVE_PAYMENT(id, paymentId), {
+    method: 'PATCH',
     signal: signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 }

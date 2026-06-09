@@ -1,13 +1,28 @@
+import { useState } from 'react';
 import { USERS_MESSAGES } from '@/features/users/constants/messages';
 import { UserRow } from '@/features/users/components/UserRow';
-import type { UserTableProps } from '@/features/users/types/users.types';
+import { ConfirmDeactivateUserModal } from '@/features/users/components/ConfirmDeactivateUserModal';
+import type { AdminUser, UserTableProps } from '@/features/users/types/users.types';
 
 const strings = USERS_MESSAGES.table;
 
 export function UserTable({ users = [], onChangeStatus }: UserTableProps) {
+  const [pendingDeactivation, setPendingDeactivation] = useState<AdminUser | null>(null);
+
   if (users.length === 0) {
     return <p className="text-sm text-foreground/60">{strings.emptyMessage}</p>;
   }
+
+  const handleChangeStatus = (id: string, status: 'active' | 'inactive') => {
+    if (status === 'inactive') {
+      const user = users.find((u) => u.id === id);
+      if (user) {
+        setPendingDeactivation(user);
+        return;
+      }
+    }
+    onChangeStatus(id, status);
+  };
 
   return (
     <div className="overflow-x-auto rounded-lg border border-foreground/10">
@@ -23,10 +38,18 @@ export function UserTable({ users = [], onChangeStatus }: UserTableProps) {
         </thead>
         <tbody className="divide-y divide-foreground/10">
           {users.map((user) => (
-            <UserRow key={user.id} user={user} onChangeStatus={onChangeStatus} />
+            <UserRow key={user.id} user={user} onChangeStatus={handleChangeStatus} />
           ))}
         </tbody>
       </table>
+
+      {pendingDeactivation && (
+        <ConfirmDeactivateUserModal
+          userName={pendingDeactivation.fullName}
+          onClose={() => setPendingDeactivation(null)}
+          onConfirm={() => onChangeStatus(pendingDeactivation.id, 'inactive')}
+        />
+      )}
     </div>
   );
 }
