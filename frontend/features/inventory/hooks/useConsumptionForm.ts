@@ -19,7 +19,7 @@ const schema = z.object({
       })
     )
     .min(1, v.itemsRequired),
-  reference: z.string().max(200, v.referenceMax).optional().or(z.literal('')),
+  reference: z.string().max(200, v.referenceMax).or(z.literal('')),
   date: z.string().min(1, v.dateRequired),
 });
 
