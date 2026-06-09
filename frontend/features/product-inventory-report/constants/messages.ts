@@ -31,6 +31,8 @@ export const INVENTORY_REPORT_MESSAGES = {
     customSubtitle: 'Productos marcados como personalizables para pedidos a medida',
     customEmpty: 'No hay productos personalizados que coincidan con los filtros.',
   },
+  disclaimer:
+    'Este reporte muestra el stock actual de cada producto y sus variantes. Usa los filtros para acotar los resultados.',
   loading: 'Cargando reporte...',
   fetchError: 'Error al cargar el reporte de inventario.',
   retry: 'Reintentar',
