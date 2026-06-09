@@ -7,6 +7,7 @@ import {
   rejectReview as rejectReviewService,
   respondToReview as respondToReviewService,
   deleteReview as deleteReviewService,
+  deleteReviewByExternalId as deleteReviewByExternalIdService,
   stats as statsService,
 } from './reviews.service.js';
 import { sendReviewRejectedEmail } from '../../shared/services/email.service.js';
@@ -15,6 +16,15 @@ import { REVIEW_MESSAGES } from './reviews.constants.js';
 export const notifyNewReview = async (req, res, next) => {
   try {
     const result = await createReviewNotificationService(req.body);
+    return res.status(HTTP_STATUS.OK).json({ data: result, error: null, meta: null });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const notifyDeletedReview = async (req, res, next) => {
+  try {
+    const result = await deleteReviewByExternalIdService(req.params.externalId);
     return res.status(HTTP_STATUS.OK).json({ data: result, error: null, meta: null });
   } catch (error) {
     next(error);
