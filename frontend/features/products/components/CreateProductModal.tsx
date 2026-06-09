@@ -49,6 +49,7 @@ export function CreateProductModal({ onClose, onSave, serverError }: CreateProdu
       onClose={onClose}
       footer={footer}
       size="md"
+      disableBackdropClose
     >
       <form id="create-product-form" onSubmit={handleSubmit} className="space-y-4">
         <FormField id="create-name" label={strings.nameLabel} error={errors.name?.message}>
