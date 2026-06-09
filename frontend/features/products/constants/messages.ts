@@ -99,6 +99,9 @@ export const PRODUCTS_MESSAGES = {
     max: 'El umbral mínimo no puede superar 999,999',
     integer: 'El umbral mínimo debe ser un número entero',
   },
+  report: {
+    button: 'Ver reporte',
+  },
   bulk: {
     title: 'Ajuste masivo de stock',
     subtitle: 'Selecciona las variantes y define la nueva cantidad para cada una.',

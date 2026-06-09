@@ -2,6 +2,8 @@ export const NOTIFICATION_MESSAGES = {
   NOT_FOUND: 'Notificación no encontrada',
   ACCESS_DENIED: 'No tienes permiso para acceder a esta notificación',
   PREFERENCES_UPDATED: 'Preferencias actualizadas correctamente',
+  WRONG_TYPE: 'Esta operación solo aplica a notificaciones de pedidos con personalización',
+  ALREADY_PROCESSED: 'Esta notificación ya fue procesada',
 };
 
 export const NOTIFICATION_EVENTS = {
@@ -28,4 +30,35 @@ export const NOTIFICATION_TYPE = {
 export const NOTIFICATION_REVIEW_TITLES = {
   PRIORITY: 'Reseña negativa recibida',
   STANDARD: 'Nueva reseña de producto',
+};
+
+export const SSE_CONFIG = {
+  CONTENT_TYPE: 'text/event-stream',
+  CACHE_CONTROL: 'no-cache',
+  CONNECTION: 'keep-alive',
+  CONNECTED_MSG: ': connected\n\n',
+  KEEPALIVE_MSG: ': keepalive\n\n',
+};
+
+export const CUSTOMIZATION_STATUS = {
+  ACCEPTED: 'accepted',
+  REJECTED: 'rejected',
+};
+
+export const CONTENT_KEYS = {
+  CUSTOMIZATION_STATUS: 'customizationStatus',
+  CUSTOMIZATION_REJECTION_REASON: 'customizationRejectionReason',
+};
+
+export const NOTIFICATION_VALIDATION_MESSAGES = {
+  ORDER_NOTIFICATIONS_BOOLEAN: 'El campo receiveOrderNotifications debe ser un booleano',
+  REVIEW_NOTIFICATIONS_BOOLEAN: 'El campo receiveReviewNotifications debe ser un booleano',
+  AT_LEAST_ONE_PREFERENCE: 'Debe incluir al menos un campo de preferencia para actualizar',
+  CUSTOMIZATION_STATUS_INVALID: 'El estado debe ser "accepted" o "rejected"',
+  REJECTION_REASON_MAX: 'La razón no puede superar 500 caracteres',
+  REJECTION_REASON_REQUIRED: 'La razón de rechazo es obligatoria al rechazar una personalización',
+};
+
+export const NOTIFICATION_VALIDATION_LIMITS = {
+  REJECTION_REASON_MAX: 500,
 };

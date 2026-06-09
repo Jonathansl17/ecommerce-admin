@@ -1,7 +1,8 @@
 import nodemailer from 'nodemailer';
 import prisma from '../db/prisma.js';
 import { SUPPLY_ALERT_TYPES } from './supplyAlert.constants.js';
-import { EMAIL_SUBJECTS, EMAIL_BODY } from './email.constants.js';
+import { EMAIL_CONFIG, EMAIL_SUBJECTS, EMAIL_BODY } from './email.constants.js';
+import { UNIT_OF_MEASURE_LABELS } from '../../features/inventory/inventory.constants.js';
 
 const escHtml = (s) =>
   String(s)
@@ -11,23 +12,17 @@ const escHtml = (s) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#x27;');
 
+const sanitizeSubject = (s) => String(s).replace(/[\r\n]+/g, ' ').trim();
+
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: process.env.SMTP_SECURE === 'true',
+  host: process.env.EMAIL_HOST,
+  port: Number(process.env.EMAIL_PORT) || EMAIL_CONFIG.DEFAULT_PORT,
+  secure: process.env.EMAIL_SECURE === 'true',
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
-
-const UNIT_LABELS = {
-  grams: 'gramos',
-  kilograms: 'kilogramos',
-  milliliters: 'mililitros',
-  liters: 'litros',
-  units: 'unidades',
-};
 
 const EMAIL_COLOR = {
   OUT_OF_STOCK: '#dc2626',
@@ -51,13 +46,14 @@ export const sendLowStockAlert = async ({
 
   if (admins.length === 0) return;
 
-  const unit = UNIT_LABELS[unitOfMeasure] ?? unitOfMeasure;
+  const unit = UNIT_OF_MEASURE_LABELS[unitOfMeasure] ?? unitOfMeasure;
   const isOutOfStock = alertType === SUPPLY_ALERT_TYPES.OUT_OF_STOCK;
   const safeSupplyName = escHtml(supplyName);
+  const safeSubjectName = sanitizeSubject(supplyName);
 
   const subject = isOutOfStock
-    ? EMAIL_SUBJECTS.OUT_OF_STOCK_ALERT(safeSupplyName)
-    : EMAIL_SUBJECTS.LOW_STOCK_ALERT(safeSupplyName);
+    ? EMAIL_SUBJECTS.OUT_OF_STOCK_ALERT(safeSubjectName)
+    : EMAIL_SUBJECTS.LOW_STOCK_ALERT(safeSubjectName);
 
   const diasRestantesText =
     diasRestantes !== null
@@ -95,7 +91,7 @@ export const sendLowStockAlert = async ({
     <p style="margin-top:16px">${EMAIL_BODY.LOW_STOCK.FOOTER}</p>
   `;
 
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const from = process.env.EMAIL_FROM || process.env.EMAIL_USER;
 
   await Promise.all(
     admins.map((admin) =>
@@ -107,7 +103,7 @@ export const sendLowStockAlert = async ({
 export const sendReviewRejectedEmail = async ({ customerEmail, customerName, productName }) => {
   if (!customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) return;
 
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const from = process.env.EMAIL_FROM || process.env.EMAIL_USER;
   const safeName = customerName ? escHtml(customerName) : null;
   const safeProduct = escHtml(productName);
   const body = EMAIL_BODY.REVIEW_REJECTED;

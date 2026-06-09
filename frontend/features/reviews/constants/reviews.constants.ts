@@ -71,6 +71,7 @@ export const EMPTY_REVIEW_STATS: ReviewStats = {
 export const REVIEWS_STRINGS = {
   page: {
     title: 'Moderación de reseñas',
+    ariaLoading: 'Cargando reseñas',
   },
   tabs: {
     all: 'Todas',
@@ -88,6 +89,11 @@ export const REVIEWS_STRINGS = {
     responseSectionLabel: 'Respuesta del administrador',
     moderationSectionLabel: 'Motivo de rechazo',
     byAdmin: (name: string | null) => (name ? `Por ${name}` : 'Por administrador'),
+  },
+  panel: {
+    ariaTabList: 'Filtrar reseñas por estado',
+    ariaList: 'Lista de reseñas',
+    ariaCount: (n: number) => `${n} reseñas`,
   },
   modals: {
     rejectTitle: 'Rechazar reseña',
@@ -115,6 +121,7 @@ export const REVIEWS_STRINGS = {
     submitting: 'Guardando...',
     deleting: 'Eliminando...',
     charsRemaining: (n: number) => `${n} caracteres restantes`,
+    minLengthError: (n: number) => `Mínimo ${n} caracteres`,
   },
   empty: {
     all: 'No hay reseñas registradas.',
@@ -141,6 +148,12 @@ export const REVIEWS_STRINGS = {
     respondError: 'Error al publicar la respuesta.',
     deleteError: 'Error al eliminar la reseña.',
   },
+  toasts: {
+    approved: 'Reseña aprobada',
+    rejected: 'Reseña rechazada',
+    approveError: 'No se pudo aprobar la reseña',
+    rejectError: 'No se pudo rechazar la reseña',
+  },
   time: {
     justNow: 'Justo ahora',
     minutesAgo: (n: number) => `hace ${n} minuto${n === 1 ? '' : 's'}`,
@@ -162,3 +175,15 @@ export const REVIEWS_STRINGS = {
     searchForm: 'Filtros de búsqueda de reseñas',
   },
 } as const;
+
+export const REVIEWS_CARD_STRINGS = REVIEWS_STRINGS.card;
+export const REVIEWS_MODAL_STRINGS = REVIEWS_STRINGS.modals;
+export const REVIEWS_ERRORS_STRINGS = REVIEWS_STRINGS.errors;
+export const REVIEWS_TIME_STRINGS = REVIEWS_STRINGS.time;
+export const REVIEWS_TABS_STRINGS = REVIEWS_STRINGS.tabs;
+export const REVIEWS_EMPTY_STRINGS = REVIEWS_STRINGS.empty;
+
+export const MODERATION_REASONS = Object.keys(MODERATION_REASON_LABELS) as ModerationReason[];
+
+export const RESPOND_MIN_LENGTH = 10;
+export const REVIEW_TEXT_MAX_LENGTH = 500;

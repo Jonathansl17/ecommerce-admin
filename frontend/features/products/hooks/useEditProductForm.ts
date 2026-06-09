@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { editProductSchema } from '../shared/validators';
 import type { EditProductFormData, Product } from '../types/products.types';
@@ -14,7 +14,7 @@ export function useEditProductForm(
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<EditProductFormData>({
-    resolver: zodResolver(editProductSchema),
+    resolver: zodResolver(editProductSchema) as Resolver<EditProductFormData>,
     defaultValues: {
       name: product.name,
       description: product.description ?? '',
