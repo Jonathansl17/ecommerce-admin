@@ -5,16 +5,15 @@ import {
   getSupplies,
   createSupply,
   updateSupply,
-  registerEntries,
-  registerConsumption,
 } from '@/features/inventory/shared/inventory.api';
-import { INVENTORY_STRINGS } from '@/features/inventory/constants/inventory.constants';
+import { INVENTORY_STRINGS, INVENTORY_CONFIG } from '@/features/inventory/constants/inventory.constants';
+import { useDeleteSupply } from './useDeleteSupply';
+import { useEntryModal } from './useEntryModal';
+import { useConsumptionModal } from './useConsumptionModal';
 import type {
   Supply,
   CreateSupplyForm,
   UpdateSupplyForm,
-  CreateSupplyEntriesForm,
-  CreateConsumptionForm,
 } from '@/lib/types/inventory.types';
 
 const strings = INVENTORY_STRINGS;
@@ -24,16 +23,9 @@ export function useInventoryPage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   const [supplyFormOpen, setSupplyFormOpen] = useState(false);
-  const [entryOpen, setEntryOpen] = useState(false);
-  const [consumptionOpen, setConsumptionOpen] = useState(false);
   const [editingSupply, setEditingSupply] = useState<Supply | null>(null);
-  const [quickEntrySupplyId, setQuickEntrySupplyId] = useState<string | undefined>(undefined);
-
   const [supplyFormError, setSupplyFormError] = useState<string | null>(null);
-  const [entryError, setEntryError] = useState<string | null>(null);
-  const [consumptionError, setConsumptionError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
-
   const [showCreationHint, setShowCreationHint] = useState(false);
   const [createdSupply, setCreatedSupply] = useState<Supply | null>(null);
 
@@ -48,25 +40,49 @@ export function useInventoryPage() {
   }, []);
 
   useEffect(() => {
-    loadSupplies();
+    let cancelled = false;
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const poll = async () => {
+      if (cancelled) return;
+      await loadSupplies();
+      if (cancelled) return;
+      timeout = setTimeout(poll, INVENTORY_CONFIG.POLL_INTERVAL_MS);
+    };
+
+    poll();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
   }, [loadSupplies]);
 
-  // --- Open handlers ---
-  const openSupplyForm = () => { setSupplyFormError(null); setSupplyFormOpen(true); };
-  const openEntry = (supplyId?: string) => { setEntryError(null); setQuickEntrySupplyId(supplyId); setEntryOpen(true); };
-  const openConsumption = () => { setConsumptionError(null); setConsumptionOpen(true); };
+  const deleteModal = useDeleteSupply((id) => {
+    setSupplies((prev) => prev.filter((s) => s.id !== id));
+  });
 
-  // --- Close handlers ---
+  const entryModal = useEntryModal((updatedSupplies) => {
+    setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
+  });
+
+  const consumptionModal = useConsumptionModal((updatedSupplies) => {
+    setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
+  });
+
+  // --- Supply form ---
+  const openSupplyForm = () => { setSupplyFormError(null); setSupplyFormOpen(true); };
   const closeSupplyForm = () => { setSupplyFormOpen(false); setSupplyFormError(null); };
-  const closeEntry = () => { setEntryOpen(false); setEntryError(null); setQuickEntrySupplyId(undefined); };
-  const closeConsumption = () => { setConsumptionOpen(false); setConsumptionError(null); };
+
+  // --- Edit ---
+  const openEdit = (supply: Supply) => { setEditError(null); setEditingSupply(supply); };
   const closeEdit = () => { setEditingSupply(null); setEditError(null); };
 
-  // --- Creation hint actions ---
+  // --- Creation hint ---
   const dismissCreationHint = () => { setShowCreationHint(false); setCreatedSupply(null); };
   const editFromHint = () => { setEditingSupply(createdSupply); dismissCreationHint(); };
 
-  // --- CRUD handlers ---
+  // --- CRUD ---
   const handleCreate = async (data: CreateSupplyForm) => {
     try {
       setSupplyFormError(null);
@@ -81,34 +97,6 @@ export function useInventoryPage() {
         error?.error === strings.errors.duplicateName
           ? strings.errors.duplicateName
           : strings.errors.createError
-      );
-    }
-  };
-
-  const handleCreateEntry = async (data: CreateSupplyEntriesForm) => {
-    try {
-      setEntryError(null);
-      const updatedSupplies = await registerEntries(data);
-      setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
-      setEntryOpen(false);
-      setQuickEntrySupplyId(undefined);
-    } catch {
-      setEntryError(strings.errors.entryError);
-    }
-  };
-
-  const handleConsumption = async (data: CreateConsumptionForm) => {
-    try {
-      setConsumptionError(null);
-      const updatedSupplies = await registerConsumption(data);
-      setSupplies((prev) => prev.map((s) => updatedSupplies.find((u) => u.id === s.id) ?? s));
-      setConsumptionOpen(false);
-    } catch (err: unknown) {
-      const error = err as { error?: string };
-      setConsumptionError(
-        error?.error === strings.errors.stockInsufficient
-          ? strings.errors.stockInsufficient
-          : strings.errors.consumptionError
       );
     }
   };
@@ -129,43 +117,32 @@ export function useInventoryPage() {
     }
   };
 
-  const openEdit = (supply: Supply) => { setEditError(null); setEditingSupply(supply); };
-  const handleQuickEntry = (supplyId: string) => openEntry(supplyId);
-
   return {
     // data
     supplies,
     fetchError,
-    // modal open state
+    // supply form
     supplyFormOpen,
-    entryOpen,
-    consumptionOpen,
-    editingSupply,
-    quickEntrySupplyId,
-    // server errors
     supplyFormError,
-    entryError,
-    consumptionError,
+    openSupplyForm,
+    closeSupplyForm,
+    handleCreate,
+    // edit
+    editingSupply,
     editError,
+    openEdit,
+    closeEdit,
+    handleUpdate,
     // creation hint
     showCreationHint,
-    // open/close actions
-    openSupplyForm,
-    openEntry,
-    openEdit,
-    openConsumption,
-    closeSupplyForm,
-    closeEntry,
-    closeConsumption,
-    closeEdit,
-    // hint actions
     editFromHint,
     dismissCreationHint,
-    // CRUD
-    handleCreate,
-    handleCreateEntry,
-    handleConsumption,
-    handleUpdate,
-    handleQuickEntry,
+    // delete modal
+    ...deleteModal,
+    // entry modal
+    ...entryModal,
+    handleQuickEntry: entryModal.openEntry,
+    // consumption modal
+    ...consumptionModal,
   };
 }
