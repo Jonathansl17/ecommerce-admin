@@ -18,12 +18,12 @@ export function RejectReviewModal({
   const [reason, setReason] = useState<ModerationReason>('other');
   const [notes, setNotes] = useState('');
 
-  const notesRemaining = REVIEW_TEXT_MAX_LENGTH - notes.length;
-
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     onConfirm(reason, notes.trim() || undefined);
   };
+
+  const notesRemaining = MAX_NOTES_LENGTH - notes.length;
 
   return (
     <Modal
@@ -46,7 +46,8 @@ export function RejectReviewModal({
             type="submit"
             form="reject-review-form"
             disabled={isLoading}
-            className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors disabled:opacity-50"
+            className="rounded-md px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
+            style={{ backgroundColor: isLoading ? '#f87171' : '#ef4444' }}
           >
             {isLoading ? strings.submitting : strings.confirmReject}
           </button>
@@ -63,13 +64,16 @@ export function RejectReviewModal({
         />
 
         <div className="space-y-1.5">
-          <label htmlFor="reject-notes" className="block text-sm font-medium text-foreground">
+          <label
+            htmlFor="reject-notes"
+            className="block text-sm font-medium text-foreground"
+          >
             {strings.rejectNotesLabel}
           </label>
           <textarea
             id="reject-notes"
             value={notes}
-            onChange={(e) => setNotes(e.target.value.slice(0, REVIEW_TEXT_MAX_LENGTH))}
+            onChange={(e) => setNotes(e.target.value.slice(0, MAX_NOTES_LENGTH))}
             placeholder={strings.rejectNotesPlaceholder}
             rows={3}
             disabled={isLoading}
