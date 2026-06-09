@@ -1,16 +1,18 @@
 import { Router } from 'express';
 import { getAll, getById, create, update, remove, changeStatus } from './clients.controller.js';
-import { requireAuth } from '../../shared/middleware/authMiddleware.js';
+import { requireAuth, requireRole } from '../../shared/middleware/authMiddleware.js';
+import { validateClientId, validateCreateClient, validateUpdateClient } from './clients.validator.js';
+import { adminWriteRateLimit } from '../../shared/middleware/rateLimitMiddleware.js';
 
+const ADMIN_ROLES = ['administrador'];
 const router = Router();
 
-router.use(requireAuth);
-
+router.use(requireAuth, requireRole(ADMIN_ROLES));
 router.get('/', getAll);
-router.get('/:id', getById);
-router.post('/', create);
-router.put('/:id', update);
-router.patch('/:id/status', changeStatus);
-router.delete('/:id', remove);
+router.get('/:id', validateClientId, getById);
+router.post('/', adminWriteRateLimit, validateCreateClient, create);
+router.put('/:id', adminWriteRateLimit, validateClientId, validateUpdateClient, update);
+router.patch('/:id/status', adminWriteRateLimit, validateClientId, changeStatus);
+router.delete('/:id', adminWriteRateLimit, validateClientId, remove);
 
 export default router;

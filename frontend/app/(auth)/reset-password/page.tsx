@@ -1,10 +1,11 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ResetPasswordForm } from '@/features/password-recovery/components/ResetPasswordForm';
 import { useResetPasswordForm } from '@/features/password-recovery/hooks/useResetPasswordForm';
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const {
@@ -31,5 +32,13 @@ export default function ResetPasswordPage() {
       handleSubmit={handleSubmit}
       fieldError={fieldError}
     />
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

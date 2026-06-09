@@ -12,6 +12,8 @@ const escHtml = (s) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#x27;');
 
+const sanitizeSubject = (s) => String(s).replace(/[\r\n]+/g, ' ').trim();
+
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: Number(process.env.EMAIL_PORT) || EMAIL_CONFIG.DEFAULT_PORT,
@@ -47,10 +49,11 @@ export const sendLowStockAlert = async ({
   const unit = UNIT_OF_MEASURE_LABELS[unitOfMeasure] ?? unitOfMeasure;
   const isOutOfStock = alertType === SUPPLY_ALERT_TYPES.OUT_OF_STOCK;
   const safeSupplyName = escHtml(supplyName);
+  const safeSubjectName = sanitizeSubject(supplyName);
 
   const subject = isOutOfStock
-    ? EMAIL_SUBJECTS.OUT_OF_STOCK_ALERT(safeSupplyName)
-    : EMAIL_SUBJECTS.LOW_STOCK_ALERT(safeSupplyName);
+    ? EMAIL_SUBJECTS.OUT_OF_STOCK_ALERT(safeSubjectName)
+    : EMAIL_SUBJECTS.LOW_STOCK_ALERT(safeSubjectName);
 
   const diasRestantesText =
     diasRestantes !== null
