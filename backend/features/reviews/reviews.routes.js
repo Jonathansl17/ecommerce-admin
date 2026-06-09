@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   notifyNewReview,
+  notifyDeletedReview,
   getReviews,
   getReview,
   approveReview,
@@ -20,6 +21,7 @@ import { requireApiKey } from '../../shared/middleware/apiKeyMiddleware.js';
 
 export const reviewsWebhookRouter = Router();
 reviewsWebhookRouter.post('/notify', requireApiKey, validateNotifyNewReview, notifyNewReview);
+reviewsWebhookRouter.delete('/notify/:externalId', requireApiKey, notifyDeletedReview);
 
 export const reviewsAdminRouter = Router();
 reviewsAdminRouter.get('/', requireAuth, getReviews);

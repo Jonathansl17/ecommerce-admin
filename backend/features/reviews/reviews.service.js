@@ -6,6 +6,31 @@ import { crearError } from '../../shared/middleware/errorHandler.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
 import { ACCOUNT_STATUS } from '../../shared/constants/app.constants.js';
 import { MODERATION_DEFAULT_REASON, REVIEW_MESSAGES } from './reviews.constants.js';
+import {
+  deleteReview as deleteReviewOnClient,
+  updateReviewStatus as updateReviewStatusOnClient,
+} from '../../shared/clientApi/index.js';
+
+/**
+ * Propaga un cambio de estado de reseña al backend del cliente. La reseña en el
+ * cliente se identifica por `externalId`. Si la llamada falla no revertimos el
+ * cambio del admin: solo lo registramos para no romper la moderación.
+ *
+ * @param {{ externalId: string | null }} review
+ * @param {string} status
+ * @param {string} [reason]
+ */
+const propagateStatusToClient = async (review, status, reason) => {
+  if (!review.externalId) return;
+  try {
+    await updateReviewStatusOnClient(review.externalId, { status, reason });
+  } catch (err) {
+    console.error(
+      `No se pudo actualizar el estado de la reseña ${review.externalId} en el cliente:`,
+      err.message,
+    );
+  }
+};
 
 const reviewInclude = { adminResponse: true };
 
@@ -165,6 +190,9 @@ export const approveReview = async (id) => {
     data: { status: 'approved' },
     include: reviewInclude,
   });
+
+  await propagateStatusToClient(review, 'approved');
+
   return serializeReview(updated);
 };
 
@@ -200,6 +228,8 @@ export const rejectReview = async (id, adminId, { reason, notes } = {}) => {
       },
     }),
   ]);
+
+  await propagateStatusToClient(review, 'rejected', reason ?? MODERATION_DEFAULT_REASON);
 
   return serializeReview(updated);
 };
@@ -263,7 +293,40 @@ export const deleteReview = async (id, adminId, { reason, detail } = {}) => {
     prisma.review.delete({ where: { id: BigInt(id) } }),
   ]);
 
+  // Propaga el borrado al backend del cliente. La reseña en el cliente se
+  // identifica por externalId; si falla, no revertimos el borrado del admin,
+  // solo lo registramos para no romper la moderación.
+  if (review.externalId) {
+    try {
+      await deleteReviewOnClient(review.externalId, { reason });
+    } catch (err) {
+      console.error(
+        `No se pudo borrar la reseña ${review.externalId} en el cliente:`,
+        err.message,
+      );
+    }
+  }
+
   return { id, deleted: true };
+};
+
+/**
+ * Borra la reseña que el cliente ya eliminó, identificada por su `externalId`
+ * (el id de la reseña en el backend del cliente). Es el reflejo del borrado del
+ * cliente: NO vuelve a llamar al cliente, para evitar un bucle de propagación.
+ * Si no existe la reseña, se considera idempotente (ya estaba borrada).
+ *
+ * @param {string} externalId
+ */
+export const deleteReviewByExternalId = async (externalId) => {
+  const review = await prisma.review.findFirst({
+    where: { externalId: String(externalId) },
+    select: { id: true },
+  });
+  if (!review) return { externalId, deleted: false };
+
+  await prisma.review.delete({ where: { id: review.id } });
+  return { externalId, deleted: true };
 };
 
 /**
