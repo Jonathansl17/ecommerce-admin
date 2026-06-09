@@ -19,3 +19,11 @@ export const webhookRateLimit = rateLimit({
   legacyHeaders: false,
   handler: errorResponse,
 });
+
+export const adminWriteRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  handler: errorResponse,
+});

@@ -16,7 +16,8 @@ const expectedDigest = digest(process.env.ADMIN_API_KEY);
 
 export const requireApiKey = (req, _res, next) => {
   const raw = req.headers['x-api-key'];
-  const provided = Array.isArray(raw) ? raw[0] : raw;
+  const provided = Array.isArray(raw) ? null : raw;
+
 
   if (!provided || typeof provided !== 'string') {
     return next(crearError(API_KEY_ERRORS.MISSING, HTTP_STATUS.UNAUTHORIZED));

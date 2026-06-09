@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { ORDER_LIST_LIMITS, ORDER_VALIDATION, ORDER_VALIDATION_MESSAGES } from './orders.constants.js';
+import { ORDER_LIST_LIMITS, ORDER_STATUSES, ORDER_VALIDATION, ORDER_VALIDATION_MESSAGES } from './orders.constants.js';
 import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
 const orderProductSchema = z.object({
@@ -16,7 +16,10 @@ const orderProductSchema = z.object({
     .nonnegative(ORDER_VALIDATION_MESSAGES.UNIT_PRICE_NONNEGATIVE),
   isCustomizable: z.boolean().optional().default(false),
   customizationDetails: z
-    .record(z.string().max(100), z.string().max(500))
+    .record(
+      z.string().regex(/^[a-zA-Z0-9_-]+$/, 'Las claves de customizationDetails solo pueden contener letras, números, _ y -').max(100),
+      z.string().max(500),
+    )
     .refine((val) => Object.keys(val).length <= 50, {
       message: 'customizationDetails no puede tener más de 50 entradas',
     })
@@ -84,7 +87,7 @@ const optionalIntFromQuery = ({ min, max, label }) =>
     );
 
 const listOrdersQuerySchema = z.object({
-  status: optionalTrimmedString(ORDER_VALIDATION.STATUS_MIN, ORDER_VALIDATION.STATUS_MAX, 'status'),
+  status: z.enum(ORDER_STATUSES).optional(),
   clientUserId: optionalTrimmedString(
     ORDER_VALIDATION.CLIENT_USER_ID_MIN,
     ORDER_VALIDATION.CLIENT_USER_ID_MAX,
@@ -99,7 +102,7 @@ const listOrdersQuerySchema = z.object({
   }),
   offset: optionalIntFromQuery({
     min: ORDER_LIST_LIMITS.MIN_OFFSET,
-    max: Number.MAX_SAFE_INTEGER,
+    max: ORDER_LIST_LIMITS.MAX_OFFSET,
     label: 'offset',
   }),
 });
@@ -120,16 +123,29 @@ export const validateListOrdersQuery = (req, res, next) => {
 };
 
 const updateOrderStatusSchema = z.object({
-  status: z
-    .string({ required_error: ORDER_VALIDATION_MESSAGES.STATUS_REQUIRED })
-    .trim()
-    .min(ORDER_VALIDATION.STATUS_MIN, ORDER_VALIDATION_MESSAGES.STATUS_EMPTY)
-    .max(ORDER_VALIDATION.STATUS_MAX, ORDER_VALIDATION_MESSAGES.STATUS_MAX),
+  status: z.enum(ORDER_STATUSES, {
+    required_error: ORDER_VALIDATION_MESSAGES.STATUS_REQUIRED,
+    error: `Estado inválido. Valores permitidos: ${ORDER_STATUSES.join(', ')}`,
+  }),
 });
 
 export const validateUpdateOrderStatus = (req, res, next) => {
   const result = updateOrderStatusSchema.safeParse(req.body);
   if (!result.success) return responderErrores(res, result.error);
   req.body = result.data;
+  next();
+};
+
+const orderIdParamSchema = z.object({
+  id: z
+    .string()
+    .trim()
+    .min(1, 'El ID del pedido es requerido')
+    .max(ORDER_VALIDATION.ORDER_ID_MAX, ORDER_VALIDATION_MESSAGES.ORDER_ID_MAX),
+});
+
+export const validateOrderIdParam = (req, res, next) => {
+  const result = orderIdParamSchema.safeParse(req.params);
+  if (!result.success) return responderErrores(res, result.error);
   next();
 };
