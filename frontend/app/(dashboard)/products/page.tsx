@@ -19,6 +19,8 @@ import { CreateProductModal } from '@/features/products/components/CreateProduct
 import { EditProductModal } from '@/features/products/components/EditProductModal';
 import { DeleteProductModal } from '@/features/products/components/DeleteProductModal';
 import { ProductAlerts } from '@/features/stock-alerts/components/ProductAlerts';
+import { Pagination } from '@/components/ui/Pagination';
+import { usePagination } from '@/lib/hooks/usePagination';
 import type {
   Product,
   AdjustStockForm,
@@ -48,6 +50,8 @@ export default function ProductsPage() {
   const { create } = useCreateProduct(dispatch);
   const { edit } = useEditProduct(dispatch);
   const { remove } = useDeleteProduct(dispatch);
+
+  const { page, setPage, totalPages, pageItems, total, pageSize, setPageSize } = usePagination(state.products);
 
   const loadProducts = useCallback(async () => {
     dispatch({ type: 'FETCH_START' });
@@ -202,7 +206,7 @@ export default function ProductsPage() {
               </button>
             </div>
             <ProductList
-            products={state.products}
+            products={pageItems}
             onAdjust={(product) => {
               setModalKey((k) => k + 1);
               setAdjustingProduct(product);
@@ -210,6 +214,14 @@ export default function ProductsPage() {
             onHistory={(product) => setHistoryProduct(product)}
             onEdit={handleOpenEdit}
             onDelete={handleOpenDelete}
+          />
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
           />
           </>
         )}
