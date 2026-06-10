@@ -1,31 +1,17 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import type { Review, ModerationReason } from '../types/reviews.types';
-import { approveReview, rejectReview, respondToReview } from '../shared/reviews.api';
-
-interface UseReviewActionsReturn {
-  approve: (
-    id: string,
-    onSuccess: (updated: Review) => void,
-    onError?: () => void
-  ) => Promise<void>;
-  reject: (
-    id: string,
-    reason: ModerationReason,
-    notes: string | undefined,
-    onSuccess: (updated: Review) => void,
-    onError?: () => void
-  ) => Promise<void>;
-  respond: (
-    id: string,
-    responseText: string,
-    onSuccess: (updated: Review) => void
-  ) => Promise<void>;
-  loadingId: string | null;
-  actionError: string | null;
-  clearError: () => void;
-}
+import type {
+  Review,
+  ModerationReason,
+  UseReviewActionsReturn,
+} from '../types/reviews.types';
+import {
+  approveReview,
+  rejectReview,
+  respondToReview,
+  deleteReview,
+} from '../shared/reviews.api';
 
 export function useReviewActions(): UseReviewActionsReturn {
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -34,11 +20,7 @@ export function useReviewActions(): UseReviewActionsReturn {
   const clearError = useCallback(() => setActionError(null), []);
 
   const approve = useCallback(
-    async (
-      id: string,
-      onSuccess: (updated: Review) => void,
-      onError?: () => void
-    ) => {
+    async (id: string, onSuccess: (updated: Review) => void) => {
       setLoadingId(id);
       setActionError(null);
       try {
@@ -46,7 +28,6 @@ export function useReviewActions(): UseReviewActionsReturn {
         onSuccess(updated);
       } catch {
         setActionError(id);
-        onError?.();
       } finally {
         setLoadingId(null);
       }
@@ -59,8 +40,7 @@ export function useReviewActions(): UseReviewActionsReturn {
       id: string,
       reason: ModerationReason,
       notes: string | undefined,
-      onSuccess: (updated: Review) => void,
-      onError?: () => void
+      onSuccess: (updated: Review) => void
     ) => {
       setLoadingId(id);
       setActionError(null);
@@ -69,7 +49,6 @@ export function useReviewActions(): UseReviewActionsReturn {
         onSuccess(updated);
       } catch {
         setActionError(id);
-        onError?.();
       } finally {
         setLoadingId(null);
       }
@@ -97,5 +76,26 @@ export function useReviewActions(): UseReviewActionsReturn {
     []
   );
 
-  return { approve, reject, respond, loadingId, actionError, clearError };
+  const remove = useCallback(
+    async (
+      id: string,
+      reason: ModerationReason,
+      detail: string | undefined,
+      onSuccess: () => void
+    ) => {
+      setLoadingId(id);
+      setActionError(null);
+      try {
+        await deleteReview(id, { reason, detail });
+        onSuccess();
+      } catch {
+        setActionError(id);
+      } finally {
+        setLoadingId(null);
+      }
+    },
+    []
+  );
+
+  return { approve, reject, respond, remove, loadingId, actionError, clearError };
 }

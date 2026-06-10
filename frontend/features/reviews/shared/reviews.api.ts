@@ -3,9 +3,11 @@ import { REQUEST_TIMEOUT_MS } from '@/lib/constants/api.constants';
 import type {
   Review,
   ReviewListResponse,
-  ReviewStatus,
   ReviewStats,
   RejectReviewPayload,
+  DeleteReviewPayload,
+  GetReviewsParams,
+  GetReviewStatsParams,
 } from '../types/reviews.types';
 
 const unwrap = async <T>(promise: Promise<{ data: T }>): Promise<T> => {
@@ -20,24 +22,46 @@ const rethrowErrorBody = (err: unknown): never => {
   throw err;
 };
 
-export async function getReviews(status?: ReviewStatus): Promise<Review[]> {
-  const params = status ? '?' + new URLSearchParams({ status }).toString() : '';
+export async function getReviews({
+  status,
+  product,
+  client,
+  page = 1,
+  pageSize,
+}: GetReviewsParams = {}): Promise<ReviewListResponse> {
+  const search = new URLSearchParams();
+  if (status) search.set('status', status);
+  if (product?.trim()) search.set('product', product.trim());
+  if (client?.trim()) search.set('client', client.trim());
+  if (pageSize) {
+    search.set('limit', String(pageSize));
+    search.set('offset', String((page - 1) * pageSize));
+  }
+  const query = search.toString();
+
   try {
-    const result = await unwrap(
-      apiFetch<{ data: ReviewListResponse }>(`/reviews${params}`, {
+    return await unwrap(
+      apiFetch<{ data: ReviewListResponse }>(`/reviews${query ? `?${query}` : ''}`, {
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       })
     );
-    return result.items;
   } catch {
     throw new Error('fetch_error');
   }
 }
 
-export async function getReviewStats(): Promise<ReviewStats> {
+export async function getReviewStats({
+  product,
+  client,
+}: GetReviewStatsParams = {}): Promise<ReviewStats> {
+  const search = new URLSearchParams();
+  if (product?.trim()) search.set('product', product.trim());
+  if (client?.trim()) search.set('client', client.trim());
+  const query = search.toString();
+
   try {
     return await unwrap(
-      apiFetch<{ data: ReviewStats }>(`/reviews/stats`, {
+      apiFetch<{ data: ReviewStats }>(`/reviews/stats${query ? `?${query}` : ''}`, {
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       })
     );
@@ -96,5 +120,17 @@ export async function respondToReview(id: string, responseText: string): Promise
     );
   } catch (err) {
     return rethrowErrorBody(err);
+  }
+}
+
+export async function deleteReview(id: string, data: DeleteReviewPayload): Promise<void> {
+  try {
+    await apiFetch<{ data: unknown }>(`/reviews/${id}/moderation`, {
+      method: 'DELETE',
+      body: data as unknown as Record<string, unknown>,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (err) {
+    rethrowErrorBody(err);
   }
 }

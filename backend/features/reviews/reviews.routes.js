@@ -1,32 +1,33 @@
 import { Router } from 'express';
 import {
   notifyNewReview,
+  notifyDeletedReview,
   getReviews,
   getReview,
   approveReview,
   rejectReview,
   respondToReview,
+  deleteReview,
   getStats,
 } from './reviews.controller.js';
 import {
   validateNotifyNewReview,
   validateRespondToReview,
   validateRejectReview,
-  validateListReviewsQuery,
+  validateDeleteReview,
 } from './reviews.validator.js';
-import { requireAuth, requireRole } from '../../shared/middleware/authMiddleware.js';
+import { requireAuth } from '../../shared/middleware/authMiddleware.js';
 import { requireApiKey } from '../../shared/middleware/apiKeyMiddleware.js';
-import { webhookRateLimit } from '../../shared/middleware/rateLimitMiddleware.js';
-
-const ADMIN_ROLES = ['administrador'];
 
 export const reviewsWebhookRouter = Router();
-reviewsWebhookRouter.post('/notify', webhookRateLimit, requireApiKey, validateNotifyNewReview, notifyNewReview);
+reviewsWebhookRouter.post('/notify', requireApiKey, validateNotifyNewReview, notifyNewReview);
+reviewsWebhookRouter.delete('/notify/:externalId', requireApiKey, notifyDeletedReview);
 
 export const reviewsAdminRouter = Router();
-reviewsAdminRouter.get('/', requireAuth, requireRole(ADMIN_ROLES), validateListReviewsQuery, getReviews);
-reviewsAdminRouter.get('/stats', requireAuth, requireRole(ADMIN_ROLES), getStats);
-reviewsAdminRouter.get('/:id', requireAuth, requireRole(ADMIN_ROLES), getReview);
-reviewsAdminRouter.patch('/:id/approve', requireAuth, requireRole(ADMIN_ROLES), approveReview);
-reviewsAdminRouter.patch('/:id/reject', requireAuth, requireRole(ADMIN_ROLES), validateRejectReview, rejectReview);
-reviewsAdminRouter.post('/:id/respond', requireAuth, requireRole(ADMIN_ROLES), validateRespondToReview, respondToReview);
+reviewsAdminRouter.get('/', requireAuth, getReviews);
+reviewsAdminRouter.get('/stats', requireAuth, getStats);
+reviewsAdminRouter.get('/:id', requireAuth, getReview);
+reviewsAdminRouter.patch('/:id/approve', requireAuth, approveReview);
+reviewsAdminRouter.patch('/:id/reject', requireAuth, validateRejectReview, rejectReview);
+reviewsAdminRouter.post('/:id/respond', requireAuth, validateRespondToReview, respondToReview);
+reviewsAdminRouter.delete('/:id/moderation', requireAuth, validateDeleteReview, deleteReview);
