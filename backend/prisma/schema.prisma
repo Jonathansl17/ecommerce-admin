@@ -389,6 +389,15 @@ model ProductStockMovement {
   @@map("product_stock_movements")
 }
 
+model ProductImage {
+  id        BigInt   @id @default(autoincrement())
+  data      Bytes
+  mimeType  String   @map("mime_type") @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("product_images")
+}
+
 // ──────────────────────────────── Auth Security ────────────────────────────────
 
 model RevokedToken {

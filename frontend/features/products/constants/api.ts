@@ -7,4 +7,5 @@ export const PRODUCTS_API = {
   ADJUST_STOCK: (productId: string) => `/products/${productId}/adjust-stock`,
   MOVEMENTS: (productId: string) => `/products/${productId}/movements`,
   BULK_ADJUST_STOCK: '/products/bulk-adjust',
+  UPLOAD_IMAGE: '/products/upload-image',
 } as const;

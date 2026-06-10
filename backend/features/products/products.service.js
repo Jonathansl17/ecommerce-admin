@@ -148,7 +148,7 @@ export const adjustProductStock = async (productId, { newStock, reason, note }, 
   // Read and write inside the same Serializable transaction to prevent TOCTOU:
   // two concurrent adjustments on the same product would otherwise both capture
   // the same previousQuantity and produce a corrupted audit trail.
-  return prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx) => {
     const product = await tx.product.findFirst({ where: { id, deletedAt: null } });
     if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
 
@@ -169,14 +169,16 @@ export const adjustProductStock = async (productId, { newStock, reason, note }, 
       },
     });
 
-    const updated = await tx.product.update({
+    return tx.product.update({
       where: { id },
       data: { currentStock: newStock },
       include: { variants: true },
     });
-
-    return serializeProduct(updated);
   }, { isolationLevel: 'Serializable' });
+
+  await syncProductUpdated(updated);
+
+  return serializeProduct(updated);
 };
 
 export const getProductMovements = async (productId, { reason, startDate, endDate, page = 1, limit = 20 }) => {
@@ -269,6 +271,12 @@ export const bulkAdjustProductStock = async (adjustments, reason, note, adminId)
 
     return results;
   }, { isolationLevel: 'Serializable' });
+
+  const adjustedProducts = await prisma.product.findMany({
+    where: { id: { in: updatedItems.map((r) => BigInt(r.productId)) } },
+    include: { variants: true },
+  });
+  await Promise.all(adjustedProducts.map((p) => syncProductUpdated(p)));
 
   return {
     results: updatedItems.map((r) => ({ ...r, success: true })),

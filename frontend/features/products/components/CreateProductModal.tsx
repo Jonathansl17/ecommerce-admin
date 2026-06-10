@@ -5,6 +5,7 @@ import { FormField } from '@/components/ui/FormField';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useCreateProductForm } from '../hooks/useCreateProductForm';
+import { ProductImageField } from './ProductImageField';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
 import { CREATE_PRODUCT_VALIDATION, PRODUCT_STATUS_OPTIONS } from '../constants/validation';
 import type { CreateProductFormData } from '../types/products.types';
@@ -18,7 +19,7 @@ interface CreateProductModalProps {
 }
 
 export function CreateProductModal({ onClose, onSave, serverError }: CreateProductModalProps) {
-  const { register, handleSubmit, errors, isSubmitting } = useCreateProductForm(onSave);
+  const { register, handleSubmit, errors, isSubmitting, setValue, watch } = useCreateProductForm(onSave);
 
   const footer = (
     <>
@@ -107,6 +108,10 @@ export function CreateProductModal({ onClose, onSave, serverError }: CreateProdu
               </option>
             ))}
           </select>
+        </FormField>
+
+        <FormField id="create-image" label={PRODUCTS_MESSAGES.image.label}>
+          <ProductImageField value={watch('imageUrl')} onChange={(url) => setValue('imageUrl', url)} />
         </FormField>
 
         {serverError && (
