@@ -2,21 +2,97 @@ import prisma from '../../shared/db/prisma.js';
 import { broadcast } from '../../shared/sse/sseManager.js';
 import { createReviewNotification as persistReviewNotifications } from '../notifications/notifications.factory.service.js';
 import { NOTIFICATION_EVENTS, NOTIFICATION_CONFIG } from '../notifications/notifications.constants.js';
-import {
-  listReviews as listReviewsClient,
-  getReview as getReviewClient,
-  updateReviewStatus as updateReviewStatusClient,
-  respondToReview as respondToReviewClient,
-  getReviewStats as getReviewStatsClient,
-} from '../../shared/clientApi/reviews.client.js';
-import { ClientApiError } from '../../shared/clientApi/client-api.errors.js';
-import { CLIENT_API_ERROR_CODES } from '../../shared/clientApi/client-api.constants.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
-import { REVIEW_BAD_RESPONSE_FIELDS, REVIEW_MESSAGES } from './reviews.constants.js';
 import { ACCOUNT_STATUS } from '../../shared/constants/app.constants.js';
+import { MODERATION_DEFAULT_REASON, REVIEW_MESSAGES } from './reviews.constants.js';
+import {
+  deleteReview as deleteReviewOnClient,
+  updateReviewStatus as updateReviewStatusOnClient,
+} from '../../shared/clientApi/index.js';
 
+/**
+ * Propaga un cambio de estado de reseña al backend del cliente. La reseña en el
+ * cliente se identifica por `externalId`. Si la llamada falla no revertimos el
+ * cambio del admin: solo lo registramos para no romper la moderación.
+ *
+ * @param {{ externalId: string | null }} review
+ * @param {string} status
+ * @param {string} [reason]
+ */
+const propagateStatusToClient = async (review, status, reason) => {
+  if (!review.externalId) return;
+  try {
+    await updateReviewStatusOnClient(review.externalId, { status, reason });
+  } catch (err) {
+    console.error(
+      `No se pudo actualizar el estado de la reseña ${review.externalId} en el cliente:`,
+      err.message,
+    );
+  }
+};
+
+const reviewInclude = { adminResponse: true };
+
+/**
+ * Serialize a Review Prisma record into the shape the admin frontend consumes.
+ * Converts BigInt ids to strings and flattens the denormalized client/product
+ * fields into nested objects.
+ *
+ * @param {object} r - Review row including `adminResponse`.
+ * @returns {object}
+ */
+const serializeReview = (r) => ({
+  id: r.id.toString(),
+  productId: r.productId,
+  clientUserId: r.clientId ?? '',
+  rating: r.rating,
+  comment: r.comment,
+  status: r.status,
+  edited: r.edited,
+  helpfulVotes: r.helpfulVotes,
+  unhelpfulVotes: r.unhelpfulVotes,
+  adminResponse: r.adminResponse?.text ?? null,
+  createdAt: r.createdAt.toISOString(),
+  updatedAt: r.updatedAt.toISOString(),
+  clientUser: {
+    id: r.clientId ?? '',
+    fullName: r.clientName,
+    email: r.clientEmail ?? '',
+  },
+  product: {
+    itemId: r.productId,
+    name: r.productName,
+    imageUrl: null,
+  },
+});
+
+/**
+ * Persist a review pushed by the storefront webhook, then notify all admins
+ * that have review notifications enabled (or no preference row yet).
+ * Broadcasts an SSE `new_review` event to every notified admin.
+ *
+ * @param {{ reviewId: string, productName: string, productId: string, clientName: string, clientId?: string, clientEmail?: string, rating: number, reviewText: string }} reviewData
+ * @returns {{ notifiedCount: number }}
+ */
 export const createReviewNotification = async (reviewData) => {
+  const isPriority = reviewData.rating <= NOTIFICATION_CONFIG.LOW_RATING_THRESHOLD;
+
+  const review = await prisma.review.create({
+    data: {
+      externalId: reviewData.reviewId,
+      productId: reviewData.productId,
+      productName: reviewData.productName,
+      clientId: reviewData.clientId ?? null,
+      clientName: reviewData.clientName,
+      clientEmail: reviewData.clientEmail ?? null,
+      rating: reviewData.rating,
+      comment: reviewData.reviewText,
+      isPriority,
+      status: 'pending',
+    },
+  });
+
   const adminUsers = await prisma.adminUser.findMany({
     where: {
       accountStatus: ACCOUNT_STATUS.ACTIVE,
@@ -34,135 +110,237 @@ export const createReviewNotification = async (reviewData) => {
   }
 
   const targetAdminIds = adminUsers.map((u) => u.id);
-
-  const isPriority = reviewData.rating <= NOTIFICATION_CONFIG.LOW_RATING_THRESHOLD;
-  const payload = { ...reviewData, isPriority };
+  const payload = { ...reviewData, isPriority, internalReviewId: review.id };
 
   const notifications = await persistReviewNotifications(payload, targetAdminIds);
 
-  notifications.forEach((notification) => {
-    broadcast([notification.adminId], NOTIFICATION_EVENTS.NEW_REVIEW, { notification });
+  notifications.forEach((notification, i) => {
+    broadcast([String(targetAdminIds[i])], NOTIFICATION_EVENTS.NEW_REVIEW, { notification });
   });
 
   return { notifiedCount: notifications.length };
 };
 
-const extractBadResponseMessage = (body, fallback) => {
-  if (body && typeof body === 'object' && typeof body[REVIEW_BAD_RESPONSE_FIELDS.ERROR] === 'string') {
-    return body[REVIEW_BAD_RESPONSE_FIELDS.ERROR];
-  }
-  return fallback;
-};
-
 /**
- * Maps a ClientApiError raised by the client backend wrapper into an HTTP error
- * suitable for the admin error handler. Non-ClientApiError errors are re-thrown
- * untouched so they bubble up as 500s through the default handler.
- */
-const mapClientApiError = (error, { notFoundMessage } = {}) => {
-  if (!(error instanceof ClientApiError)) return error;
-
-  if (error.code === CLIENT_API_ERROR_CODES.BAD_RESPONSE) {
-    const status = error.status ?? HTTP_STATUS.INTERNAL_ERROR;
-    if (status === HTTP_STATUS.NOT_FOUND) {
-      return crearError(
-        notFoundMessage ?? extractBadResponseMessage(error.body, REVIEW_MESSAGES.NO_ENCONTRADA),
-        HTTP_STATUS.NOT_FOUND,
-      );
-    }
-    const message = extractBadResponseMessage(error.body, REVIEW_MESSAGES.ERROR_DESCONOCIDO);
-    return crearError(message, status);
-  }
-
-  if (
-    error.code === CLIENT_API_ERROR_CODES.UNREACHABLE ||
-    error.code === CLIENT_API_ERROR_CODES.TIMEOUT
-  ) {
-    return crearError(REVIEW_MESSAGES.SERVICIO_EXTERNO_NO_DISPONIBLE, HTTP_STATUS.BAD_GATEWAY);
-  }
-
-  if (error.code === CLIENT_API_ERROR_CODES.MISSING_CONFIG) {
-    return crearError(REVIEW_MESSAGES.CONFIGURACION_CLIENTE_FALTANTE, HTTP_STATUS.INTERNAL_ERROR);
-  }
-
-  return crearError(REVIEW_MESSAGES.ERROR_DESCONOCIDO, HTTP_STATUS.INTERNAL_ERROR);
-};
-
-/**
- * List reviews via the client backend. Returns the raw `{ total, items }` shape
- * from the client API.
+ * Build a Prisma `where` from the supported review filters. `product` and
+ * `client` are case-insensitive substring matches on the denormalized names.
  *
- * @param {{ status?: string, productId?: string, clientUserId?: string, rating?: number, limit?: number, offset?: number }} filters
+ * @param {{ status?: string, rating?: number, product?: string, client?: string }} filters
  */
-export const getReviews = async (filters = {}) => {
-  try {
-    return await listReviewsClient(filters);
-  } catch (error) {
-    throw mapClientApiError(error);
-  }
+const buildReviewWhere = ({ status, rating, product, client } = {}) => {
+  const where = {};
+  if (status) where.status = status;
+  if (rating) where.rating = rating;
+  if (product) where.productName = { contains: product, mode: 'insensitive' };
+  if (client) where.clientName = { contains: client, mode: 'insensitive' };
+  return where;
 };
 
 /**
- * Fetch a single review by its id from the client backend.
+ * List reviews, optionally filtered by status / rating / product / client,
+ * ordered by priority then recency. Returns `{ total, items }`.
+ *
+ * @param {{ status?: string, rating?: number, product?: string, client?: string, limit?: number, offset?: number }} filters
+ */
+export const getReviews = async ({ status, rating, product, client, limit, offset } = {}) => {
+  const where = buildReviewWhere({ status, rating, product, client });
+
+  const [total, rows] = await prisma.$transaction([
+    prisma.review.count({ where }),
+    prisma.review.findMany({
+      where,
+      include: reviewInclude,
+      orderBy: [{ isPriority: 'desc' }, { createdAt: 'desc' }],
+      skip: offset,
+      take: limit,
+    }),
+  ]);
+
+  return { total, items: rows.map(serializeReview) };
+};
+
+/**
+ * Fetch a single review by its internal id.
  *
  * @param {string} id
  */
 export const getReview = async (id) => {
-  try {
-    return await getReviewClient(id);
-  } catch (error) {
-    throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
-  }
+  const review = await prisma.review.findUnique({
+    where: { id: BigInt(id) },
+    include: reviewInclude,
+  });
+  if (!review) throw crearError(REVIEW_MESSAGES.NO_ENCONTRADA, HTTP_STATUS.NOT_FOUND);
+  return serializeReview(review);
 };
 
 /**
- * Approve a review via the client backend.
+ * Approve a pending review.
  *
  * @param {string} id
  */
 export const approveReview = async (id) => {
-  try {
-    return await updateReviewStatusClient(id, { status: 'approved' });
-  } catch (error) {
-    throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
+  const review = await prisma.review.findUnique({ where: { id: BigInt(id) } });
+  if (!review) throw crearError(REVIEW_MESSAGES.NO_ENCONTRADA, HTTP_STATUS.NOT_FOUND);
+  if (review.status !== 'pending') {
+    throw crearError(REVIEW_MESSAGES.YA_PROCESADA, HTTP_STATUS.CONFLICT);
   }
+
+  const updated = await prisma.review.update({
+    where: { id: BigInt(id) },
+    data: { status: 'approved' },
+    include: reviewInclude,
+  });
+
+  await propagateStatusToClient(review, 'approved');
+
+  return serializeReview(updated);
 };
 
 /**
- * Reject a review via the client backend, then notify the customer by email.
+ * Reject a pending review and append a moderation record (audit log).
  *
  * @param {string} id
- * @param {{ reason?: string, notes?: string }} options
+ * @param {string} adminId
+ * @param {{ reason?: string, notes?: string }} body
  */
-export const rejectReview = async (id, { reason, notes } = {}) => {
-  try {
-    return await updateReviewStatusClient(id, { status: 'rejected', reason, notes });
-  } catch (error) {
-    throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
+export const rejectReview = async (id, adminId, { reason, notes } = {}) => {
+  const review = await prisma.review.findUnique({ where: { id: BigInt(id) } });
+  if (!review) throw crearError(REVIEW_MESSAGES.NO_ENCONTRADA, HTTP_STATUS.NOT_FOUND);
+  if (review.status !== 'pending') {
+    throw crearError(REVIEW_MESSAGES.YA_PROCESADA, HTTP_STATUS.CONFLICT);
   }
+
+  const [updated] = await prisma.$transaction([
+    prisma.review.update({
+      where: { id: BigInt(id) },
+      data: { status: 'rejected' },
+      include: reviewInclude,
+    }),
+    prisma.moderationRecord.create({
+      data: {
+        reviewId: BigInt(id),
+        adminId: BigInt(adminId),
+        action: 'rejected',
+        reason: reason ?? MODERATION_DEFAULT_REASON,
+        notes: notes ?? null,
+        productName: review.productName,
+        clientName: review.clientName,
+      },
+    }),
+  ]);
+
+  await propagateStatusToClient(review, 'rejected', reason ?? MODERATION_DEFAULT_REASON);
+
+  return serializeReview(updated);
 };
 
 /**
- * Post an admin response to a review via the client backend.
+ * Add an admin response to a review. One response per review; rejected reviews
+ * cannot be responded to.
  *
  * @param {string} id
- * @param {{ responseText: string }} data
+ * @param {string} adminId
+ * @param {{ responseText: string }} body
  */
-export const respondToReview = async (id, { responseText }) => {
-  try {
-    return await respondToReviewClient(id, { responseText });
-  } catch (error) {
-    throw mapClientApiError(error, { notFoundMessage: REVIEW_MESSAGES.NO_ENCONTRADA });
+export const respondToReview = async (id, adminId, { responseText }) => {
+  const review = await prisma.review.findUnique({
+    where: { id: BigInt(id) },
+    include: { adminResponse: true },
+  });
+  if (!review) throw crearError(REVIEW_MESSAGES.NO_ENCONTRADA, HTTP_STATUS.NOT_FOUND);
+  if (review.adminResponse) {
+    throw crearError(REVIEW_MESSAGES.YA_TIENE_RESPUESTA, HTTP_STATUS.CONFLICT);
   }
+  if (review.status === 'rejected') {
+    throw crearError(REVIEW_MESSAGES.NO_RESPONDER_RECHAZADA, HTTP_STATUS.UNPROCESSABLE_ENTITY);
+  }
+
+  await prisma.adminResponse.create({
+    data: { reviewId: BigInt(id), adminId: BigInt(adminId), text: responseText },
+  });
+
+  const updated = await prisma.review.findUnique({
+    where: { id: BigInt(id) },
+    include: reviewInclude,
+  });
+  return serializeReview(updated);
 };
 
 /**
- * Fetch aggregated review stats from the client backend.
+ * Delete a review as a moderator: appends an immutable moderation record and
+ * removes the review. Its admin response is removed via onDelete cascade.
+ *
+ * @param {string} id
+ * @param {string} adminId
+ * @param {{ reason: string, detail?: string }} body
  */
-export const stats = async () => {
-  try {
-    return await getReviewStatsClient();
-  } catch (error) {
-    throw mapClientApiError(error);
+export const deleteReview = async (id, adminId, { reason, detail } = {}) => {
+  const review = await prisma.review.findUnique({ where: { id: BigInt(id) } });
+  if (!review) throw crearError(REVIEW_MESSAGES.NO_ENCONTRADA, HTTP_STATUS.NOT_FOUND);
+
+  await prisma.$transaction([
+    prisma.moderationRecord.create({
+      data: {
+        reviewId: BigInt(id),
+        adminId: BigInt(adminId),
+        action: 'deleted',
+        reason,
+        notes: detail ?? null,
+        productName: review.productName,
+        clientName: review.clientName,
+      },
+    }),
+    prisma.review.delete({ where: { id: BigInt(id) } }),
+  ]);
+
+  // Propaga el borrado al backend del cliente. La reseña en el cliente se
+  // identifica por externalId; si falla, no revertimos el borrado del admin,
+  // solo lo registramos para no romper la moderación.
+  if (review.externalId) {
+    try {
+      await deleteReviewOnClient(review.externalId, { reason });
+    } catch (err) {
+      console.error(
+        `No se pudo borrar la reseña ${review.externalId} en el cliente:`,
+        err.message,
+      );
+    }
   }
+
+  return { id, deleted: true };
+};
+
+/**
+ * Borra la reseña que el cliente ya eliminó, identificada por su `externalId`
+ * (el id de la reseña en el backend del cliente). Es el reflejo del borrado del
+ * cliente: NO vuelve a llamar al cliente, para evitar un bucle de propagación.
+ * Si no existe la reseña, se considera idempotente (ya estaba borrada).
+ *
+ * @param {string} externalId
+ */
+export const deleteReviewByExternalId = async (externalId) => {
+  const review = await prisma.review.findFirst({
+    where: { externalId: String(externalId) },
+    select: { id: true },
+  });
+  if (!review) return { externalId, deleted: false };
+
+  await prisma.review.delete({ where: { id: review.id } });
+  return { externalId, deleted: true };
+};
+
+/**
+ * Aggregate review counts by status, honoring the optional product/client
+ * filters so the panel tab counts match the active search.
+ *
+ * @param {{ product?: string, client?: string }} filters
+ */
+export const stats = async ({ product, client } = {}) => {
+  const base = buildReviewWhere({ product, client });
+  const [pending, approved, rejected] = await Promise.all([
+    prisma.review.count({ where: { ...base, status: 'pending' } }),
+    prisma.review.count({ where: { ...base, status: 'approved' } }),
+    prisma.review.count({ where: { ...base, status: 'rejected' } }),
+  ]);
+  return { pending, approved, rejected, total: pending + approved + rejected };
 };

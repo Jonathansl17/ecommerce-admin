@@ -1,10 +1,6 @@
-/*
-  Warnings:
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
 
-  - You are about to drop the `clients` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `products` table. If the table is not empty, all the data it contains will be lost.
-
-*/
 -- CreateEnum
 CREATE TYPE "AccountStatus" AS ENUM ('active', 'inactive', 'deleted');
 
@@ -36,22 +32,25 @@ CREATE TYPE "StockMovementType" AS ENUM ('sale', 'manual_adjustment');
 CREATE TYPE "StockMovementReason" AS ENUM ('manual_adjustment', 'error_correction', 'damaged_product', 'return');
 
 -- CreateEnum
+CREATE TYPE "ProductStatus" AS ENUM ('active', 'inactive');
+
+-- CreateEnum
+CREATE TYPE "ProductStockMovementType" AS ENUM ('sale', 'manual_adjustment', 'production');
+
+-- CreateEnum
 CREATE TYPE "CustomOrderStatus" AS ENUM ('received', 'in_process', 'ready', 'sold', 'rejected');
+
+-- CreateEnum
+CREATE TYPE "NotificationType" AS ENUM ('internal', 'email', 'both');
+
+-- CreateEnum
+CREATE TYPE "ReviewStatus" AS ENUM ('pending', 'approved', 'rejected');
 
 -- CreateEnum
 CREATE TYPE "ModerationReason" AS ENUM ('offensive_content', 'spam', 'false_information', 'off_topic', 'other');
 
 -- CreateEnum
-CREATE TYPE "NotificationType" AS ENUM ('internal', 'email', 'both');
-
--- DropForeignKey
-ALTER TABLE "products" DROP CONSTRAINT "products_client_id_fkey";
-
--- DropTable
-DROP TABLE "clients";
-
--- DropTable
-DROP TABLE "products";
+CREATE TYPE "ModerationAction" AS ENUM ('rejected', 'deleted');
 
 -- CreateTable
 CREATE TABLE "admin_users" (
@@ -64,6 +63,16 @@ CREATE TABLE "admin_users" (
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "admin_users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "notification_preferences" (
+    "admin_user_id" BIGINT NOT NULL,
+    "receive_order_notifications" BOOLEAN NOT NULL DEFAULT true,
+    "receive_review_notifications" BOOLEAN NOT NULL DEFAULT true,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "notification_preferences_pkey" PRIMARY KEY ("admin_user_id")
 );
 
 -- CreateTable
@@ -138,7 +147,7 @@ CREATE TABLE "supplies" (
 CREATE TABLE "inventory_movements" (
     "id" BIGSERIAL NOT NULL,
     "supply_id" BIGINT NOT NULL,
-    "admin_user_id" BIGINT NOT NULL,
+    "admin_id" BIGINT NOT NULL,
     "type" "InventoryMovementType" NOT NULL,
     "quantity" DECIMAL(10,2) NOT NULL,
     "previous_stock" DECIMAL(10,2) NOT NULL,
@@ -164,8 +173,8 @@ CREATE TABLE "supply_alerts" (
 CREATE TABLE "sales" (
     "id" BIGSERIAL NOT NULL,
     "client_id" BIGINT NOT NULL,
-    "admin_user_id" BIGINT NOT NULL,
-    "order_id" BIGINT NOT NULL,
+    "admin_id" BIGINT NOT NULL,
+    "order_id" BIGINT,
     "payment_method" "PaymentMethod" NOT NULL,
     "total_amount" DECIMAL(10,2) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -205,12 +214,12 @@ CREATE TABLE "invoices" (
 CREATE TABLE "stock_movements" (
     "id" BIGSERIAL NOT NULL,
     "variant_id" BIGINT NOT NULL,
-    "admin_user_id" BIGINT NOT NULL,
+    "admin_id" BIGINT NOT NULL,
     "sale_id" BIGINT,
     "type" "StockMovementType" NOT NULL,
     "previous_quantity" INTEGER NOT NULL,
     "new_quantity" INTEGER NOT NULL,
-    "reason" "StockMovementReason" NOT NULL,
+    "reason" "StockMovementReason",
     "note" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -218,22 +227,11 @@ CREATE TABLE "stock_movements" (
 );
 
 -- CreateTable
-CREATE TABLE "variant_alerts" (
-    "id" BIGSERIAL NOT NULL,
-    "variant_id" BIGINT NOT NULL,
-    "type" "AlertType" NOT NULL,
-    "threshold" INTEGER NOT NULL,
-    "active" BOOLEAN NOT NULL,
-
-    CONSTRAINT "variant_alerts_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "custom_orders" (
     "id" BIGSERIAL NOT NULL,
     "client_id" BIGINT NOT NULL,
     "product_id" BIGINT NOT NULL,
-    "admin_user_id" BIGINT NOT NULL,
+    "admin_id" BIGINT NOT NULL,
     "customization_details" JSONB NOT NULL,
     "status" "CustomOrderStatus" NOT NULL,
     "rejection_reason" TEXT,
@@ -244,10 +242,50 @@ CREATE TABLE "custom_orders" (
 );
 
 -- CreateTable
+CREATE TABLE "admin_notifications" (
+    "id" BIGSERIAL NOT NULL,
+    "admin_id" BIGINT NOT NULL,
+    "type" "NotificationType" NOT NULL,
+    "title" VARCHAR(200) NOT NULL,
+    "content" TEXT,
+    "entity_type" VARCHAR(50),
+    "entity_id" BIGINT,
+    "entity_external_id" VARCHAR(100),
+    "read" BOOLEAN NOT NULL,
+    "sent_at" TIMESTAMP(3),
+    "send_attempts" SMALLINT NOT NULL DEFAULT 0,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "admin_notifications_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "reviews" (
+    "id" BIGSERIAL NOT NULL,
+    "external_id" VARCHAR(100),
+    "product_id" VARCHAR(100) NOT NULL,
+    "product_name" VARCHAR(150) NOT NULL,
+    "client_id" VARCHAR(100),
+    "client_name" VARCHAR(150) NOT NULL,
+    "client_email" VARCHAR(150),
+    "rating" INTEGER NOT NULL,
+    "comment" TEXT NOT NULL,
+    "edited" BOOLEAN NOT NULL DEFAULT false,
+    "helpful_votes" INTEGER NOT NULL DEFAULT 0,
+    "unhelpful_votes" INTEGER NOT NULL DEFAULT 0,
+    "is_priority" BOOLEAN NOT NULL DEFAULT false,
+    "status" "ReviewStatus" NOT NULL DEFAULT 'pending',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "reviews_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "admin_responses" (
     "id" BIGSERIAL NOT NULL,
     "review_id" BIGINT NOT NULL,
-    "admin_user_id" BIGINT NOT NULL,
+    "admin_id" BIGINT NOT NULL,
     "text" VARCHAR(500) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -259,29 +297,83 @@ CREATE TABLE "admin_responses" (
 CREATE TABLE "moderation_records" (
     "id" BIGSERIAL NOT NULL,
     "review_id" BIGINT NOT NULL,
-    "admin_user_id" BIGINT NOT NULL,
+    "admin_id" BIGINT NOT NULL,
+    "action" "ModerationAction" NOT NULL DEFAULT 'rejected',
     "reason" "ModerationReason" NOT NULL,
     "notes" TEXT,
+    "product_name" VARCHAR(150),
+    "client_name" VARCHAR(150),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "moderation_records_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "admin_notifications" (
+CREATE TABLE "products" (
     "id" BIGSERIAL NOT NULL,
-    "admin_user_id" BIGINT NOT NULL,
-    "type" "NotificationType" NOT NULL,
-    "title" VARCHAR(200) NOT NULL,
-    "content" TEXT,
-    "entity_type" VARCHAR(50),
-    "entity_id" BIGINT,
-    "read" BOOLEAN NOT NULL,
-    "sent_at" TIMESTAMP(3),
-    "send_attempts" SMALLINT NOT NULL DEFAULT 0,
+    "name" VARCHAR(100) NOT NULL,
+    "description" TEXT,
+    "price" DECIMAL(10,2) NOT NULL,
+    "status" "ProductStatus" NOT NULL,
+    "current_stock" INTEGER NOT NULL DEFAULT 0,
+    "min_threshold" INTEGER,
+    "is_customizable" BOOLEAN NOT NULL DEFAULT false,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "products_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "product_variants" (
+    "id" BIGSERIAL NOT NULL,
+    "product_id" BIGINT NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
+    "price_override" DECIMAL(10,2),
+
+    CONSTRAINT "product_variants_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "product_stock_movements" (
+    "id" BIGSERIAL NOT NULL,
+    "product_id" BIGINT NOT NULL,
+    "admin_id" BIGINT NOT NULL,
+    "sale_id" BIGINT,
+    "type" "ProductStockMovementType" NOT NULL,
+    "previous_quantity" INTEGER NOT NULL,
+    "new_quantity" INTEGER NOT NULL,
+    "reason" "StockMovementReason",
+    "note" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "admin_notifications_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "product_stock_movements_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "revoked_tokens" (
+    "id" BIGSERIAL NOT NULL,
+    "jti" VARCHAR(36) NOT NULL,
+    "expires_at" TIMESTAMP NOT NULL,
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "revoked_tokens_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "refresh_tokens" (
+    "id" BIGSERIAL NOT NULL,
+    "user_id" BIGINT NOT NULL,
+    "token_hash" VARCHAR(64) NOT NULL,
+    "jti" VARCHAR(36) NOT NULL,
+    "expires_at" TIMESTAMP NOT NULL,
+    "rotated_at" TIMESTAMP,
+    "revoked_at" TIMESTAMP,
+    "last_used_at" TIMESTAMP,
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "refresh_tokens_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -306,16 +398,16 @@ CREATE INDEX "admins_role_id_idx" ON "admins"("role_id");
 CREATE INDEX "inventory_movements_supply_id_idx" ON "inventory_movements"("supply_id");
 
 -- CreateIndex
-CREATE INDEX "inventory_movements_admin_user_id_idx" ON "inventory_movements"("admin_user_id");
+CREATE INDEX "inventory_movements_admin_id_idx" ON "inventory_movements"("admin_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "supply_alerts_supply_id_key" ON "supply_alerts"("supply_id");
+CREATE INDEX "inventory_movements_created_at_idx" ON "inventory_movements"("created_at");
 
 -- CreateIndex
 CREATE INDEX "sales_client_id_idx" ON "sales"("client_id");
 
 -- CreateIndex
-CREATE INDEX "sales_admin_user_id_idx" ON "sales"("admin_user_id");
+CREATE INDEX "sales_admin_id_idx" ON "sales"("admin_id");
 
 -- CreateIndex
 CREATE INDEX "sales_order_id_idx" ON "sales"("order_id");
@@ -339,13 +431,10 @@ CREATE INDEX "invoices_client_id_idx" ON "invoices"("client_id");
 CREATE INDEX "stock_movements_variant_id_idx" ON "stock_movements"("variant_id");
 
 -- CreateIndex
-CREATE INDEX "stock_movements_admin_user_id_idx" ON "stock_movements"("admin_user_id");
+CREATE INDEX "stock_movements_admin_id_idx" ON "stock_movements"("admin_id");
 
 -- CreateIndex
 CREATE INDEX "stock_movements_sale_id_idx" ON "stock_movements"("sale_id");
-
--- CreateIndex
-CREATE INDEX "variant_alerts_variant_id_idx" ON "variant_alerts"("variant_id");
 
 -- CreateIndex
 CREATE INDEX "custom_orders_client_id_idx" ON "custom_orders"("client_id");
@@ -354,25 +443,67 @@ CREATE INDEX "custom_orders_client_id_idx" ON "custom_orders"("client_id");
 CREATE INDEX "custom_orders_product_id_idx" ON "custom_orders"("product_id");
 
 -- CreateIndex
-CREATE INDEX "custom_orders_admin_user_id_idx" ON "custom_orders"("admin_user_id");
+CREATE INDEX "custom_orders_admin_id_idx" ON "custom_orders"("admin_id");
 
 -- CreateIndex
-CREATE INDEX "admin_responses_review_id_idx" ON "admin_responses"("review_id");
+CREATE INDEX "admin_notifications_admin_id_idx" ON "admin_notifications"("admin_id");
 
 -- CreateIndex
-CREATE INDEX "admin_responses_admin_user_id_idx" ON "admin_responses"("admin_user_id");
+CREATE INDEX "admin_notifications_entity_type_entity_id_idx" ON "admin_notifications"("entity_type", "entity_id");
+
+-- CreateIndex
+CREATE INDEX "admin_notifications_admin_id_entity_type_entity_external_id_idx" ON "admin_notifications"("admin_id", "entity_type", "entity_external_id");
+
+-- CreateIndex
+CREATE INDEX "reviews_status_idx" ON "reviews"("status");
+
+-- CreateIndex
+CREATE INDEX "reviews_external_id_idx" ON "reviews"("external_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "admin_responses_review_id_key" ON "admin_responses"("review_id");
+
+-- CreateIndex
+CREATE INDEX "admin_responses_admin_id_idx" ON "admin_responses"("admin_id");
+
+-- CreateIndex
+CREATE INDEX "moderation_records_admin_id_idx" ON "moderation_records"("admin_id");
 
 -- CreateIndex
 CREATE INDEX "moderation_records_review_id_idx" ON "moderation_records"("review_id");
 
 -- CreateIndex
-CREATE INDEX "moderation_records_admin_user_id_idx" ON "moderation_records"("admin_user_id");
+CREATE INDEX "product_variants_product_id_idx" ON "product_variants"("product_id");
 
 -- CreateIndex
-CREATE INDEX "admin_notifications_admin_user_id_idx" ON "admin_notifications"("admin_user_id");
+CREATE INDEX "product_stock_movements_product_id_idx" ON "product_stock_movements"("product_id");
 
 -- CreateIndex
-CREATE INDEX "admin_notifications_entity_type_entity_id_idx" ON "admin_notifications"("entity_type", "entity_id");
+CREATE INDEX "product_stock_movements_admin_id_idx" ON "product_stock_movements"("admin_id");
+
+-- CreateIndex
+CREATE INDEX "product_stock_movements_sale_id_idx" ON "product_stock_movements"("sale_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "revoked_tokens_jti_key" ON "revoked_tokens"("jti");
+
+-- CreateIndex
+CREATE INDEX "revoked_tokens_expires_at_idx" ON "revoked_tokens"("expires_at");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "refresh_tokens_token_hash_key" ON "refresh_tokens"("token_hash");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "refresh_tokens_jti_key" ON "refresh_tokens"("jti");
+
+-- CreateIndex
+CREATE INDEX "refresh_tokens_user_id_idx" ON "refresh_tokens"("user_id");
+
+-- CreateIndex
+CREATE INDEX "refresh_tokens_expires_at_idx" ON "refresh_tokens"("expires_at");
+
+-- AddForeignKey
+ALTER TABLE "notification_preferences" ADD CONSTRAINT "notification_preferences_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "admin_recovery_tokens" ADD CONSTRAINT "admin_recovery_tokens_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admin_users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -396,13 +527,13 @@ ALTER TABLE "supplies" ADD CONSTRAINT "supplies_item_id_fkey" FOREIGN KEY ("item
 ALTER TABLE "inventory_movements" ADD CONSTRAINT "inventory_movements_supply_id_fkey" FOREIGN KEY ("supply_id") REFERENCES "supplies"("item_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "inventory_movements" ADD CONSTRAINT "inventory_movements_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admins"("admin_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "inventory_movements" ADD CONSTRAINT "inventory_movements_admin_id_fkey" FOREIGN KEY ("admin_id") REFERENCES "admins"("admin_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "supply_alerts" ADD CONSTRAINT "supply_alerts_supply_id_fkey" FOREIGN KEY ("supply_id") REFERENCES "supplies"("item_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "sales" ADD CONSTRAINT "sales_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admins"("admin_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "sales" ADD CONSTRAINT "sales_admin_id_fkey" FOREIGN KEY ("admin_id") REFERENCES "admins"("admin_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_sale_id_fkey" FOREIGN KEY ("sale_id") REFERENCES "sales"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -411,19 +542,29 @@ ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_sale_id_fkey" FOREIGN KEY ("
 ALTER TABLE "invoices" ADD CONSTRAINT "invoices_sale_id_fkey" FOREIGN KEY ("sale_id") REFERENCES "sales"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admins"("admin_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_admin_id_fkey" FOREIGN KEY ("admin_id") REFERENCES "admins"("admin_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_sale_id_fkey" FOREIGN KEY ("sale_id") REFERENCES "sales"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "custom_orders" ADD CONSTRAINT "custom_orders_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admins"("admin_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "custom_orders" ADD CONSTRAINT "custom_orders_admin_id_fkey" FOREIGN KEY ("admin_id") REFERENCES "admins"("admin_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "admin_responses" ADD CONSTRAINT "admin_responses_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admins"("admin_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "admin_notifications" ADD CONSTRAINT "admin_notifications_admin_id_fkey" FOREIGN KEY ("admin_id") REFERENCES "admins"("admin_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "moderation_records" ADD CONSTRAINT "moderation_records_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admins"("admin_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "admin_responses" ADD CONSTRAINT "admin_responses_admin_id_fkey" FOREIGN KEY ("admin_id") REFERENCES "admins"("admin_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "admin_notifications" ADD CONSTRAINT "admin_notifications_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "admins"("admin_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "admin_responses" ADD CONSTRAINT "admin_responses_review_id_fkey" FOREIGN KEY ("review_id") REFERENCES "reviews"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "moderation_records" ADD CONSTRAINT "moderation_records_admin_id_fkey" FOREIGN KEY ("admin_id") REFERENCES "admins"("admin_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "product_variants" ADD CONSTRAINT "product_variants_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "product_stock_movements" ADD CONSTRAINT "product_stock_movements_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+

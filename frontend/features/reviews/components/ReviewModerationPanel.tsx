@@ -1,88 +1,77 @@
 'use client';
 
 import { MessageSquare } from 'lucide-react';
-import type { ReviewModerationPanelProps, ReviewTab, StatusFilter } from '../types/reviews.types';
-import {
-  REVIEWS_STRINGS as strings,
-  REVIEWS_TABS_STRINGS,
-  REVIEWS_EMPTY_STRINGS,
-} from '../constants/reviews.constants';
+import type {
+  ReviewModerationPanelProps,
+  ReviewStatusFilter,
+} from '../types/reviews.types';
+import { REVIEWS_STRINGS } from '../constants/reviews.constants';
 import { ReviewModerationCard } from './ReviewModerationCard';
+import { ReviewStatusTabs } from './ReviewStatusTabs';
+import { ReviewSearchFilters } from './ReviewSearchFilters';
+import { ReviewPagination } from './ReviewPagination';
 
-const TABS: ReviewTab[] = [
-  { key: 'pending', label: REVIEWS_TABS_STRINGS.pending },
-  { key: 'approved', label: REVIEWS_TABS_STRINGS.approved },
-  { key: 'rejected', label: REVIEWS_TABS_STRINGS.rejected },
-  { key: 'all', label: REVIEWS_TABS_STRINGS.all },
-];
+const strings = REVIEWS_STRINGS;
 
-function countForStatus(reviews: ReviewModerationPanelProps['reviews'], status: StatusFilter): number {
-  if (status === 'all') return reviews.length;
-  return reviews.filter((r) => r.status === status).length;
-}
+const emptyMessages: Record<ReviewStatusFilter, string> = {
+  all: strings.empty.all,
+  pending: strings.empty.pending,
+  approved: strings.empty.approved,
+  rejected: strings.empty.rejected,
+};
 
 export function ReviewModerationPanel({
   reviews,
+  counts,
   statusFilter,
   onFilterChange,
+  onSearch,
+  onClearSearch,
   onApprove,
   onReject,
   onRespond,
+  onDelete,
+  page,
+  pageSize,
+  total,
+  onPageChange,
+  isLoading,
   loadingId,
   errorId,
 }: ReviewModerationPanelProps) {
-  const emptyMessage = REVIEWS_EMPTY_STRINGS[statusFilter];
-
   return (
     <div className="space-y-4">
-      <div
-        className="flex flex-wrap gap-1 rounded-lg border border-border bg-muted p-1"
-        role="tablist"
-        aria-label={strings.panel.ariaTabList}
-      >
-        {TABS.map(({ key, label }) => {
-          const count = countForStatus(reviews, key);
-          const isActive = statusFilter === key;
-
-          return (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              onClick={() => onFilterChange(key)}
-              className={[
-                'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
-              ].join(' ')}
-            >
-              {label}
-              <span
-                className={[
-                  'rounded-full px-1.5 py-0.5 text-xs font-medium',
-                  isActive ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground',
-                ].join(' ')}
-                aria-label={strings.panel.ariaCount(count)}
-              >
-                {count}
-              </span>
-            </button>
-          );
-        })}
+      {/* Filters: status tabs + product/person search, on the same row */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <ReviewStatusTabs
+          statusFilter={statusFilter}
+          counts={counts}
+          onFilterChange={onFilterChange}
+        />
+        <ReviewSearchFilters onSearch={onSearch} onClear={onClearSearch} />
       </div>
 
-      {reviews.length === 0 ? (
+      {/* Review list */}
+      {isLoading ? (
+        <div className="space-y-3" aria-busy="true" aria-label={strings.a11y.loading}>
+          {Array.from({ length: pageSize }, (_, i) => (
+            <div
+              key={i}
+              className="h-28 animate-pulse rounded-lg border border-border bg-muted"
+              aria-hidden="true"
+            />
+          ))}
+        </div>
+      ) : reviews.length === 0 ? (
         <div
           className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-16 text-center"
           role="status"
         >
           <MessageSquare className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground">{emptyMessage}</p>
+          <p className="text-sm font-medium text-foreground">{emptyMessages[statusFilter]}</p>
         </div>
       ) : (
-        <ul className="space-y-3" aria-label={strings.panel.ariaList}>
+        <ul className="space-y-3" aria-label={strings.a11y.list}>
           {reviews.map((review) => (
             <li key={review.id}>
               <ReviewModerationCard
@@ -90,6 +79,7 @@ export function ReviewModerationPanel({
                 onApprove={onApprove}
                 onReject={onReject}
                 onRespond={onRespond}
+                onDelete={onDelete}
                 loadingId={loadingId}
                 errorId={errorId}
               />
@@ -97,6 +87,13 @@ export function ReviewModerationPanel({
           ))}
         </ul>
       )}
+
+      <ReviewPagination
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        onPageChange={onPageChange}
+      />
     </div>
   );
 }

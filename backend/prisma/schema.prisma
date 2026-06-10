@@ -89,6 +89,25 @@ enum NotificationType {
   both
 }
 
+enum ReviewStatus {
+  pending
+  approved
+  rejected
+}
+
+enum ModerationReason {
+  offensive_content
+  spam
+  false_information
+  off_topic
+  other
+}
+
+enum ModerationAction {
+  rejected
+  deleted
+}
+
 model AdminUser {
   id                     BigInt                    @id @default(autoincrement())
   fullName               String                    @map("full_name") @db.VarChar(100)
@@ -167,6 +186,8 @@ model Admin {
   stockMovements     StockMovement[]
   customOrders       CustomOrder[]
   notifications      AdminNotification[]
+  adminResponses     AdminResponse[]
+  moderationRecords  ModerationRecord[]
 
   @@index([roleId])
   @@map("admins")
@@ -334,6 +355,67 @@ model AdminNotification {
   @@index([entityType, entityId])
   @@index([adminId, entityType, entityExternalId])
   @@map("admin_notifications")
+}
+
+// ──────────────────────────────── Reviews Module ────────────────────────────────
+
+// Reviews are authored on the storefront; the admin stores a denormalized copy
+// (no FK to client tables) so they can be moderated, responded to and deleted.
+model Review {
+  id             BigInt         @id @default(autoincrement())
+  externalId     String?        @map("external_id") @db.VarChar(100)
+  productId      String         @map("product_id") @db.VarChar(100)
+  productName    String         @map("product_name") @db.VarChar(150)
+  clientId       String?        @map("client_id") @db.VarChar(100)
+  clientName     String         @map("client_name") @db.VarChar(150)
+  clientEmail    String?        @map("client_email") @db.VarChar(150)
+  rating         Int
+  comment        String         @db.Text
+  edited         Boolean        @default(false)
+  helpfulVotes   Int            @default(0) @map("helpful_votes")
+  unhelpfulVotes Int            @default(0) @map("unhelpful_votes")
+  isPriority     Boolean        @default(false) @map("is_priority")
+  status         ReviewStatus   @default(pending)
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  adminResponse  AdminResponse?
+
+  @@index([status])
+  @@index([externalId])
+  @@map("reviews")
+}
+
+model AdminResponse {
+  id        BigInt   @id @default(autoincrement())
+  reviewId  BigInt   @unique @map("review_id")
+  adminId   BigInt   @map("admin_id")
+  text      String   @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  admin     Admin    @relation(fields: [adminId], references: [adminUserId])
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@map("admin_responses")
+}
+
+// Immutable moderation audit log. `reviewId` is a historical reference (no FK)
+// so the record survives the deletion of the review it documents.
+model ModerationRecord {
+  id          BigInt           @id @default(autoincrement())
+  reviewId    BigInt           @map("review_id")
+  adminId     BigInt           @map("admin_id")
+  action      ModerationAction @default(rejected)
+  reason      ModerationReason
+  notes       String?
+  productName String?          @map("product_name") @db.VarChar(150)
+  clientName  String?          @map("client_name") @db.VarChar(150)
+  createdAt   DateTime         @default(now()) @map("created_at")
+  admin       Admin            @relation(fields: [adminId], references: [adminUserId])
+
+  @@index([adminId])
+  @@index([reviewId])
+  @@map("moderation_records")
 }
 
 // ──────────────────────────────── Products Module ────────────────────────────────
