@@ -80,6 +80,7 @@ export default function ProductsPage() {
       price: data.price,
       status: data.status,
       ...(data.description ? { description: data.description } : {}),
+      ...(data.imageUrl ? { imageUrl: data.imageUrl } : {}),
     };
     const product = await create(dto);
     if (product) {
@@ -95,6 +96,7 @@ export default function ProductsPage() {
       status: data.status,
       description: data.description || null,
       minThreshold: data.minThreshold ?? null,
+      imageUrl: data.imageUrl || null,
     };
     const product = await edit(editingProduct.id, dto);
     if (product) {

@@ -27,3 +27,18 @@ export const PRODUCTS_SYNC = {
   VARIANTE_COLOR_POR_DEFECTO: 'Único',
   VARIANTE_TALLA_POR_DEFECTO: 'Único',
 };
+
+export const PRODUCTS_IMAGE = {
+  MAX_SIZE_BYTES: 2 * 1024 * 1024,
+  ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+  PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL || 'http://localhost:3000',
+  SERVE_PATH: '/api/products/image',
+};
+
+export const PRODUCTS_IMAGE_MESSAGES = {
+  ARCHIVO_REQUERIDO: 'No se recibió ninguna imagen',
+  TIPO_INVALIDO: 'Tipo de imagen no permitido (usa JPG, PNG, WEBP o GIF)',
+  DEMASIADO_GRANDE: 'La imagen supera el tamaño máximo de 2 MB',
+  NO_ENCONTRADA: 'Imagen no encontrada',
+  ERROR_SUBIDA: 'Error al subir la imagen',
+};

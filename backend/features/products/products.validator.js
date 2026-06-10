@@ -7,7 +7,7 @@ const STOCK_ADJUSTMENT_REASONS = ['manual_adjustment', 'error_correction', 'dama
 const isAllowedImageUrl = (value) => {
   try {
     const url = new URL(value);
-    return url.protocol === 'https:' && PRODUCTS_CONFIG.HOSTS_IMAGEN_PERMITIDOS.includes(url.hostname);
+    return url.protocol === 'https:' || url.protocol === 'http:';
   } catch {
     return false;
   }
@@ -18,7 +18,7 @@ const imageUrlSchema = z.preprocess(
   z
     .string()
     .max(PRODUCTS_CONFIG.IMAGEN_MAX_LENGTH, 'La URL de imagen no puede superar 300 caracteres')
-    .refine(isAllowedImageUrl, 'La imagen debe ser una URL https de placehold.co o images.unsplash.com')
+    .refine(isAllowedImageUrl, 'La imagen debe ser una URL válida')
     .nullable()
     .optional(),
 );

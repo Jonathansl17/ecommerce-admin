@@ -9,6 +9,8 @@ export function useCreateProductForm(onSave: (data: CreateProductFormData) => Pr
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<CreateProductFormData>({
     resolver: zodResolver(createProductSchema),
@@ -17,6 +19,7 @@ export function useCreateProductForm(onSave: (data: CreateProductFormData) => Pr
       description: '',
       price: 0,
       status: 'active',
+      imageUrl: '',
     },
   });
 
@@ -29,5 +32,7 @@ export function useCreateProductForm(onSave: (data: CreateProductFormData) => Pr
     handleSubmit: handleSubmit(onFormSubmit),
     errors,
     isSubmitting,
+    setValue,
+    watch,
   };
 }
