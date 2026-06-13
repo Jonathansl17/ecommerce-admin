@@ -31,6 +31,7 @@ export const createProductSchema = z.object({
     .min(CREATE_PRODUCT_VALIDATION.PRICE.MIN, createValidation.priceMin)
     .max(CREATE_PRODUCT_VALIDATION.PRICE.MAX, createValidation.priceMax),
   status: z.enum(['active', 'inactive']),
+  imageUrl: z.string().max(300),
 });
 
 const thresholdSchema = z.preprocess(

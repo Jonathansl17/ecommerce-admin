@@ -4,6 +4,34 @@ import { responderErrores } from '../../shared/middleware/validatorUtils.js';
 
 const STOCK_ADJUSTMENT_REASONS = ['manual_adjustment', 'error_correction', 'damaged_product', 'return'];
 
+const isAllowedImageUrl = (value) => {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:';
+  } catch {
+    return false;
+  }
+};
+
+const imageUrlSchema = z.preprocess(
+  (v) => (v === '' ? undefined : v),
+  z
+    .string()
+    .max(PRODUCTS_CONFIG.IMAGEN_MAX_LENGTH, 'La URL de imagen no puede superar 300 caracteres')
+    .refine(isAllowedImageUrl, 'La imagen debe ser una URL válida')
+    .nullable()
+    .optional(),
+);
+
+const categorySchema = z.preprocess(
+  (v) => (v === '' ? undefined : v),
+  z
+    .string()
+    .max(PRODUCTS_CONFIG.CATEGORIA_MAX_LENGTH, 'La categoría no puede superar 80 caracteres')
+    .nullable()
+    .optional(),
+);
+
 export const validateProductId = (paramName = 'id') => (req, res, next) => {
   if (!/^\d+$/.test(req.params[paramName])) {
     return res.status(400).json({ data: null, error: 'ID de producto inválido', meta: null });
@@ -16,6 +44,8 @@ const createProductSchema = z.object({
   description: z.string().max(500, 'La descripción no puede superar 500 caracteres').nullable().optional(),
   price: z.number({ required_error: 'El precio es requerido' }).positive('El precio debe ser mayor a cero').max(9_999_999, 'El precio excede el límite permitido'),
   status: z.enum(['active', 'inactive'], { error: 'Estado inválido' }).optional(),
+  imageUrl: imageUrlSchema,
+  category: categorySchema,
 });
 
 const updateProductSchema = z.object({
@@ -30,6 +60,8 @@ const updateProductSchema = z.object({
     .max(PRODUCTS_CONFIG.UMBRAL_MAX, PRODUCTS_MESSAGES.UMBRAL_INVALIDO)
     .nullable()
     .optional(),
+  imageUrl: imageUrlSchema,
+  category: categorySchema,
 });
 
 const adjustStockSchema = z.object({

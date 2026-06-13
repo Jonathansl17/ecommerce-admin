@@ -47,6 +47,14 @@ export const PRODUCTS_MESSAGES = {
   success: {
     adjustApplied: 'Stock ajustado correctamente',
   },
+  image: {
+    label: 'Imagen del producto (opcional)',
+    uploadButton: 'Subir imagen',
+    uploadingButton: 'Subiendo...',
+    changeButton: 'Cambiar',
+    removeButton: 'Quitar',
+    uploadError: 'No se pudo subir la imagen',
+  },
   create: {
     title: 'Agregar producto',
     nameLabel: 'Nombre',
@@ -144,6 +152,6 @@ export const PRODUCTS_MESSAGES = {
     paginationPrev: 'Anterior',
     paginationNext: 'Siguiente',
     expandNotes: 'Notas:',
-    viewHistory: 'Ver historial',
+    viewHistory: 'Historial',
   },
 } as const;

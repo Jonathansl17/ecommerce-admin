@@ -1,12 +1,8 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import type { ReviewStatus } from '../types/reviews.types';
-import { REVIEW_STATUS_LABELS } from '../constants/reviews.constants';
-
-interface ReviewStatusBadgeProps {
-  status: ReviewStatus;
-}
+import type { ReviewStatus, ReviewStatusBadgeProps } from '../types/reviews.types';
+import { REVIEW_STATUS, REVIEW_STATUS_LABELS } from '../constants/reviews.constants';
 
 export function ReviewStatusBadge({ status }: ReviewStatusBadgeProps) {
   const styles: Record<ReviewStatus, CSSProperties> = {
@@ -18,7 +14,7 @@ export function ReviewStatusBadge({ status }: ReviewStatusBadgeProps) {
   const baseClass =
     'inline-block rounded px-2 py-0.5 text-xs font-medium';
 
-  if (status === 'pending') {
+  if (status === REVIEW_STATUS.pending) {
     return (
       <span className={`${baseClass} bg-muted text-muted-foreground`}>
         {REVIEW_STATUS_LABELS[status]}

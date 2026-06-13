@@ -57,6 +57,7 @@ export function StockAdjustmentModal({
       onClose={onClose}
       footer={footer}
       size="sm"
+      disableBackdropClose
     >
       <form id="adjust-form" onSubmit={handleSubmit} className="space-y-4">
         <FormField id="adjust-current-stock" label={strings.currentStockLabel}>

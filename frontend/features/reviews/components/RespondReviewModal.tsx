@@ -3,20 +3,24 @@
 import { useState, type FormEvent } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import type { RespondReviewModalProps } from '../types/reviews.types';
-import { REVIEWS_MODAL_STRINGS as strings, RESPOND_MIN_LENGTH, REVIEW_TEXT_MAX_LENGTH } from '../constants/reviews.constants';
+import { REVIEW_FORM_LIMITS, REVIEWS_STRINGS } from '../constants/reviews.constants';
+
+const strings = REVIEWS_STRINGS.modals;
+const MIN_LENGTH = REVIEW_FORM_LIMITS.responseMin;
+const MAX_LENGTH = REVIEW_FORM_LIMITS.responseMax;
 
 export function RespondReviewModal({ onConfirm, onClose, isLoading }: RespondReviewModalProps) {
   const [text, setText] = useState('');
 
-  const trimmed = text.trim();
-  const tooShort = trimmed.length > 0 && trimmed.length < RESPOND_MIN_LENGTH;
-  const remaining = REVIEW_TEXT_MAX_LENGTH - text.length;
-
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (trimmed.length < RESPOND_MIN_LENGTH) return;
+    const trimmed = text.trim();
+    if (trimmed.length < MIN_LENGTH) return;
     onConfirm(trimmed);
   };
+
+  const remaining = MAX_LENGTH - text.length;
+  const tooShort = text.trim().length > 0 && text.trim().length < MIN_LENGTH;
 
   return (
     <Modal
@@ -38,7 +42,7 @@ export function RespondReviewModal({ onConfirm, onClose, isLoading }: RespondRev
           <button
             type="submit"
             form="respond-review-form"
-            disabled={isLoading || trimmed.length < RESPOND_MIN_LENGTH}
+            disabled={isLoading || text.trim().length < MIN_LENGTH}
             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors disabled:opacity-50"
           >
             {isLoading ? strings.submitting : strings.confirmRespond}
@@ -54,7 +58,7 @@ export function RespondReviewModal({ onConfirm, onClose, isLoading }: RespondRev
           <textarea
             id="respond-text"
             value={text}
-            onChange={(e) => setText(e.target.value.slice(0, REVIEW_TEXT_MAX_LENGTH))}
+            onChange={(e) => setText(e.target.value.slice(0, MAX_LENGTH))}
             placeholder={strings.respondTextPlaceholder}
             rows={4}
             required
@@ -63,7 +67,7 @@ export function RespondReviewModal({ onConfirm, onClose, isLoading }: RespondRev
           />
           <div className="flex items-center justify-between">
             {tooShort && (
-              <p className="text-xs text-destructive">{strings.minLengthError(RESPOND_MIN_LENGTH)}</p>
+              <p className="text-xs text-destructive">Mínimo {MIN_LENGTH} caracteres</p>
             )}
             <p className="ml-auto text-right text-xs text-muted-foreground">
               {strings.charsRemaining(remaining)}
