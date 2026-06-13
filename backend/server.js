@@ -5,7 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { limpiarTokensExpirados } from './features/auth/auth.tokens.service.js';
-import productsRoutes from './features/products/products.routes.js';
+import productsRoutes, { productImagesPublicRouter } from './features/products/products.routes.js';
 import clientsRoutes from './features/clients/clients.routes.js';
 import storeUsersRoutes from './features/clients/store-users.routes.js';
 import authRoutes from './features/auth/auth.routes.js';
@@ -39,6 +39,7 @@ app.use(cookieParser());
 // pass the CSRF check regardless, but they are grouped with this block for clarity.
 app.use('/api/orders', ordersWebhookRouter);
 app.use('/api/reviews', reviewsWebhookRouter);
+app.use('/api/products', productImagesPublicRouter);
 
 app.use(requireFetchHeader);
 

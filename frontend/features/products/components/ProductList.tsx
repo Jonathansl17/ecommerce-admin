@@ -59,30 +59,30 @@ export function ProductList({ products, onAdjust, onHistory, onEdit, onDelete }:
                 </span>
               </td>
               <td className="px-4 py-3">
-                <div className="flex gap-3">
+                <div className="flex items-center gap-3">
                   <button
-                    onClick={() => onAdjust(product)}
+                    onClick={() => onEdit(product)}
                     className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
                   >
-                    {strings.adjustButton}
+                    {strings.editButton}
                   </button>
                   <button
                     onClick={() => onHistory(product)}
-                    className="text-sm font-medium text-foreground/50 hover:text-foreground transition-colors"
+                    className="text-sm font-medium text-foreground/50 hover:text-foreground/80 transition-colors"
                   >
                     {historyStrings.viewHistory}
-                  </button>
-                  <button
-                    onClick={() => onEdit(product)}
-                    className="text-sm font-medium text-amber-600 hover:text-amber-700 transition-colors"
-                  >
-                    {strings.editButton}
                   </button>
                   <button
                     onClick={() => onDelete(product)}
                     className="text-sm font-medium text-red-500 hover:text-red-600 transition-colors"
                   >
                     {strings.deleteButton}
+                  </button>
+                  <button
+                    onClick={() => onAdjust(product)}
+                    className="text-sm font-medium text-amber-600 hover:text-amber-700 transition-colors"
+                  >
+                    {strings.adjustButton}
                   </button>
                 </div>
               </td>

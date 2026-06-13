@@ -46,6 +46,10 @@ export function ProductInventoryReport() {
         onStockStatusChange={setStockStatus}
       />
 
+      <div className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3">
+        <p className="text-sm text-blue-700">{strings.disclaimer}</p>
+      </div>
+
       <div className="space-y-3">
         <h2 className="text-base font-semibold text-foreground">
           {strings.sections.standardTitle}
@@ -53,9 +57,7 @@ export function ProductInventoryReport() {
         <InventoryReportTable rows={standardRows} />
       </div>
 
-      <div className="border-t border-foreground/10 pt-6">
-        <CustomProductsSection rows={customRows} />
-      </div>
+      <CustomProductsSection rows={customRows} />
     </div>
   );
 }

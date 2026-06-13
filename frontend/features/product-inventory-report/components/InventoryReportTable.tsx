@@ -1,5 +1,9 @@
+'use client';
+
+import { Pagination } from '@/components/ui/Pagination';
+import { usePagination } from '@/lib/hooks/usePagination';
 import { INVENTORY_REPORT_MESSAGES } from '../constants/messages';
-import type { InventoryReportRow, InventoryReportTableProps, StockStatus } from '../models/product-inventory-report.models';
+import type { InventoryReportTableProps, StockStatus } from '../models/product-inventory-report.models';
 
 const strings = INVENTORY_REPORT_MESSAGES;
 
@@ -13,13 +17,21 @@ const STOCK_STATUS_STYLES: Record<StockStatus, string> = {
 export function InventoryReportTable({
   rows,
   emptyMessage = strings.table.emptyMessage,
+  embedded = false,
 }: InventoryReportTableProps) {
+  const { page, setPage, totalPages, pageItems, total, pageSize, setPageSize } = usePagination(rows);
+
   if (rows.length === 0) {
-    return <p className="text-sm text-foreground/60">{emptyMessage}</p>;
+    return (
+      <p className={`text-sm text-foreground/60 ${embedded ? 'px-4 py-3' : ''}`}>{emptyMessage}</p>
+    );
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-foreground/10">
+    <>
+    <div
+      className={embedded ? 'overflow-x-auto' : 'overflow-x-auto rounded-lg border border-foreground/10'}
+    >
       <table className="w-full text-sm">
         <thead className="bg-foreground/5 text-left text-foreground/70">
           <tr>
@@ -31,7 +43,7 @@ export function InventoryReportTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-foreground/10">
-          {rows.map((row, index) => (
+          {pageItems.map((row, index) => (
             <tr
               key={`${row.productId}-${row.variantName ?? 'base'}-${index}`}
               className="hover:bg-foreground/5 transition-colors"
@@ -56,5 +68,16 @@ export function InventoryReportTable({
         </tbody>
       </table>
     </div>
+    <div className={embedded ? 'px-4 py-3' : 'mt-3'}>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
+    </div>
+    </>
   );
 }
