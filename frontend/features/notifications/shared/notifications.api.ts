@@ -9,6 +9,8 @@ const ROUTES = {
   unreadCount: '/notifications/unread-count',
   read: (id: string) => `/notifications/${id}/read`,
   readAll: '/notifications/read-all',
+  remove: (id: string) => `/notifications/${id}`,
+  removeAll: '/notifications',
   preferences: '/notifications/preferences',
   customizationStatus: (id: string) => `/notifications/${id}/customization-status`,
 } as const;
@@ -63,6 +65,28 @@ export async function markAllRead(): Promise<void> {
   try {
     await apiFetch<unknown>(ROUTES.readAll, {
       method: 'PATCH',
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (err) {
+    return rethrowErrorBody(err);
+  }
+}
+
+export async function deleteNotification(id: string): Promise<void> {
+  try {
+    await apiFetch<unknown>(ROUTES.remove(id), {
+      method: 'DELETE',
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (err) {
+    return rethrowErrorBody(err);
+  }
+}
+
+export async function deleteAllNotifications(): Promise<void> {
+  try {
+    await apiFetch<unknown>(ROUTES.removeAll, {
+      method: 'DELETE',
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
   } catch (err) {

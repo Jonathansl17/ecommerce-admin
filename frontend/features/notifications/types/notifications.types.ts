@@ -44,6 +44,7 @@ export interface ReviewNotificationContent {
 export interface NotificationCardProps {
   notification: Notification;
   onMarkRead: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 export type SaveState = 'idle' | 'saving';
