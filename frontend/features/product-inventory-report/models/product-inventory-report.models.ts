@@ -59,6 +59,8 @@ export interface CustomProductsSectionProps {
 export interface InventoryReportTableProps {
   rows: InventoryReportRow[];
   emptyMessage?: string;
+  /** When true, omits the table's own border/rounding so it can sit inside a card. */
+  embedded?: boolean;
 }
 
 export interface InventoryReportFiltersProps {

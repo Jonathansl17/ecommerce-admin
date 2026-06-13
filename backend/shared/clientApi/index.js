@@ -5,3 +5,4 @@ export * from './orders.client.js';
 export * from './users.client.js';
 export * from './stock.client.js';
 export * from './reviews.client.js';
+export * from './products.client.js';
