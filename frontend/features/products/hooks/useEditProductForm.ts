@@ -12,6 +12,8 @@ export function useEditProductForm(
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<EditProductFormData>({
     resolver: zodResolver(editProductSchema) as Resolver<EditProductFormData>,
@@ -21,6 +23,7 @@ export function useEditProductForm(
       price: product.price,
       status: product.status,
       minThreshold: product.minThreshold ?? null,
+      imageUrl: product.imageUrl ?? '',
     },
   });
 
@@ -33,5 +36,7 @@ export function useEditProductForm(
     handleSubmit: handleSubmit(onFormSubmit),
     errors,
     isSubmitting,
+    setValue,
+    watch,
   };
 }

@@ -27,6 +27,7 @@ export function StockMovementHistoryModal({
       description={strings.subtitle}
       onClose={onClose}
       size="lg"
+      disableBackdropClose
     >
       <StockMovementHistory product={product} refreshKey={refreshKey} />
     </Modal>

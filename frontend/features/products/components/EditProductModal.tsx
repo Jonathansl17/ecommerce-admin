@@ -5,6 +5,7 @@ import { FormField } from '@/components/ui/FormField';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useEditProductForm } from '../hooks/useEditProductForm';
+import { ProductImageField } from './ProductImageField';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
 import { CREATE_PRODUCT_VALIDATION, PRODUCT_STATUS_OPTIONS, THRESHOLD_VALIDATION } from '../constants/validation';
 import type { EditProductFormData, Product } from '../types/products.types';
@@ -19,7 +20,7 @@ interface EditProductModalProps {
 }
 
 export function EditProductModal({ product, onClose, onSave, serverError }: EditProductModalProps) {
-  const { register, handleSubmit, errors, isSubmitting } = useEditProductForm(product, onSave);
+  const { register, handleSubmit, errors, isSubmitting, setValue, watch } = useEditProductForm(product, onSave);
 
   const footer = (
     <>
@@ -50,6 +51,7 @@ export function EditProductModal({ product, onClose, onSave, serverError }: Edit
       onClose={onClose}
       footer={footer}
       size="md"
+      disableBackdropClose
     >
       <form id="edit-product-form" onSubmit={handleSubmit} className="space-y-4">
         <FormField id="edit-name" label={strings.nameLabel} error={errors.name?.message}>
@@ -125,6 +127,10 @@ export function EditProductModal({ product, onClose, onSave, serverError }: Edit
             {...register('minThreshold')}
           />
           <p className="mt-1 text-xs text-foreground/50">{strings.minThresholdHint}</p>
+        </FormField>
+
+        <FormField id="edit-image" label={PRODUCTS_MESSAGES.image.label}>
+          <ProductImageField value={watch('imageUrl')} onChange={(url) => setValue('imageUrl', url)} />
         </FormField>
 
         {serverError && (

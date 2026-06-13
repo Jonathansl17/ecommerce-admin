@@ -130,6 +130,9 @@ const REVIEW_COMMENTS = [
 const daysAgo = (n) => new Date(Date.now() - n * MS_PER_DAY);
 
 async function limpiarBaseDeDatos() {
+  await prisma.moderationRecord.deleteMany();
+  await prisma.adminResponse.deleteMany();
+  await prisma.review.deleteMany();
   await prisma.adminNotification.deleteMany();
   await prisma.productStockMovement.deleteMany();
   await prisma.stockMovement.deleteMany();
@@ -189,6 +192,21 @@ async function sembrarAdmins(role) {
     data: { adminUserId: principal.id, receiveOrderNotifications: true, receiveReviewNotifications: true },
   });
   admins.push(principal);
+
+  // Cuenta de prueba adicional con credenciales fijas.
+  const yarield = await prisma.adminUser.create({
+    data: {
+      fullName: 'Yarield',
+      email: 'yarield252@gmail.com',
+      passwordHash: await bcrypt.hash('Cliente12345', SALT_ROUNDS),
+      accountStatus: 'active',
+    },
+  });
+  await prisma.admin.create({ data: { adminUserId: yarield.id, roleId: role.id } });
+  await prisma.notificationPreference.create({
+    data: { adminUserId: yarield.id, receiveOrderNotifications: true, receiveReviewNotifications: true },
+  });
+  admins.push(yarield);
 
   for (let i = 0; i < RECORDS_PER_TABLE - 1; i++) {
     const fullName = `${FIRST_NAMES[i]} ${LAST_NAMES[i]}`;
@@ -703,6 +721,83 @@ async function sembrarRevokedTokens() {
   }
 }
 
+const REVIEWS_PER_PRODUCT = 4;
+const RESPONSE_TEXTS = [
+  '¡Gracias por tu reseña! Nos alegra mucho que te gustara.',
+  'Agradecemos tu comentario, lo tendremos muy en cuenta.',
+  'Lamentamos el inconveniente, te contactaremos para ayudarte.',
+  'Gracias por tu retroalimentación, seguimos mejorando cada día.',
+];
+
+// Seeds denormalized reviews referencing the admin's own products, plus some
+// admin responses (approved) and moderation records (rejected) for testing.
+async function sembrarReviews(admins, productos) {
+  let creadas = 0;
+  let respuestas = 0;
+  let moderaciones = 0;
+  let n = 0;
+
+  for (let p = 0; p < productos.length; p++) {
+    const { product } = productos[p];
+    for (let r = 0; r < REVIEWS_PER_PRODUCT; r++) {
+      const status = REVIEW_STATUSES[(p + r) % REVIEW_STATUSES.length];
+      const rating = 1 + ((p + r) % 5);
+      const clientName = `${FIRST_NAMES[n % FIRST_NAMES.length]} ${LAST_NAMES[(n + 3) % LAST_NAMES.length]}`;
+
+      const review = await prisma.review.create({
+        data: {
+          externalId: `ext-review-${product.id}-${r}`,
+          productId: String(product.id),
+          productName: product.name,
+          clientId: `client-${1000 + n}`,
+          clientName,
+          clientEmail: `cliente${n + 1}@example.com`,
+          rating,
+          comment: REVIEW_COMMENTS[n % REVIEW_COMMENTS.length],
+          edited: n % 5 === 0,
+          helpfulVotes: (p + r) * 2,
+          unhelpfulVotes: r % 3,
+          isPriority: rating <= 2,
+          status,
+          createdAt: daysAgo(n % 30),
+        },
+      });
+      creadas++;
+
+      if (status === 'approved' && r % 2 === 0) {
+        const admin = admins[n % admins.length];
+        await prisma.adminResponse.create({
+          data: {
+            reviewId: review.id,
+            adminId: admin.id,
+            text: RESPONSE_TEXTS[n % RESPONSE_TEXTS.length],
+          },
+        });
+        respuestas++;
+      }
+
+      if (status === 'rejected') {
+        const admin = admins[n % admins.length];
+        await prisma.moderationRecord.create({
+          data: {
+            reviewId: review.id,
+            adminId: admin.id,
+            action: 'rejected',
+            reason: MODERATION_REASONS[n % MODERATION_REASONS.length],
+            notes: n % 2 === 0 ? 'Rechazada durante el seed por incumplir las pautas.' : null,
+            productName: product.name,
+            clientName,
+          },
+        });
+        moderaciones++;
+      }
+      n++;
+    }
+  }
+
+  return { creadas, respuestas, moderaciones };
+}
+
 async function main() {
   console.log('Iniciando seed administrativo...');
 
@@ -753,6 +848,11 @@ async function main() {
 
   await sembrarRefreshTokens(admins);
   console.log('- Refresh tokens');
+
+  const reviewsStats = await sembrarReviews(admins, productos);
+  console.log(
+    `- ${reviewsStats.creadas} reseñas (${reviewsStats.respuestas} respuestas, ${reviewsStats.moderaciones} registros de moderación)`,
+  );
 
   await sembrarRevokedTokens();
   console.log('- Revoked tokens');

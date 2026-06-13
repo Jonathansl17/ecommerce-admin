@@ -2,6 +2,7 @@ import prisma from '../../shared/db/prisma.js';
 import { PRODUCTS_MESSAGES, PRODUCTS_CONFIG } from './products.constants.js';
 import { crearError } from '../../shared/middleware/errorHandler.js';
 import { HTTP_STATUS } from '../../shared/constants/http.constants.js';
+import { syncProductCreated, syncProductUpdated, syncProductDeleted } from './products.sync.js';
 
 const serializeVariant = (variant) => ({
   id: variant.id.toString(),
@@ -21,6 +22,8 @@ const serializeProduct = (product, avgDailySales = null, daysRemaining = null) =
   currentStock: product.currentStock,
   minThreshold: product.minThreshold ?? null,
   isCustomizable: product.isCustomizable,
+  imageUrl: product.imageUrl ?? null,
+  category: product.category ?? null,
   createdAt: product.createdAt.toISOString(),
   updatedAt: product.updatedAt.toISOString(),
   variants: (product.variants ?? []).map(serializeVariant),
@@ -81,16 +84,19 @@ export const getById = async (id) => {
   return serializeProduct(product);
 };
 
-export const create = async ({ name, description, price, status }) => {
+export const create = async ({ name, description, price, status, imageUrl, category }) => {
   const product = await prisma.product.create({
     data: {
       name,
       description: description ?? null,
       price,
       status: status ?? PRODUCTS_CONFIG.ESTADO_POR_DEFECTO,
+      imageUrl: imageUrl ?? null,
+      category: category ?? null,
     },
     include: { variants: true },
   });
+  await syncProductCreated(product);
   return serializeProduct(product);
 };
 
@@ -99,7 +105,7 @@ export const update = async (id, data) => {
   const existing = await prisma.product.findFirst({ where: { id: bigId, deletedAt: null } });
   if (!existing) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
 
-  const { name, description, price, status, minThreshold } = data;
+  const { name, description, price, status, minThreshold, imageUrl, category } = data;
   const product = await prisma.product.update({
     where: { id: bigId },
     data: {
@@ -108,9 +114,12 @@ export const update = async (id, data) => {
       ...(price !== undefined && { price }),
       ...(status !== undefined && { status }),
       ...('minThreshold' in data && { minThreshold: minThreshold ?? null }),
+      ...('imageUrl' in data && { imageUrl: imageUrl ?? null }),
+      ...('category' in data && { category: category ?? null }),
     },
     include: { variants: true },
   });
+  await syncProductUpdated(product);
   return serializeProduct(product);
 };
 
@@ -128,6 +137,8 @@ export const remove = async (id) => {
     data: { deletedAt: new Date() },
   });
 
+  await syncProductDeleted(product);
+
   return serializeProduct(product);
 };
 
@@ -137,7 +148,7 @@ export const adjustProductStock = async (productId, { newStock, reason, note }, 
   // Read and write inside the same Serializable transaction to prevent TOCTOU:
   // two concurrent adjustments on the same product would otherwise both capture
   // the same previousQuantity and produce a corrupted audit trail.
-  return prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx) => {
     const product = await tx.product.findFirst({ where: { id, deletedAt: null } });
     if (!product) throw crearError(PRODUCTS_MESSAGES.NO_ENCONTRADO, HTTP_STATUS.NOT_FOUND);
 
@@ -158,14 +169,16 @@ export const adjustProductStock = async (productId, { newStock, reason, note }, 
       },
     });
 
-    const updated = await tx.product.update({
+    return tx.product.update({
       where: { id },
       data: { currentStock: newStock },
       include: { variants: true },
     });
-
-    return serializeProduct(updated);
   }, { isolationLevel: 'Serializable' });
+
+  await syncProductUpdated(updated);
+
+  return serializeProduct(updated);
 };
 
 export const getProductMovements = async (productId, { reason, startDate, endDate, page = 1, limit = 20 }) => {
@@ -258,6 +271,12 @@ export const bulkAdjustProductStock = async (adjustments, reason, note, adminId)
 
     return results;
   }, { isolationLevel: 'Serializable' });
+
+  const adjustedProducts = await prisma.product.findMany({
+    where: { id: { in: updatedItems.map((r) => BigInt(r.productId)) } },
+    include: { variants: true },
+  });
+  await Promise.all(adjustedProducts.map((p) => syncProductUpdated(p)));
 
   return {
     results: updatedItems.map((r) => ({ ...r, success: true })),

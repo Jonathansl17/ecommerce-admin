@@ -14,6 +14,7 @@ export interface Product {
   status: ProductStatus;
   currentStock: number;
   minThreshold: number | null;
+  imageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
   variants: ProductVariant[];
@@ -74,6 +75,7 @@ export interface CreateProductDTO {
   description?: string;
   price: number;
   status?: ProductStatus;
+  imageUrl?: string;
 }
 
 export interface CreateProductFormData {
@@ -81,6 +83,7 @@ export interface CreateProductFormData {
   description: string;
   price: number;
   status: ProductStatus;
+  imageUrl: string;
 }
 
 export interface EditProductDTO {
@@ -89,6 +92,7 @@ export interface EditProductDTO {
   price?: number;
   status?: ProductStatus;
   minThreshold?: number | null;
+  imageUrl?: string | null;
 }
 
 export interface EditProductFormData {
@@ -97,4 +101,5 @@ export interface EditProductFormData {
   price: number;
   status: ProductStatus;
   minThreshold: number | null;
+  imageUrl: string;
 }

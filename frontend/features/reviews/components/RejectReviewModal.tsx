@@ -3,12 +3,11 @@
 import { useState, type FormEvent } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import type { ModerationReason, RejectReviewModalProps } from '../types/reviews.types';
-import {
-  MODERATION_REASON_LABELS,
-  REVIEWS_MODAL_STRINGS as strings,
-  MODERATION_REASONS,
-  REVIEW_TEXT_MAX_LENGTH,
-} from '../constants/reviews.constants';
+import { REVIEW_FORM_LIMITS, REVIEWS_STRINGS } from '../constants/reviews.constants';
+import { ModerationReasonSelect } from './ModerationReasonSelect';
+
+const strings = REVIEWS_STRINGS.modals;
+const MAX_NOTES_LENGTH = REVIEW_FORM_LIMITS.notesMax;
 
 export function RejectReviewModal({
   reviewId: _reviewId,
@@ -19,12 +18,12 @@ export function RejectReviewModal({
   const [reason, setReason] = useState<ModerationReason>('other');
   const [notes, setNotes] = useState('');
 
-  const notesRemaining = REVIEW_TEXT_MAX_LENGTH - notes.length;
-
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     onConfirm(reason, notes.trim() || undefined);
   };
+
+  const notesRemaining = MAX_NOTES_LENGTH - notes.length;
 
   return (
     <Modal
@@ -47,7 +46,8 @@ export function RejectReviewModal({
             type="submit"
             form="reject-review-form"
             disabled={isLoading}
-            className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors disabled:opacity-50"
+            className="rounded-md px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
+            style={{ backgroundColor: isLoading ? '#f87171' : '#ef4444' }}
           >
             {isLoading ? strings.submitting : strings.confirmReject}
           </button>
@@ -55,34 +55,25 @@ export function RejectReviewModal({
       }
     >
       <form id="reject-review-form" onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <label htmlFor="reject-reason" className="block text-sm font-medium text-foreground">
-            {strings.rejectReasonLabel}
-          </label>
-          <select
-            id="reject-reason"
-            value={reason}
-            onChange={(e) => setReason(e.target.value as ModerationReason)}
-            required
-            disabled={isLoading}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-          >
-            {MODERATION_REASONS.map((r) => (
-              <option key={r} value={r}>
-                {MODERATION_REASON_LABELS[r]}
-              </option>
-            ))}
-          </select>
-        </div>
+        <ModerationReasonSelect
+          id="reject-reason"
+          label={strings.rejectReasonLabel}
+          value={reason}
+          onChange={setReason}
+          disabled={isLoading}
+        />
 
         <div className="space-y-1.5">
-          <label htmlFor="reject-notes" className="block text-sm font-medium text-foreground">
+          <label
+            htmlFor="reject-notes"
+            className="block text-sm font-medium text-foreground"
+          >
             {strings.rejectNotesLabel}
           </label>
           <textarea
             id="reject-notes"
             value={notes}
-            onChange={(e) => setNotes(e.target.value.slice(0, REVIEW_TEXT_MAX_LENGTH))}
+            onChange={(e) => setNotes(e.target.value.slice(0, MAX_NOTES_LENGTH))}
             placeholder={strings.rejectNotesPlaceholder}
             rows={3}
             disabled={isLoading}
