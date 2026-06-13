@@ -1,3 +1,4 @@
+import { Select } from '@/components/ui/Select';
 import { INVENTORY_REPORT_MESSAGES } from '../constants/messages';
 import { STOCK_STATUS_VALUES } from '../constants/filters';
 import { INVENTORY_REPORT_FILTERS_STYLES as styles } from '../constants/styles';
@@ -29,17 +30,16 @@ export function InventoryReportFilters({
         <label className={styles.label}>
           {strings.filters.stockStatusLabel}
         </label>
-        <select
+        <Select
           value={filters.stockStatus}
           onChange={(e) => onStockStatusChange(e.target.value as StockStatus)}
-          className={styles.select}
         >
           {STOCK_STATUS_VALUES.map((status) => (
             <option key={status} value={status}>
               {strings.stockStatus[status]}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
     </div>
   );

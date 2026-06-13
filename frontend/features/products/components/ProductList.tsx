@@ -1,8 +1,21 @@
+import { SlidersHorizontal, Pencil, History, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
+import { IconButton } from '@/components/ui/IconButton';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
 import type { Product } from '../types/products.types';
 
 const strings = PRODUCTS_MESSAGES.list;
 const historyStrings = PRODUCTS_MESSAGES.history;
+
+// La variante suele nombrarse "{producto} — {variante}"; el producto ya está arriba,
+// así que mostramos solo el sufijo para evitar redundancia.
+function variantLabel(productName: string, variantName: string): string {
+  for (const sep of [' — ', ' - ', ' – ']) {
+    const prefix = `${productName}${sep}`;
+    if (variantName.startsWith(prefix)) return variantName.slice(prefix.length);
+  }
+  return variantName;
+}
 
 interface ProductListProps {
   products: Product[];
@@ -31,59 +44,45 @@ export function ProductList({ products, onAdjust, onHistory, onEdit, onDelete }:
         <tbody className="divide-y divide-foreground/10">
           {products.map((product) => (
             <tr key={product.id} className="hover:bg-foreground/5 transition-colors">
-              <td className="px-4 py-3">
-                <p className="font-medium text-foreground">{product.name}</p>
+              <td className="max-w-xs px-4 py-3 align-top">
+                <p className="font-medium text-foreground break-words">{product.name}</p>
                 {product.variants.length > 0 && (
                   <div className="mt-1 flex flex-wrap gap-1">
-                    {product.variants.map((v) => (
-                      <span
-                        key={v.id}
-                        className="inline-block rounded bg-foreground/8 px-1.5 py-0.5 text-xs text-foreground/50"
-                      >
-                        {v.name}
-                      </span>
-                    ))}
+                    {product.variants.map((v) => {
+                      const label = variantLabel(product.name, v.name);
+                      return (
+                        <span
+                          key={v.id}
+                          title={v.name}
+                          className="inline-block max-w-[12rem] truncate rounded bg-foreground/8 px-1.5 py-0.5 text-xs text-foreground/50"
+                        >
+                          {label}
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
               </td>
               <td className="px-4 py-3 text-foreground/70">{product.currentStock}</td>
               <td className="px-4 py-3">
-                <span
-                  className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                    product.status === 'active'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
+                <Badge variant={product.status === 'active' ? 'success' : 'neutral'}>
                   {product.status === 'active' ? strings.statusActive : strings.statusInactive}
-                </span>
+                </Badge>
               </td>
               <td className="px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => onEdit(product)}
-                    className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                  >
-                    {strings.editButton}
-                  </button>
-                  <button
-                    onClick={() => onHistory(product)}
-                    className="text-sm font-medium text-foreground/50 hover:text-foreground/80 transition-colors"
-                  >
-                    {historyStrings.viewHistory}
-                  </button>
-                  <button
-                    onClick={() => onDelete(product)}
-                    className="text-sm font-medium text-red-500 hover:text-red-600 transition-colors"
-                  >
-                    {strings.deleteButton}
-                  </button>
-                  <button
-                    onClick={() => onAdjust(product)}
-                    className="text-sm font-medium text-amber-600 hover:text-amber-700 transition-colors"
-                  >
-                    {strings.adjustButton}
-                  </button>
+                <div className="flex items-center gap-1">
+                  <IconButton label={strings.adjustButton} onClick={() => onAdjust(product)}>
+                    <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+                  </IconButton>
+                  <IconButton label={strings.editButton} onClick={() => onEdit(product)}>
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                  </IconButton>
+                  <IconButton label={historyStrings.viewHistory} onClick={() => onHistory(product)}>
+                    <History className="h-4 w-4" aria-hidden="true" />
+                  </IconButton>
+                  <IconButton variant="danger" label={strings.deleteButton} onClick={() => onDelete(product)}>
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </IconButton>
                 </div>
               </td>
             </tr>

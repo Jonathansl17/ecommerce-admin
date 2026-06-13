@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
+import { Input } from '@/components/ui/Input';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
 import { STOCK_ADJUSTMENT_REASON_OPTIONS } from '../constants/validation';
 import type { StockMovementFilters } from '../types/stock-movement';
@@ -39,29 +42,24 @@ export function StockMovementFilters({ onFilterChange }: StockMovementFiltersPro
           <label className="text-sm font-medium text-foreground/70 block mb-1">
             {strings.filterByReason}
           </label>
-          <select
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30"
-          >
+          <Select value={reason} onChange={(e) => setReason(e.target.value)}>
             <option value="">{strings.filterAllReasons}</option>
             {STOCK_ADJUSTMENT_REASON_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div>
           <label className="text-sm font-medium text-foreground/70 block mb-1">
             {strings.filterStartDate}
           </label>
-          <input
+          <Input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30"
           />
         </div>
 
@@ -69,28 +67,19 @@ export function StockMovementFilters({ onFilterChange }: StockMovementFiltersPro
           <label className="text-sm font-medium text-foreground/70 block mb-1">
             {strings.filterEndDate}
           </label>
-          <input
+          <Input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30"
           />
         </div>
       </div>
 
       <div className="flex gap-2">
-        <button
-          onClick={handleApply}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
-        >
-          {strings.applyFilters}
-        </button>
-        <button
-          onClick={handleClear}
-          className="px-4 py-2 border border-foreground/20 text-foreground/70 text-sm rounded-md hover:bg-foreground/5 transition-colors"
-        >
+        <Button onClick={handleApply}>{strings.applyFilters}</Button>
+        <Button variant="outline" onClick={handleClear}>
           {strings.clearFilters}
-        </button>
+        </Button>
       </div>
     </div>
   );

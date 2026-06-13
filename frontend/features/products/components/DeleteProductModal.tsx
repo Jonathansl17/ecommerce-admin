@@ -34,10 +34,10 @@ export function DeleteProductModal({
       </button>
       <Button
         type="button"
+        variant="destructive"
         isLoading={isDeleting}
         loadingText={strings.deletingButton}
         onClick={onConfirm}
-        className="w-auto px-4 bg-red-600 hover:bg-red-700"
       >
         {strings.deleteButton}
       </Button>

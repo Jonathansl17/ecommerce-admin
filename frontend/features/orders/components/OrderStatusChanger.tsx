@@ -1,5 +1,6 @@
 'use client';
 
+import { Select } from '@/components/ui/Select';
 import { ORDER_STATUSES, ORDER_STATUS_LABELS, ORDERS_STRINGS } from '../constants/orders.constants';
 import type { OrderStatus } from '../types/orders.types';
 
@@ -31,12 +32,11 @@ export function OrderStatusChanger({
       >
         {s.changeLabel}
       </label>
-      <select
+      <Select
         id="order-status-changer"
         value={currentStatus}
         onChange={handleChange}
         disabled={disabled}
-        className="rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
         aria-label={s.changeLabel}
       >
         {ORDER_STATUSES.map((st) => (
@@ -44,7 +44,7 @@ export function OrderStatusChanger({
             {ORDER_STATUS_LABELS[st]}
           </option>
         ))}
-      </select>
+      </Select>
       {disabled && (
         <span className="text-xs text-muted-foreground" aria-live="polite">
           {s.changingLabel}

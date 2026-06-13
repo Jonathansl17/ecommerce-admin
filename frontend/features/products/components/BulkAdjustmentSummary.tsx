@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/Button';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
 import type { BulkAdjustStockResponse } from '../types/products.types';
 
@@ -23,32 +24,32 @@ export function BulkAdjustmentSummary({ summary, onClose }: BulkAdjustmentSummar
         <h2 className="text-base font-semibold text-foreground mb-4">{strings.summaryTitle}</h2>
 
         <div className="flex gap-4 mb-4">
-          <div className="flex-1 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 p-3 text-center">
-            <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+          <div className="flex-1 rounded-lg bg-success/15 border border-success/30 p-3 text-center">
+            <p className="text-2xl font-bold text-success">
               {summary.summary.successful}
             </p>
-            <p className="text-xs text-green-600 dark:text-green-500">Exitosos</p>
+            <p className="text-xs text-success">Exitosos</p>
           </div>
           {summary.summary.failed > 0 && (
-            <div className="flex-1 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-3 text-center">
-              <p className="text-2xl font-bold text-red-700 dark:text-red-400">
+            <div className="flex-1 rounded-lg bg-destructive/15 border border-destructive/30 p-3 text-center">
+              <p className="text-2xl font-bold text-destructive">
                 {summary.summary.failed}
               </p>
-              <p className="text-xs text-red-600 dark:text-red-500">Fallidos</p>
+              <p className="text-xs text-destructive">Fallidos</p>
             </div>
           )}
         </div>
 
         {summary.summary.failed > 0 && (
           <div className="mb-4">
-            <p className="text-sm font-medium text-red-600 dark:text-red-400 mb-2">
+            <p className="text-sm font-medium text-destructive mb-2">
               Productos que fallaron:
             </p>
             <ul className="space-y-1">
               {summary.results
                 .filter((r) => !r.success)
                 .map((r) => (
-                  <li key={r.productId} className="text-xs text-red-600 dark:text-red-400">
+                  <li key={r.productId} className="text-xs text-destructive">
                     • ID {r.productId}: {r.error}
                   </li>
                 ))}
@@ -56,12 +57,9 @@ export function BulkAdjustmentSummary({ summary, onClose }: BulkAdjustmentSummar
           </div>
         )}
 
-        <button
-          onClick={onClose}
-          className="w-full px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
-        >
+        <Button onClick={onClose} fullWidth>
           {strings.summaryClose}
-        </button>
+        </Button>
       </div>
     </div>
   );

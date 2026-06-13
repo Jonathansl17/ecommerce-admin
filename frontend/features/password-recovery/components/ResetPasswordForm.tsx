@@ -3,6 +3,7 @@ import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthField } from '@/components/auth/AuthField';
 import { FormGeneralError } from '@/components/auth/FormGeneralError';
 import { Button } from '@/components/ui/Button';
+import { Alert } from '@/components/ui/Alert';
 import { AUTH_ROUTES } from '@/features/auth/constants/auth.constants';
 import { PASSWORD_RECOVERY_STRINGS } from '@/features/password-recovery/constants/password-recovery.constants';
 import type { ResetPasswordFormProps } from '@/features/password-recovery/types/password-recovery.types';
@@ -25,9 +26,7 @@ export function ResetPasswordForm({
       <FormGeneralError message={fieldError('general') || generalMessage} />
 
       {successMessage ? (
-        <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-900">
-          {successMessage}
-        </p>
+        <Alert variant="success">{successMessage}</Alert>
       ) : null}
 
       {!successMessage ? (
@@ -56,6 +55,7 @@ export function ResetPasswordForm({
 
           <Button
             type="submit"
+            fullWidth
             isLoading={loading || validatingToken}
             loadingText={validatingToken ? strings.validatingToken : strings.submittingButton}
             disabled={!isTokenValid}

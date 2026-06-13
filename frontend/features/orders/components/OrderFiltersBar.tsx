@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Select } from '@/components/ui/Select';
 import { ORDER_STATUSES, ORDER_STATUS_LABELS, ORDERS_STRINGS } from '../constants/orders.constants';
 import type { OrderFilters, OrderStatus } from '../types/orders.types';
 
@@ -45,11 +46,10 @@ export function OrderFiltersBar({ onChange }: OrderFiltersBarProps) {
         <label className="text-xs font-medium text-muted-foreground" htmlFor="orders-filter-status">
           {s.statusLabel}
         </label>
-        <select
+        <Select
           id="orders-filter-status"
           value={status}
           onChange={(e) => setStatus(e.target.value as OrderStatus | '')}
-          className="rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <option value="">{s.statusAll}</option>
           {ORDER_STATUSES.map((s) => (
@@ -57,7 +57,7 @@ export function OrderFiltersBar({ onChange }: OrderFiltersBarProps) {
               {ORDER_STATUS_LABELS[s]}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {/* From date */}

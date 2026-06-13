@@ -3,6 +3,7 @@ import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthField } from '@/components/auth/AuthField';
 import { FormGeneralError } from '@/components/auth/FormGeneralError';
 import { Button } from '@/components/ui/Button';
+import { Alert } from '@/components/ui/Alert';
 import { AUTH_ROUTES } from '@/features/auth/constants/auth.constants';
 import { PASSWORD_RECOVERY_STRINGS } from '@/features/password-recovery/constants/password-recovery.constants';
 import type { ForgotPasswordFormProps } from '@/features/password-recovery/types/password-recovery.types';
@@ -22,9 +23,7 @@ export function ForgotPasswordForm({
       <FormGeneralError message={fieldError('general')} />
 
       {successMessage ? (
-        <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-900">
-          {successMessage}
-        </p>
+        <Alert variant="success">{successMessage}</Alert>
       ) : null}
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -39,7 +38,7 @@ export function ForgotPasswordForm({
           error={fieldError('email')}
         />
 
-        <Button type="submit" isLoading={loading} loadingText={strings.submittingButton}>
+        <Button type="submit" fullWidth isLoading={loading} loadingText={strings.submittingButton}>
           {strings.submitButton}
         </Button>
       </form>

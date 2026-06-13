@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { Select } from '@/components/ui/Select';
 import { useOrders } from '@/features/orders/hooks/useOrders';
 import { OrderFiltersBar } from '@/features/orders/components/OrderFiltersBar';
 import { OrdersTable } from '@/features/orders/components/OrdersTable';
@@ -92,10 +93,9 @@ export default function SalesPage() {
 
           <div className="flex items-center gap-2">
             {/* Limit selector */}
-            <select
+            <Select
               value={limit}
               onChange={(e) => handleLimitChange(Number(e.target.value))}
-              className="rounded-md border border-input bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               aria-label="Resultados por página"
             >
               {PAGE_LIMIT_OPTIONS.map((opt) => (
@@ -103,7 +103,7 @@ export default function SalesPage() {
                   {opt} / pág.
                 </option>
               ))}
-            </select>
+            </Select>
 
             {/* Prev / Next */}
             <button

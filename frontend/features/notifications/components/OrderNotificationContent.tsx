@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { MapPin, Check, X } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
 import type {
   OrderNotificationContent as OrderContent,
   OrderNotificationContentProps,
@@ -41,16 +42,16 @@ export function OrderNotificationContent({ content }: OrderNotificationContentPr
         {customizationStatus && (
           <div className="border-t border-border pt-2">
             {customizationStatus === 'accepted' ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+              <Badge variant="success">
                 <Check className="h-3 w-3" aria-hidden="true" />
                 {strings.customizationAccepted}
-              </span>
+              </Badge>
             ) : (
               <>
-                <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
+                <Badge variant="danger">
                   <X className="h-3 w-3" aria-hidden="true" />
                   {strings.customizationRejected}
-                </span>
+                </Badge>
                 {customizationRejectionReason && (
                   <p className="mt-1 text-xs italic text-muted-foreground">{customizationRejectionReason}</p>
                 )}

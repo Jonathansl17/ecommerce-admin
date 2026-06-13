@@ -3,6 +3,7 @@
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { FormField } from '@/components/ui/FormField';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_OPTIONS } from '../constants/inventory.constants';
 import { useSupplyForm } from '../hooks/useSupplyForm';
@@ -28,7 +29,6 @@ export function SupplyFormModal({ onClose, onSubmit, serverError }: SupplyFormMo
         form="supply-form"
         isLoading={isSubmitting}
         loadingText={strings.submittingButton}
-        className="w-auto px-4"
       >
         {strings.submitButton}
       </Button>
@@ -55,12 +55,10 @@ export function SupplyFormModal({ onClose, onSubmit, serverError }: SupplyFormMo
         </FormField>
 
         <FormField id="modal-unit" label={strings.unitLabel} error={errors.unitOfMeasure?.message}>
-          <select
+          <Select
             id="modal-unit"
+            hasError={!!errors.unitOfMeasure}
             {...register('unitOfMeasure')}
-            className={`w-full rounded-md border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30 ${
-              errors.unitOfMeasure ? 'border-red-500' : 'border-foreground/20'
-            }`}
           >
             <option value="">{strings.unitPlaceholder}</option>
             {UNIT_OF_MEASURE_OPTIONS.map((opt) => (
@@ -68,7 +66,7 @@ export function SupplyFormModal({ onClose, onSubmit, serverError }: SupplyFormMo
                 {opt.label}
               </option>
             ))}
-          </select>
+          </Select>
         </FormField>
 
         <FormField id="modal-stock" label={strings.stockLabel} error={errors.initialStock?.message}>

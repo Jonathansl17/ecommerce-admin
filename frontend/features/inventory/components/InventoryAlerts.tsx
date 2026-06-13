@@ -1,3 +1,4 @@
+import { StatusDot } from '@/components/ui/StatusDot';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '../constants/inventory.constants';
 import type { Supply } from '@/lib/types/inventory.types';
 
@@ -29,15 +30,15 @@ function AlertRow({ supply, variant, onQuickEntry }: AlertRowProps) {
   return (
     <li className="flex items-center justify-between gap-4">
       <div className="min-w-0 flex-1">
-        <p className={`truncate text-sm font-medium ${isOut ? 'text-red-800' : 'text-yellow-900'}`}>
+        <p className={`truncate text-sm font-medium ${isOut ? 'text-destructive' : 'text-warning-foreground'}`}>
           {supply.name}
         </p>
-        <p className={`text-xs ${isOut ? 'text-red-500' : 'text-yellow-600'}`}>
+        <p className={`text-xs ${isOut ? 'text-destructive/80' : 'text-warning-foreground/80'}`}>
           {strings.stockLabel}: {Number(supply.currentStock)}{' '}
           {unit} · {strings.thresholdLabel}:{' '}
           {Number(supply.minThreshold)}
         </p>
-        <p className={`text-xs mt-0.5 ${isOut ? 'text-red-400' : 'text-yellow-500'}`}>
+        <p className={`text-xs mt-0.5 ${isOut ? 'text-destructive/70' : 'text-warning-foreground/70'}`}>
           {strings.avgDailySalesLabel}: {avgLabel} · {strings.daysRemainingLabel}: {daysLabel}
         </p>
       </div>
@@ -46,8 +47,8 @@ function AlertRow({ supply, variant, onQuickEntry }: AlertRowProps) {
         onClick={() => onQuickEntry(supply.id)}
         className={`shrink-0 rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
           isOut
-            ? 'border-red-300 text-red-700 hover:bg-red-100'
-            : 'border-yellow-400 text-yellow-800 hover:bg-yellow-100'
+            ? 'border-destructive/40 text-destructive hover:bg-destructive/15'
+            : 'border-warning/50 text-warning-foreground hover:bg-warning/20'
         }`}
       >
         {strings.registerEntryButton}
@@ -75,10 +76,10 @@ export function InventoryAlerts({ supplies, onQuickEntry }: InventoryAlertsProps
 
       <div className="grid gap-3 sm:grid-cols-2">
         {outOfStock.length > 0 && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <div className="rounded-lg border border-destructive/20 bg-destructive/15 px-4 py-3">
             <div className="mb-3 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-red-500" aria-hidden="true" />
-              <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
+              <StatusDot tone="danger" />
+              <p className="text-xs font-semibold uppercase tracking-wide text-destructive">
                 {strings.outOfStock} ({outOfStock.length})
               </p>
             </div>
@@ -91,10 +92,10 @@ export function InventoryAlerts({ supplies, onQuickEntry }: InventoryAlertsProps
         )}
 
         {lowStock.length > 0 && (
-          <div className="rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3">
+          <div className="rounded-lg border border-warning/30 bg-warning/20 px-4 py-3">
             <div className="mb-3 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-yellow-500" aria-hidden="true" />
-              <p className="text-xs font-semibold uppercase tracking-wide text-yellow-700">
+              <StatusDot tone="warning" />
+              <p className="text-xs font-semibold uppercase tracking-wide text-warning-foreground">
                 {strings.lowStock} ({lowStock.length})
               </p>
             </div>

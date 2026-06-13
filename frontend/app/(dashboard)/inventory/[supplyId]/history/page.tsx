@@ -2,6 +2,7 @@
 
 import { use } from 'react';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/Badge';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/constants/inventory.constants';
 import { useSupplyHistory } from '@/features/inventory/hooks/useSupplyHistory';
 import { formatDateTime } from '@/lib/utils/format';
@@ -132,11 +133,9 @@ export default function SupplyHistoryPage({
                         {formatDateTime(m.createdAt)}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          m.type === 'entry' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-                        }`}>
+                        <Badge variant={m.type === 'entry' ? 'success' : 'warning'}>
                           {m.type === 'entry' ? strings.typeEntry : strings.typeConsumption}
-                        </span>
+                        </Badge>
                       </td>
                       <td className="px-4 py-3 text-foreground/70">{m.quantity}</td>
                       <td className="px-4 py-3 text-foreground/70">{m.previousStock}</td>

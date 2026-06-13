@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { X } from 'lucide-react';
 
 interface ModalProps {
   titleId: string;
@@ -22,11 +23,11 @@ const SIZE_CLASSES: Record<NonNullable<ModalProps['size']>, string> = {
 export function Modal({ titleId, title, description, onClose, footer, children, size = 'md', disableBackdropClose = false }: ModalProps) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="animate-modal-backdrop-in fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       onClick={disableBackdropClose ? undefined : onClose}
     >
       <div
-        className={`flex max-h-[90vh] w-full ${SIZE_CLASSES[size]} flex-col rounded-lg border border-foreground/10 bg-background shadow-lg`}
+        className={`animate-modal-panel-in flex max-h-[90vh] w-full ${SIZE_CLASSES[size]} flex-col rounded-lg border border-foreground/10 bg-background shadow-lg`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -47,7 +48,7 @@ export function Modal({ titleId, title, description, onClose, footer, children, 
             className="flex-shrink-0 rounded-md p-1 text-foreground/50 hover:bg-foreground/5 hover:text-foreground transition-colors"
             aria-label="Cerrar"
           >
-            ✕
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
 
