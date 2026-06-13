@@ -6,7 +6,17 @@ export const ORDER_MESSAGES = {
   ERROR_DESCONOCIDO: 'Error inesperado al comunicarse con el servicio del cliente',
 };
 
-export const ORDER_STATUSES = ['received', 'in_process', 'ready', 'sold', 'rejected'];
+export const ORDER_STATUSES = [
+  'pending_payment',
+  'confirmed',
+  'in_preparation',
+  'customization_in_progress',
+  'ready_shipment',
+  'shipped',
+  'in_transit',
+  'delivered',
+  'cancelled',
+];
 
 export const ORDER_VALIDATION = {
   ORDER_ID_MIN: 1,

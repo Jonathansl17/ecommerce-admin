@@ -25,8 +25,8 @@ export function OrderStatusTimeline({ notifications }: OrderStatusTimelineProps)
               />
             </span>
             <div className="flex flex-wrap items-center gap-2">
-              <OrderStatusBadge status={notification.status} />
-              <span className="text-xs text-muted-foreground">{formatDate(notification.createdAt)}</span>
+              <OrderStatusBadge status={notification.newStatus} />
+              <span className="text-xs text-muted-foreground">{formatDate(notification.changedAt ?? notification.createdAt)}</span>
             </div>
           </li>
         ))}

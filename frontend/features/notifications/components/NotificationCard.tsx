@@ -1,6 +1,8 @@
 'use client';
 
-import { Check } from 'lucide-react';
+import { Check, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
+import { IconButton } from '@/components/ui/IconButton';
 import type {
   OrderNotificationContent,
   ReviewNotificationContent,
@@ -12,7 +14,7 @@ import { NOTIFICATION_STRINGS, NOTIFICATION_CARD_STRINGS as strings } from '../c
 import { parseNotificationContent, getCardBorderStyle } from '@/lib/utils/notifications';
 import { timeAgo } from '@/lib/utils/timeAgo';
 
-export function NotificationCard({ notification, onMarkRead }: NotificationCardProps) {
+export function NotificationCard({ notification, onMarkRead, onDelete }: NotificationCardProps) {
   const { id, title, content, entityType, read, createdAt } = notification;
 
   const orderContent = entityType === 'order' ? parseNotificationContent<OrderNotificationContent>(content) : null;
@@ -51,29 +53,25 @@ export function NotificationCard({ notification, onMarkRead }: NotificationCardP
               />
             )}
             {isOrderWithCustomization && (
-              <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                {NOTIFICATION_STRINGS.order.customizationBadge}
-              </span>
+              <Badge variant="warning">{NOTIFICATION_STRINGS.order.customizationBadge}</Badge>
             )}
             {isNegativeReview && (
-              <span className="inline-block rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
-                {NOTIFICATION_STRINGS.review.priorityBadge}
-              </span>
+              <Badge variant="danger">{NOTIFICATION_STRINGS.review.priorityBadge}</Badge>
             )}
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">{timeAgo(createdAt, strings)}</p>
         </div>
 
-        {!read && (
-          <button
-            onClick={handleMarkRead}
-            className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label={strings.markRead}
-            title={strings.markRead}
-          >
-            <Check className="h-4 w-4" aria-hidden="true" />
-          </button>
-        )}
+        <div className="flex shrink-0 items-center gap-1">
+          {!read && (
+            <IconButton label={strings.markRead} onClick={handleMarkRead}>
+              <Check className="h-4 w-4" aria-hidden="true" />
+            </IconButton>
+          )}
+          <IconButton variant="danger" label={strings.delete} onClick={() => onDelete(id)}>
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+          </IconButton>
+        </div>
       </div>
 
       {orderContent && (

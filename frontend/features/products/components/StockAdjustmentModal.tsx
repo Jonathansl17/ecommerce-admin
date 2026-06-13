@@ -3,6 +3,7 @@
 import { Modal } from '@/components/ui/Modal';
 import { FormField } from '@/components/ui/FormField';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { useStockAdjustmentForm } from '../hooks/useStockAdjustmentForm';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
@@ -43,7 +44,6 @@ export function StockAdjustmentModal({
         form="adjust-form"
         isLoading={isSubmitting}
         loadingText={strings.savingButton}
-        className="w-auto px-4"
       >
         {strings.saveButton}
       </Button>
@@ -83,19 +83,17 @@ export function StockAdjustmentModal({
         </FormField>
 
         <FormField id="adjust-reason" label={strings.reasonLabel} error={errors.reason?.message}>
-          <select
+          <Select
             id="adjust-reason"
+            hasError={!!errors.reason}
             {...register('reason')}
-            className={`w-full rounded-md border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30 ${
-              errors.reason ? 'border-red-500' : 'border-foreground/20'
-            }`}
           >
             {STOCK_ADJUSTMENT_REASON_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
             ))}
-          </select>
+          </Select>
         </FormField>
 
         <FormField id="adjust-note" label={strings.noteLabel} error={errors.note?.message}>
