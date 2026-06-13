@@ -78,6 +78,22 @@ export const getUnreadCount = async (adminId) => {
   return { count };
 };
 
+export const deleteNotification = async (notificationId, adminId) => {
+  const { id } = await findAndAssertOwnership(notificationId, adminId);
+
+  await prisma.adminNotification.delete({ where: { id } });
+
+  return { deleted: 1 };
+};
+
+export const deleteAllNotifications = async (adminId) => {
+  const result = await prisma.adminNotification.deleteMany({
+    where: { adminId: BigInt(adminId) },
+  });
+
+  return { deleted: result.count };
+};
+
 export const updateCustomizationStatus = async (notificationId, adminId, status, rejectionReason) => {
   const { notification, id } = await findAndAssertOwnership(notificationId, adminId);
 

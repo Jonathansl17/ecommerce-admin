@@ -53,6 +53,7 @@ export function LoginForm({
 
         <Button
           type="submit"
+          fullWidth
           isLoading={loading}
           loadingText={strings.submittingButton}
         >

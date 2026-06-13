@@ -2,6 +2,8 @@ export const NOTIFICATION_STRINGS = {
   page: {
     title: 'Notificaciones',
     markAllRead: 'Marcar todas como leídas',
+    deleteAll: 'Borrar todas',
+    confirmDeleteAll: '¿Borrar todas las notificaciones? Esta acción no se puede deshacer.',
     filterAll: 'Todas',
     filterUnread: 'No leídas',
     filterRead: 'Leídas',
@@ -20,6 +22,7 @@ export const NOTIFICATION_STRINGS = {
   },
   card: {
     markRead: 'Marcar como leída',
+    delete: 'Borrar notificación',
     justNow: 'Justo ahora',
     minutesAgo: (n: number) => `hace ${n} minuto${n === 1 ? '' : 's'}`,
     hoursAgo: (n: number) => `hace ${n} hora${n === 1 ? '' : 's'}`,

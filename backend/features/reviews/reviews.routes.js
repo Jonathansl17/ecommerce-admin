@@ -15,6 +15,7 @@ import {
   validateRespondToReview,
   validateRejectReview,
   validateDeleteReview,
+  validateListReviewsQuery,
 } from './reviews.validator.js';
 import { requireAuth } from '../../shared/middleware/authMiddleware.js';
 import { requireApiKey } from '../../shared/middleware/apiKeyMiddleware.js';
@@ -24,7 +25,7 @@ reviewsWebhookRouter.post('/notify', requireApiKey, validateNotifyNewReview, not
 reviewsWebhookRouter.delete('/notify/:externalId', requireApiKey, notifyDeletedReview);
 
 export const reviewsAdminRouter = Router();
-reviewsAdminRouter.get('/', requireAuth, getReviews);
+reviewsAdminRouter.get('/', requireAuth, validateListReviewsQuery, getReviews);
 reviewsAdminRouter.get('/stats', requireAuth, getStats);
 reviewsAdminRouter.get('/:id', requireAuth, getReview);
 reviewsAdminRouter.patch('/:id/approve', requireAuth, approveReview);

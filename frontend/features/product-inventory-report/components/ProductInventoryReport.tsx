@@ -1,5 +1,6 @@
 'use client';
 
+import { Alert } from '@/components/ui/Alert';
 import { INVENTORY_REPORT_MESSAGES } from '../constants/messages';
 import { useProductInventoryReport } from '../hooks/useProductInventoryReport';
 import { InventoryReportFilters } from './InventoryReportFilters';
@@ -27,7 +28,7 @@ export function ProductInventoryReport() {
   if (error) {
     return (
       <div className="space-y-2">
-        <p role="alert" className="text-sm text-red-500">{error}</p>
+        <Alert variant="danger">{error}</Alert>
         <button
           onClick={refetch}
           className="text-sm text-foreground/60 underline hover:text-foreground transition-colors"
@@ -46,9 +47,7 @@ export function ProductInventoryReport() {
         onStockStatusChange={setStockStatus}
       />
 
-      <div className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3">
-        <p className="text-sm text-blue-700">{strings.disclaimer}</p>
-      </div>
+      <Alert variant="info">{strings.disclaimer}</Alert>
 
       <div className="space-y-3">
         <h2 className="text-base font-semibold text-foreground">

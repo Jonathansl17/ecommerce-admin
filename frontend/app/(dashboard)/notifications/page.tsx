@@ -1,10 +1,13 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-import { Bell } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Bell, CheckCheck, Trash2 } from 'lucide-react';
 import { useNotifications } from '@/features/notifications/hooks/useNotifications';
 import { useSSENotifications } from '@/features/notifications/hooks/useSSENotifications';
 import { NotificationCard } from '@/features/notifications/components/NotificationCard';
+import { Alert } from '@/components/ui/Alert';
+import { Button } from '@/components/ui/Button';
+import { Pagination } from '@/components/ui/Pagination';
 
 import {
   NOTIFICATION_PAGE_STRINGS as strings,
@@ -14,9 +17,13 @@ import {
 } from '@/features/notifications/constants/notifications.constants';
 import type { Notification } from '@/features/notifications/types/notifications.types';
 
+const PAGE_SIZE = 10;
+
 export default function NotificationsPage() {
-  const { notifications, unreadCount, isLoading, markRead, refetch } = useNotifications();
+  const { notifications, unreadCount, isLoading, markRead, markAllRead, remove, removeAll, refetch } =
+    useNotifications();
   const [readFilter, setReadFilter] = useState<ReadFilter>('all');
+  const [page, setPage] = useState(1);
 
   const handleNewNotification = useCallback(
     (_notification: Notification) => { refetch(); },
@@ -39,22 +46,55 @@ export default function NotificationsPage() {
     return true;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+
+  // Reset to page 1 when the filter changes.
+  useEffect(() => {
+    setPage(1);
+  }, [readFilter]);
+
+  // Step back if the current page becomes out of range (e.g. after deletes).
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const empty = NOTIFICATION_EMPTY_STATE[readFilter];
+
+  const handleDeleteAll = () => {
+    if (window.confirm(strings.confirmDeleteAll)) removeAll();
+  };
 
   return (
     <div className="space-y-6">
       {!isConnected && (
-        <div
-          role="alert"
-          className="flex items-center gap-2 rounded-md border border-yellow-300 bg-yellow-50 px-4 py-2 text-sm text-yellow-800"
-        >
-          <span aria-hidden="true">⚠</span>
-          {strings.disconnectedWarning}
-        </div>
+        <Alert variant="warning">{strings.disconnectedWarning}</Alert>
       )}
 
       {/* Header */}
-      <h1 className="text-2xl font-bold text-foreground">{strings.title}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold text-foreground">{strings.title}</h1>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={markAllRead}
+            disabled={unreadCount === 0}
+          >
+            <CheckCheck className="h-4 w-4" aria-hidden="true" />
+            {strings.markAllRead}
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteAll}
+            disabled={notifications.length === 0}
+          >
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+            {strings.deleteAll}
+          </Button>
+        </div>
+      </div>
 
       {/* Filtros */}
       <div
@@ -107,18 +147,28 @@ export default function NotificationsPage() {
           <p className="text-xs text-muted-foreground">{empty.subtitle}</p>
         </div>
       ) : (
-        <ul className="space-y-3" aria-label={strings.ariaList}>
-          {filtered.map((notification) => (
-            <li key={notification.id}>
-              <NotificationCard
-                notification={notification}
-                onMarkRead={markRead}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+        <>
+          <ul className="space-y-3" aria-label={strings.ariaList}>
+            {pageItems.map((notification) => (
+              <li key={notification.id}>
+                <NotificationCard
+                  notification={notification}
+                  onMarkRead={markRead}
+                  onDelete={remove}
+                />
+              </li>
+            ))}
+          </ul>
 
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            total={filtered.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+          />
+        </>
+      )}
     </div>
   );
 }

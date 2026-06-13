@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, X, MapPin } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
 import { formatCurrency, timeAgo } from '@/lib/utils/format';
 import { CUSTOM_ORDER_CARD_STRINGS as strings, BORDER_COLOR_CLASSES } from '../constants/customOrders.constants';
 import { CustomOrderProductList } from './CustomOrderProductList';
@@ -41,16 +42,16 @@ export function CustomOrderCard({ order, onStatusUpdate }: CustomOrderCardProps)
             {timeAgo(notification.createdAt)}
           </time>
           {isAccepted && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+            <Badge variant="success">
               <Check className="h-3 w-3" aria-hidden="true" />
               {strings.statusAccepted}
-            </span>
+            </Badge>
           )}
           {customizationStatus === 'rejected' && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
+            <Badge variant="danger">
               <X className="h-3 w-3" aria-hidden="true" />
               {strings.statusRejected}
-            </span>
+            </Badge>
           )}
         </div>
       </div>

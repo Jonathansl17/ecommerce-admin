@@ -13,7 +13,7 @@ export function BulkStockAdjustmentRow({ row, onChange, disabled }: BulkStockAdj
 
   return (
     <tr
-      className={`hover:bg-foreground/5 transition-colors ${row.isSelected ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''}`}
+      className={`hover:bg-foreground/5 transition-colors ${row.isSelected ? 'bg-info/10' : ''}`}
     >
       <td className="px-4 py-3">
         <input
@@ -47,12 +47,12 @@ export function BulkStockAdjustmentRow({ row, onChange, disabled }: BulkStockAdj
             placeholder="—"
             className={`w-28 rounded-md border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/30 ${
               isSameStock
-                ? 'border-yellow-400 bg-yellow-50 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400'
+                ? 'border-warning/40 bg-warning/20 text-warning-foreground'
                 : 'border-foreground/20 bg-background text-foreground'
             }`}
           />
           {isSameStock && (
-            <span className="text-xs text-yellow-600 dark:text-yellow-400">
+            <span className="text-xs text-warning-foreground">
               {PRODUCTS_MESSAGES.bulk.sameStockWarning}
             </span>
           )}

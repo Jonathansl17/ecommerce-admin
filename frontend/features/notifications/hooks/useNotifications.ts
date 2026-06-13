@@ -7,6 +7,8 @@ import {
   getUnreadCount,
   markNotificationRead as apiMarkRead,
   markAllRead as apiMarkAllRead,
+  deleteNotification as apiDelete,
+  deleteAllNotifications as apiDeleteAll,
 } from '../shared/notifications.api';
 
 interface UseNotificationsResult {
@@ -15,6 +17,8 @@ interface UseNotificationsResult {
   isLoading: boolean;
   markRead: (id: string) => Promise<void>;
   markAllRead: () => Promise<void>;
+  remove: (id: string) => Promise<void>;
+  removeAll: () => Promise<void>;
   refetch: () => Promise<void>;
 }
 
@@ -75,12 +79,49 @@ export function useNotifications(): UseNotificationsResult {
     }
   }, [notifications, unreadCount]);
 
+  const remove = useCallback(async (id: string) => {
+    const previousNotifications = notifications;
+    const previousCount = unreadCount;
+    const target = notifications.find((n) => n.id === id);
+
+    // Optimistic update
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    if (target && !target.read) setUnreadCount((prev) => Math.max(0, prev - 1));
+
+    try {
+      await apiDelete(id);
+    } catch {
+      // Rollback on failure
+      setNotifications(previousNotifications);
+      setUnreadCount(previousCount);
+    }
+  }, [notifications, unreadCount]);
+
+  const removeAll = useCallback(async () => {
+    const previousNotifications = notifications;
+    const previousCount = unreadCount;
+
+    // Optimistic update
+    setNotifications([]);
+    setUnreadCount(0);
+
+    try {
+      await apiDeleteAll();
+    } catch {
+      // Rollback on failure
+      setNotifications(previousNotifications);
+      setUnreadCount(previousCount);
+    }
+  }, [notifications, unreadCount]);
+
   return {
     notifications,
     unreadCount,
     isLoading,
     markRead,
     markAllRead,
+    remove,
+    removeAll,
     refetch: loadData,
   };
 }

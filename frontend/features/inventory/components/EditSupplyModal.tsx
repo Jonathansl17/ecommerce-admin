@@ -3,7 +3,9 @@
 import { Modal } from '@/components/ui/Modal';
 import { FormField } from '@/components/ui/FormField';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
+import { Alert } from '@/components/ui/Alert';
 import { UNIT_OF_MEASURE_OPTIONS, INVENTORY_STRINGS } from '../constants/inventory.constants';
 import { useEditSupplyForm } from '../hooks/useEditSupplyForm';
 import type { EditSupplyModalProps } from '../types/inventory.modal.types';
@@ -30,7 +32,6 @@ export function EditSupplyModal({ supply, onClose, onSave, serverError }: EditSu
         form="edit-supply-form"
         isLoading={isSubmitting}
         loadingText={strings.savingButton}
-        className="w-auto px-4"
       >
         {strings.saveButton}
       </Button>
@@ -56,19 +57,17 @@ export function EditSupplyModal({ supply, onClose, onSave, serverError }: EditSu
         </FormField>
 
         <FormField id="edit-unit" label={strings.unitLabel} error={errors.unitOfMeasure?.message}>
-          <select
+          <Select
             id="edit-unit"
+            hasError={!!errors.unitOfMeasure}
             {...register('unitOfMeasure')}
-            className={`w-full rounded-md border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30 ${
-              errors.unitOfMeasure ? 'border-red-500' : 'border-foreground/20'
-            }`}
           >
             {UNIT_OF_MEASURE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
             ))}
-          </select>
+          </Select>
         </FormField>
 
         <FormField id="edit-stock" label={strings.stockLabel}>
@@ -95,9 +94,7 @@ export function EditSupplyModal({ supply, onClose, onSave, serverError }: EditSu
         </FormField>
 
         {unitChanged && (
-          <p role="alert" className="rounded-md border border-yellow-300 bg-yellow-50 px-3 py-2 text-sm text-yellow-700">
-            {strings.unitChangeWarning}
-          </p>
+          <Alert variant="warning">{strings.unitChangeWarning}</Alert>
         )}
 
         {serverError && (
