@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import { Pencil, History, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
+import { IconButton } from '@/components/ui/IconButton';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS, ITEM_STATUS } from '../constants/inventory.constants';
 import type { Supply } from '@/lib/types/inventory.types';
 
@@ -39,34 +42,26 @@ export function SupplyList({ supplies, onEdit, onDelete }: SupplyListProps) {
               </td>
               <td className="px-4 py-3 text-foreground/70">{Number(supply.currentStock)}</td>
               <td className="px-4 py-3">
-                <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                  supply.status === ITEM_STATUS.ACTIVE
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-gray-100 text-gray-600'
-                }`}>
+                <Badge variant={supply.status === ITEM_STATUS.ACTIVE ? 'success' : 'neutral'}>
                   {supply.status === ITEM_STATUS.ACTIVE ? strings.statusActive : strings.statusInactive}
-                </span>
+                </Badge>
               </td>
               <td className="px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => onEdit(supply)}
-                    className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                  >
-                    {strings.editButton}
-                  </button>
+                <div className="flex items-center gap-1">
+                  <IconButton label={strings.editButton} onClick={() => onEdit(supply)}>
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                  </IconButton>
                   <Link
                     href={`/inventory/${supply.id}/history`}
-                    className="text-sm font-medium text-foreground/50 hover:text-foreground/80 transition-colors"
+                    aria-label={historyStrings.historyButton}
+                    title={historyStrings.historyButton}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    {historyStrings.historyButton}
+                    <History className="h-4 w-4" aria-hidden="true" />
                   </Link>
-                  <button
-                    onClick={() => onDelete(supply)}
-                    className="text-sm font-medium text-red-500 hover:text-red-600 transition-colors"
-                  >
-                    {strings.deleteButton}
-                  </button>
+                  <IconButton variant="danger" label={strings.deleteButton} onClick={() => onDelete(supply)}>
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </IconButton>
                 </div>
               </td>
             </tr>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Alert } from '@/components/ui/Alert';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '@/features/inventory/constants/inventory.constants';
 import { useInventoryReport } from '@/features/inventory/hooks/useInventoryReport';
 
@@ -91,8 +92,8 @@ export default function InventoryReportPage() {
                         {UNIT_OF_MEASURE_LABELS[row.unitOfMeasure]}
                       </td>
                       <td className="px-4 py-3 text-right text-foreground/70">{row.stockInicial}</td>
-                      <td className="px-4 py-3 text-right font-medium text-green-700">+{row.entradas}</td>
-                      <td className="px-4 py-3 text-right font-medium text-orange-700">-{row.consumo}</td>
+                      <td className="px-4 py-3 text-right font-medium text-success">+{row.entradas}</td>
+                      <td className="px-4 py-3 text-right font-medium text-warning-foreground">-{row.consumo}</td>
                       <td className="px-4 py-3 text-right font-semibold text-foreground">
                         {Math.max(0, row.stockFinal)}
                       </td>
@@ -106,9 +107,7 @@ export default function InventoryReportPage() {
           <div className="space-y-4">
               <h2 className="text-base font-semibold text-foreground">{strings.rendimientoTitle}</h2>
 
-              <div className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3">
-                <p className="text-sm text-blue-700">{strings.rendimientoDisclaimer}</p>
-              </div>
+              <Alert variant="info">{strings.rendimientoDisclaimer}</Alert>
 
               {report.rendimiento.length === 0 ? (
                 <p className="text-sm text-foreground/60">{strings.noRendimiento}</p>

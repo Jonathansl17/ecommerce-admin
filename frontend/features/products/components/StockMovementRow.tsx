@@ -35,7 +35,7 @@ export function StockMovementRow({ movement }: StockMovementRowProps) {
         </td>
         <td className="px-4 py-3 font-medium text-foreground">{movement.previousQuantity}</td>
         <td className="px-4 py-3 font-medium text-foreground">{movement.newQuantity}</td>
-        <td className={`px-4 py-3 font-semibold ${isIncrease ? 'text-green-600' : 'text-red-600'}`}>
+        <td className={`px-4 py-3 font-semibold ${isIncrease ? 'text-success' : 'text-destructive'}`}>
           {formatMovementSign(difference)}
         </td>
         <td className="px-4 py-3">

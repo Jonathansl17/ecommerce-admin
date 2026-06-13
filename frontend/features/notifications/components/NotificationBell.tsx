@@ -15,6 +15,7 @@ import {
 import { parseNotificationContent } from '@/lib/utils/notifications';
 import { NotificationBadge } from './NotificationBadge';
 import { NotificationToastItem } from './NotificationToastItem';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -78,10 +79,13 @@ export function NotificationBell() {
         <Bell className="h-5 w-5" aria-hidden="true" />
         <NotificationBadge count={unreadCount} />
         {!isConnected && (
-          <span
-            className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-yellow-400"
-            aria-label="Sin conexión en tiempo real"
-          />
+          <>
+            <StatusDot
+              tone="warning"
+              className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 border-2 border-background"
+            />
+            <span className="sr-only">Sin conexión en tiempo real</span>
+          </>
         )}
       </Link>
 

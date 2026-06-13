@@ -3,6 +3,7 @@
 import { Modal } from '@/components/ui/Modal';
 import { FormField } from '@/components/ui/FormField';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { useEditProductForm } from '../hooks/useEditProductForm';
 import { ProductImageField } from './ProductImageField';
@@ -37,7 +38,6 @@ export function EditProductModal({ product, onClose, onSave, serverError }: Edit
         form="edit-product-form"
         isLoading={isSubmitting}
         loadingText={strings.savingButton}
-        className="w-auto px-4"
       >
         {strings.saveButton}
       </Button>
@@ -96,19 +96,17 @@ export function EditProductModal({ product, onClose, onSave, serverError }: Edit
         </FormField>
 
         <FormField id="edit-status" label={strings.statusLabel} error={errors.status?.message}>
-          <select
+          <Select
             id="edit-status"
+            hasError={!!errors.status}
             {...register('status')}
-            className={`w-full rounded-md border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30 ${
-              errors.status ? 'border-red-500' : 'border-foreground/20'
-            }`}
           >
             {PRODUCT_STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
             ))}
-          </select>
+          </Select>
         </FormField>
 
         <FormField

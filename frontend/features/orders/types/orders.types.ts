@@ -48,7 +48,9 @@ export interface AdminOrderPayment {
 
 export interface AdminOrderStatusNotification {
   id: string;
-  status: OrderStatus;
+  previousStatus: OrderStatus | null;
+  newStatus: OrderStatus;
+  changedAt: string;
   createdAt: string;
 }
 

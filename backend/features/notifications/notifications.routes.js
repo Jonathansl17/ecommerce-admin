@@ -15,6 +15,8 @@ import {
   getPreferences,
   updatePreferences,
   updateCustomizationStatus,
+  remove,
+  removeAll,
 } from './notifications.controller.js';
 
 const router = Router();
@@ -31,5 +33,7 @@ router.patch('/:id/read', requireAuth, markRead);
 router.patch('/:id/customization-status', requireAuth, requireRole(ADMIN_ROLES), validateUpdateCustomizationStatus, updateCustomizationStatus);
 router.get('/preferences', requireAuth, getPreferences);
 router.put('/preferences', requireAuth, validateUpdatePreferences, updatePreferences);
+router.delete('/', requireAuth, removeAll);
+router.delete('/:id', requireAuth, remove);
 
 export default router;

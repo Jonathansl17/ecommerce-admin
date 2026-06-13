@@ -88,3 +88,19 @@ export const validateDeleteReview = (req, res, next) => {
   req.body = result.data;
   next();
 };
+
+const listReviewsQuerySchema = z.object({
+  status: z.string().max(50).optional(),
+  product: z.string().max(150).optional(),
+  client: z.string().max(150).optional(),
+  rating: z.coerce.number().int().min(1).max(5).optional(),
+  limit: z.coerce.number().int().min(1).max(100, 'El límite no puede superar 100').default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+export const validateListReviewsQuery = (req, res, next) => {
+  const result = listReviewsQuerySchema.safeParse(req.query);
+  if (!result.success) return responderErrores(res, result.error);
+  Object.assign(req.query, result.data);
+  next();
+};
