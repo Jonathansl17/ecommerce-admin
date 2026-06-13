@@ -2,6 +2,7 @@
 
 import type { FieldErrors, UseFormRegister } from 'react-hook-form';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { FormField } from '@/components/ui/FormField';
 import { INVENTORY_STRINGS, UNIT_OF_MEASURE_LABELS } from '../constants/inventory.constants';
 import type { Supply, CreateSupplyEntriesForm, CreateConsumptionForm } from '@/lib/types/inventory.types';
@@ -57,12 +58,10 @@ export function SupplyItemRow({
 
       <div className="grid grid-cols-[1fr_120px] gap-3">
         <FormField id={`item-supply-${index}`} label={supplyLabel} error={supplyError}>
-          <select
+          <Select
             id={`item-supply-${index}`}
+            hasError={!!supplyError}
             {...register(`items.${index}.supplyId` as Parameters<typeof register>[0])}
-            className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30 ${
-              supplyError ? 'border-red-500' : 'border-foreground/20'
-            }`}
           >
             <option value="">{supplyPlaceholder}</option>
             {availableSupplies.map((s) => (
@@ -70,7 +69,7 @@ export function SupplyItemRow({
                 {s.name} ({UNIT_OF_MEASURE_LABELS[s.unitOfMeasure]})
               </option>
             ))}
-          </select>
+          </Select>
         </FormField>
 
         <FormField

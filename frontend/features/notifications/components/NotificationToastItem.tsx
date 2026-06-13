@@ -1,4 +1,5 @@
 import { Bell } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
 import type { ToastItemProps } from '../types/notifications.types';
 import { NOTIFICATION_TOAST_STRINGS as strings } from '../constants/notifications.constants';
 import { formatCurrency } from '@/lib/utils/format';
@@ -42,9 +43,7 @@ export function NotificationToastItem({ toast, onDismiss }: ToastItemProps) {
               {orderContent.clientName} &mdash; {formatCurrency(orderContent.total)}
             </p>
             {orderContent.hasCustomization && (
-              <span className="inline-block rounded px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">
-                {strings.customizationBadge}
-              </span>
+              <Badge variant="warning">{strings.customizationBadge}</Badge>
             )}
           </>
         )}
@@ -53,15 +52,13 @@ export function NotificationToastItem({ toast, onDismiss }: ToastItemProps) {
           <>
             <p className="text-xs text-muted-foreground">{reviewContent.productName}</p>
             <p
-              className="text-xs text-amber-500"
+              className="text-xs text-warning-foreground"
               aria-label={`${reviewContent.rating} de 5 estrellas`}
             >
               {renderStarsText(reviewContent.rating)}
             </p>
             {reviewContent.isPriority && (
-              <span className="inline-block rounded px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800">
-                {strings.priorityBadge}
-              </span>
+              <Badge variant="danger">{strings.priorityBadge}</Badge>
             )}
           </>
         )}

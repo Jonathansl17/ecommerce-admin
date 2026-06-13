@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { Plus } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -36,7 +37,6 @@ export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: C
         form="consumption-form"
         isLoading={isSubmitting}
         loadingText={strings.submittingButton}
-        className="w-auto px-4"
       >
         {strings.submitButton}
       </Button>
@@ -105,13 +105,14 @@ export function ConsumptionModal({ supplies, onClose, onSubmit, serverError }: C
           )}
 
           {fields.length < suppliesCount && (
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => append({ supplyId: '', quantity: NaN })}
-              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
             >
+              <Plus className="h-4 w-4" aria-hidden="true" />
               {strings.addItemButton}
-            </button>
+            </Button>
           )}
         </div>
 

@@ -4,6 +4,9 @@ import { useState, useMemo, useCallback } from 'react';
 import { useBulkAdjustStock } from '../hooks/useBulkAdjustStock';
 import { BulkStockAdjustmentRow } from './BulkStockAdjustmentRow';
 import { BulkAdjustmentSummary } from './BulkAdjustmentSummary';
+import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
+import { Input } from '@/components/ui/Input';
 import { PRODUCTS_MESSAGES } from '../constants/messages';
 import { STOCK_ADJUSTMENT_REASON_OPTIONS, BULK_ADJUSTMENT_VALIDATION } from '../constants/validation';
 import type { BulkAdjustmentRow, BulkAdjustStockResponse, StockAdjustmentReason, Product } from '../types/products.types';
@@ -82,31 +85,30 @@ export function BulkStockAdjustmentTable({ products, onDone }: BulkStockAdjustme
           <label className="text-sm font-medium text-foreground/70 block mb-1">
             {strings.reasonLabel}
           </label>
-          <select
+          <Select
             value={reason}
             onChange={(e) => setReason(e.target.value as StockAdjustmentReason)}
             disabled={isLoading}
-            className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30"
           >
             {STOCK_ADJUSTMENT_REASON_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div>
           <label className="text-sm font-medium text-foreground/70 block mb-1">
             {strings.noteLabel}
           </label>
-          <input
+          <Input
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             maxLength={BULK_ADJUSTMENT_VALIDATION.NOTE_MAX_LENGTH}
             disabled={isLoading}
-            className="w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/30"
+            className="text-sm"
           />
         </div>
       </div>
@@ -149,17 +151,18 @@ export function BulkStockAdjustmentTable({ products, onDone }: BulkStockAdjustme
         <p className="text-sm text-foreground/60">
           {strings.selectedCount(readyToAdjust.length)}
         </p>
-        <button
+        <Button
           onClick={handleSubmit}
+          isLoading={isLoading}
+          loadingText={strings.applyingButton}
           disabled={isLoading || readyToAdjust.length < BULK_ADJUSTMENT_VALIDATION.MIN_SELECTED}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? strings.applyingButton : strings.applyButton}
-        </button>
+          {strings.applyButton}
+        </Button>
       </div>
 
       {error && (
-        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+        <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}

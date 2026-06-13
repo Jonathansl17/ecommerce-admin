@@ -8,9 +8,9 @@ import type { InventoryReportTableProps, StockStatus } from '../models/product-i
 const strings = INVENTORY_REPORT_MESSAGES;
 
 const STOCK_STATUS_STYLES: Record<StockStatus, string> = {
-  available: 'bg-green-100 text-green-700',
-  low: 'bg-yellow-100 text-yellow-700',
-  out_of_stock: 'bg-red-100 text-red-700',
+  available: 'bg-success/15 text-success',
+  low: 'bg-warning/20 text-warning-foreground',
+  out_of_stock: 'bg-destructive/15 text-destructive',
   all: '',
 };
 

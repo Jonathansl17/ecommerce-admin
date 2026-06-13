@@ -8,6 +8,8 @@ import {
   getPreferences as getPreferencesService,
   updatePreferences as updatePreferencesService,
   updateCustomizationStatus as updateCustomizationStatusService,
+  deleteNotification as deleteNotificationService,
+  deleteAllNotifications as deleteAllNotificationsService,
 } from './notifications.crud.service.js';
 import { NOTIFICATION_CONFIG, SSE_CONFIG } from './notifications.constants.js';
 import { toPublicNotification } from './notifications.serializers.js';
@@ -69,6 +71,24 @@ export const markRead = async (req, res, next) => {
 export const markAllRead = async (req, res, next) => {
   try {
     const result = await markAllAsReadService(req.user.id);
+    return ok(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const remove = async (req, res, next) => {
+  try {
+    const result = await deleteNotificationService(req.params.id, req.user.id);
+    return ok(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const removeAll = async (req, res, next) => {
+  try {
+    const result = await deleteAllNotificationsService(req.user.id);
     return ok(res, result);
   } catch (error) {
     next(error);

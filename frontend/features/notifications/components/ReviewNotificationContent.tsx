@@ -13,7 +13,7 @@ function StarRating({ rating }: { rating: number }) {
           // Both filled and empty stars use the same '★' character.
           // The visual distinction is handled entirely by CSS color class,
           // not by using a different character (e.g. '☆').
-          className={i < rating ? 'text-amber-400' : 'text-muted-foreground/40'}
+          className={i < rating ? 'text-warning' : 'text-muted-foreground/40'}
         >
           {'★'}
         </span>
